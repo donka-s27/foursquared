@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <!-- Copyright 2008 Joe LaPenna -->
+
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <PreferenceCategory
+    android:title="Check-in Defaults">
+    <CheckBoxPreference
+      android:key="share_checkin"
+      android:persistent="true"
+      android:title="Share Checkins"
+      android:summaryOn="By default, show checkins to other users."
+      android:summaryOff="By default, hide checkins to other users." 
+      android:defaultValue="true" />
+    <CheckBoxPreference
+      android:key="twitter_checkin"
+      android:persistent="true"
+      android:dependency="share_checkin"
+      android:title="Twitter Checkins"
+      android:summaryOn="By default, tweet your checkins."
+      android:summaryOff="By default, do not tweet your checkins."
+      android:defaultValue="false" />
+  </PreferenceCategory>
+
+</PreferenceScreen>
