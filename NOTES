@@ -1,0 +1,57 @@
+==Setup Your Repository==
+
+The main foursquared repo is at http://joelapenna.com/git/foursquared.git
+
+*Some files must be created in order for the tests and source to build.*
+
+Templates are available in examples/
+  + *Create main/res/values/credentials.xml*
+  + *Create tests/src/com/joelapenna/foursquare/TestConstants.java*
+
+
+==Setting up Eclipse==
+
+Step Zero:
+
+http://developer.android.com/sdk/1.5_r3/installing.html
+
+Then, you have to make sure some eclipse settings are exactly correct. From preferences:
+
+Java > Compiler > Compiler Compliance Level - Set to "1.6"
+Java > Installed JREs - Should list only something Java6/1.6 related.
+Java > Installed JREs > Execution Environment - Set compatible JRE for
+    "JavaSE-1.6"
+
+
+===Setting up foursqure projects===
+
+====Get the dumpcatcher sources====
+hg clone https://dumpcatcher.googlecode.com/hg/dumpcatcher
+
+====Setup dumpcatcher project====
+Then, import that existing project into your workspace:
+File > Import > Existing project - Browse to $dumpcatcher/clients/java/main
+
+====Real foursquare projects====
+File > Import > Existing project - Browse to $foursquared/main
+
+
+
+== TODO ==
+
+   * Support removing and completing tips/todos (as of 7/09 no API)
+   * Eliminate final usage of "classic" api: /checkins (as of 7/09 cooky API)
+   * A FoursquareType with child FoursquareType will not be able to load the Parcelable when reconstructing it with the ParcelableCreator:
+      " android.os.BadParcelableException: ClassNotFoundException when unmarshalling"
+   * Fix unittesting to actually work in split package mode.
+   * Use a decorator for dumpcatcher to allow pushing /any/ exception, not just uncaught ones to the dumpcatcher.
+
+
+== RELEASE BLOCKERS ==
+
+   * auth_exchange timestamps invalidate all clients.
+      - Option 1: Fix serverside
+	  - Option 2: Ditch oAuth
+
+  * city_switch should occur when ever the user changes his site, not only at
+    login.

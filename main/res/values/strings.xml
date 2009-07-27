@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string
+    name="app_name">Foursquare</string>
+  <string
+    name="add_venue_activity_name">Add a New Venue</string>
+  <string
+    name="checkins_activity_name">Foursquare Friends</string>
+  <string
+    name="preference_activity_name">Foursquare Preferences</string>
+  <string
+    name="tips_activity_name">foursquare Venue Tips</string>
+  <string
+    name="venue_checkin_activity_name">Foursquare Venue Check-In</string>
+  <string
+    name="venue_info_activity_name">Foursquare Venue</string>
+  <string
+    name="venue_search_activity_name">Foursquare Search</string>
+  <string
+    name="venue_tips_activity_name">Foursquare Tips</string>
+
+  <string
+    name="preferences_label">Preferences</string>
+  <string
+    name="login_label">Login</string>
+
+  <string
+    name="add_venue_label">Add Venue</string>
+
+  <string
+    name="refresh_address_label">Refresh Address</string>
+
+  <string
+    name="checkins_label">Friends</string>
+  <string
+    name="myinfo_label">My Info</string>
+  <string
+    name="nearby_label">Nearby</string>
+  <string
+    name="refresh_label">Refresh</string>
+  <string
+    name="search_label">Search</string>
+  <string
+    name="stats_label">Leaderboard</string>
+
+  <string
+    name="search_hint">Search for something...</string>
+
+  <string
+    name="tip_add_spinner_prompt">Select a List</string>
+
+</resources>
