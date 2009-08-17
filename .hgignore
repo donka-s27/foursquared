@@ -1,0 +1,19 @@
+syntax: regexp
+^main/bin/
+^tests/bin/
+
+^main/gen/
+^tests/gen/
+
+^main/\.settings
+^tests/\.settings
+
+^main/src/com/joelapenna/foursquared/FoursquaredSettings.java
+
+^main/res/values/credentials.xml
+^tests/src/com/joelapenna/foursquare/TestCredentials.java
+
+\.*swp
+\.*py[co]
+
+\.DS_Store
