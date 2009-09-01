@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- android:layout_height="?android:attr/listPreferredItemHeight" -->
+
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+  android:padding="10dip"
+  style="@style/venueActivityHeaderStyle">
+
+  <TextView
+    android:id="@+id/internal_venueName"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+
+    android:layout_toRightOf="@id/icon"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentRight="true"
+    android:layout_alignParentTop="true"
+    android:layout_alignWithParentIfMissing="true"
+
+    android:textAppearance="@android:style/TextAppearance.Medium" />
+
+  <TextView
+    android:id="@+id/internal_venueLocationLine1"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentRight="true"
+    android:layout_below="@id/internal_venueName"
+
+    android:textAppearance="@android:style/TextAppearance.Small" />
+
+  <Button
+    android:id="@+id/internal_checkinButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    style="@style/venueQuickCheckinStyle"
+
+    android:layout_alignParentRight="true"
+    android:layout_below="@id/internal_venueLocationLine1"
+    android:layout_centerVertical="true"
+    android:gravity="center_vertical"
+
+    android:enabled="false"
+    android:visibility="gone" />
+
+  <TextView
+    android:id="@+id/internal_venueLocationLine2"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentRight="true"
+    android:layout_below="@id/internal_venueLocationLine1"
+    android:layout_toLeftOf="@id/internal_checkinButton"
+
+    android:textAppearance="@android:style/TextAppearance.Small" />
+
+</RelativeLayout>
