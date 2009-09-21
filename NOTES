@@ -1,0 +1,54 @@
+==Setup Your Repository==
+
+The main foursquared repo is at http://joelapenna.com/git/foursquared.git
+
+*Some files must be created in order for the tests and source to build.*
+
+Templates are available in examples/
+  + Create: main/res/values/credentials.xml
+  + Create: tests/src/com/joelapenna/foursquare/TestConstants.java
+  + Create: main/src/com/joelapenna/foursquard/FoursquaredSettings.java
+Optional if using ant to build instead of Eclipse:
+  + Create: main/local.properties
+
+
+==Setting up Eclipse==
+
+Step Zero:
+
+http://developer.android.com/sdk/1.5_r3/installing.html
+
+Then, you have to make sure some eclipse settings are exactly correct. From preferences:
+
+Java > Compiler > Compiler Compliance Level - Set to "1.6"
+Java > Installed JREs - Should list only something Java6/1.6 related.
+Java > Installed JREs > Execution Environment - Set compatible JRE for
+    "JavaSE-1.6"
+
+
+===Setting up foursqure projects===
+
+====Get the dumpcatcher sources====
+hg clone https://dumpcatcher.googlecode.com/hg/dumpcatcher
+
+====Setup dumpcatcher project====
+Then, import that existing project into your workspace:
+File > Import > Existing project - Browse to $dumpcatcher/clients/java/main
+
+====Real foursquare projects====
+File > Import > Existing project - Browse to $foursquared/main
+
+
+=== Building a release ===
+
+Update credentials.xml
+  google_maps_api_key
+  dumpcatcher_product_name
+  dumpcatcher_product_key
+  dumpcatcher_secret
+
+Update FoursquaredSettings.java
+  Disable all debugging DEBUG_*
+  Disable using the debug_server USE_DEBUG_SERVER
+  enable using dumpcatcher USE_DUMPCATCHER
+
