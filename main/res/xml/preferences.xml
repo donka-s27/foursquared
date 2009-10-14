@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <!-- Copyright 2008 Joe LaPenna -->
+
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <PreferenceCategory
+    android:title="Check-in Defaults">
+    <CheckBoxPreference
+      android:key="share_checkin"
+      android:persistent="true"
+      android:title="Tell my friends"
+      android:summaryOn="By default, tell my friends when I check-in."
+      android:summaryOff="By default, don't tell my friends when I check-in."
+      android:defaultValue="true" />
+    <CheckBoxPreference
+      android:key="twitter_checkin"
+      android:persistent="true"
+      android:dependency="share_checkin"
+      android:title="Tell Twitter"
+      android:summaryOn="By default, tweet my checkins."
+      android:summaryOff="By default, don't tweet my checkins."
+      android:defaultValue="false" />
+    <CheckBoxPreference
+      android:key="immediate_checkin"
+      android:persistent="true"
+      android:title="Checkin without prompt"
+      android:summaryOn="Checkin without confirmation when using 'Quick Checkin'"
+      android:summaryOff="Prompt for a shout when using 'Quick Checkin'"
+      android:defaultValue="true" />
+  </PreferenceCategory>
+
+  <PreferenceCategory
+    android:title="Friends">
+    <com.joelapenna.foursquared.preferences.ClickPreference
+      android:key="friend_add"
+      android:title="Add Friends"
+      android:summary="Add Friends with foursquare.com." />
+
+    <com.joelapenna.foursquared.preferences.ClickPreference
+      android:key="friend_requests"
+      android:title="Friend Requests"
+      android:summary="Manage friends with foursquare.com." />
+  </PreferenceCategory>
+
+  <PreferenceCategory
+    android:title="User Actions">
+
+    <com.joelapenna.foursquared.preferences.CityNamePreference
+      android:key="city_name"
+      android:persistent="true"
+      android:title="Update City"
+      android:summary="Update your foursquare city." />
+
+    <com.joelapenna.foursquared.preferences.ClickPreference
+      android:key="logout"
+      android:title="Logout"
+      android:summary="Sign out of Foursquare" />
+  </PreferenceCategory>
+
+</PreferenceScreen>
