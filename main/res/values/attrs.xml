@@ -1,0 +1,11 @@
+<resources>
+  <declare-styleable
+    name="VenueView">
+    <attr
+      name="checkinButton"
+      format="boolean" />
+    <attr
+      name="collapsible"
+      format="boolean" />
+  </declare-styleable>
+</resources>
