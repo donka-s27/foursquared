@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+
+  <com.google.android.maps.MapView
+    android:id="@+id/mapView"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:apiKey="@string/google_maps_api_key"
+    android:clickable="true" />
+
+  <Button
+    android:id="@+id/yelpButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentRight="true"
+    android:layout_marginTop="10dip"
+    android:layout_marginRight="10dip"
+    android:background="@drawable/venue_map_button_right" />
+
+  <Button
+    android:id="@+id/mapsButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentTop="true"
+    android:layout_toLeftOf="@id/yelpButton"
+    android:layout_marginTop="10dip"
+    android:background="@drawable/venue_map_button_left" />
+
+  <LinearLayout
+    android:id="@+id/zoomView"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignTop="@id/mapView"
+    android:layout_alignParentLeft="true"
+    android:layout_centerHorizontal="true" />
+
+</RelativeLayout>
