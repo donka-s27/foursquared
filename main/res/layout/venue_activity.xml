@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:foursquared="http://schemas.android.com/apk/res/com.joelapenna.foursquared"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+  <TabHost
+    android:id="@android:id/tabhost"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_below="@id/venueHeader"
+    style="@style/tabHostStyle">
+    <LinearLayout
+      android:id="@+id/tabhostlayout"
+      android:orientation="vertical"
+      android:layout_height="fill_parent"
+      android:layout_width="fill_parent">
+      <TabWidget
+        android:id="@android:id/tabs"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+      <com.joelapenna.foursquared.widget.VenueView
+        android:id="@+id/venue"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        foursquared:checkinButton="true"
+        foursquared:collapsible="true" />
+      <FrameLayout
+        android:id="@android:id/tabcontent"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+      </FrameLayout>
+    </LinearLayout>
+  </TabHost>
+
+</merge>
