@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <!-- Copyright (C) 2007 The Android Open Source Project -->
+  
+<resources>
+    <color
+        name="purple_start">#9b256b</color>
+    <color
+        name="purple_end">#5d2761</color>
+    <color
+        name="blue_start">#176bb4</color>
+    <color
+        name="blue_end">#7eddfc</color>
+</resources>
