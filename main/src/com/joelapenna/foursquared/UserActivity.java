@@ -4,15 +4,14 @@
 
 package com.joelapenna.foursquared;
 
-import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Badge;
 import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
+import com.joelapenna.foursquared.util.UserUtils;
 import com.joelapenna.foursquared.widget.BadgeWithIconListAdapter;
 import com.joelapenna.foursquared.widget.VenueView;
 
@@ -26,8 +25,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.DialogInterface.OnCancelListener;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -40,7 +37,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
@@ -195,60 +191,7 @@ public class UserActivity extends Activity {
         mUserObservable.notifyObservers(user);
     }
 
-    private void ensureUserPhoto(final User user) {
-        final ImageView photo = (ImageView)findViewById(R.id.photo);
-        if (user.getPhoto() == null) {
-            photo.setImageResource(R.drawable.blank_boy);
-            return;
-        }
-        final Uri photoUri = Uri.parse(user.getPhoto());
-        if (photoUri != null) {
-            RemoteResourceManager userPhotosManager = ((Foursquared)getApplication())
-                    .getRemoteResourceManager();
-            try {
-                Bitmap bitmap = BitmapFactory.decodeStream(userPhotosManager
-                        .getInputStream(photoUri));
-                photo.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                if (DEBUG) Log.d(TAG, "photo not already retrieved, requesting: " + photoUri);
-                userPhotosManager.addObserver(new RemoteResourceManager.ResourceRequestObserver(
-                        photoUri) {
-                    @Override
-                    public void requestReceived(Observable observable, Uri uri) {
-                        observable.deleteObserver(this);
-                        updateUserPhoto(photo, uri, user);
-                    }
-                });
-                userPhotosManager.request(photoUri);
-            }
-        }
-    }
 
-    private void updateUserPhoto(final ImageView photo, final Uri uri, final User user) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (DEBUG) Log.d(TAG, "Loading user photo: " + uri);
-                    RemoteResourceManager userPhotosManager = ((Foursquared)getApplication())
-                            .getRemoteResourceManager();
-                    Bitmap bitmap = BitmapFactory.decodeStream(userPhotosManager
-                            .getInputStream(uri));
-                    photo.setImageBitmap(bitmap);
-                    if (DEBUG) Log.d(TAG, "Loaded user photo: " + uri);
-                } catch (IOException e) {
-                    if (DEBUG) Log.d(TAG, "Unable to load user photo: " + uri);
-                    if (Foursquare.MALE.equals(user.getGender())) {
-                        photo.setImageResource(R.drawable.blank_boy);
-                    } else {
-                        photo.setImageResource(R.drawable.blank_girl);
-                    }
-                } catch (Exception e) {
-                    Log.d(TAG, "Ummm............", e);
-                }
-            }
-        });
-    }
 
     private class UserTask extends AsyncTask<Void, Void, User> {
 
@@ -264,10 +207,8 @@ public class UserActivity extends Activity {
         protected User doInBackground(Void... params) {
             try {
                 return ((Foursquared) getApplication()).getFoursquare().user(
-                        mUserId,
-                        false,
-                        true,
-                        LocationUtils.createFoursquareLocation(((Foursquared) getApplication())
+                    mUserId, false, true,
+                    LocationUtils.createFoursquareLocation(((Foursquared) getApplication())
                                 .getLastKnownLocation()));
             } catch (Exception e) {
                 mReason = e;
@@ -360,7 +301,7 @@ public class UserActivity extends Activity {
             TextView name = (TextView)findViewById(R.id.name);
 
             name.setText(fullName);
-            ensureUserPhoto(user);
+            UserUtils.ensureUserPhoto(UserActivity.this, user, DEBUG, TAG);
         }
     }
 }

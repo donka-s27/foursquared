@@ -98,6 +98,7 @@ public class Foursquare {
     }
 
     @V1
+    @LocationRequired
     public Venue addVenue(String name, String address, String crossstreet, String city,
             String state, String zip, String phone, Location location) throws FoursquareException,
             FoursquareError, IOException {
@@ -108,10 +109,12 @@ public class Foursquare {
 
     @V1
     public CheckinResult checkin(String venueId, String venueName, Location location, String shout,
-            boolean isPrivate, boolean twitter) throws FoursquareException, FoursquareError,
+            boolean isPrivate, boolean twitter, boolean facebook) throws FoursquareException,
+            FoursquareError,
             IOException {
         return mFoursquareV1.checkin(venueId, venueName, location.geolat, location.geolong,
-                location.geohacc, location.geovacc, location.geoalt, shout, isPrivate, twitter);
+                location.geohacc, location.geovacc, location.geoalt, shout, isPrivate, twitter,
+                facebook);
     }
 
     @V1
@@ -177,6 +180,7 @@ public class Foursquare {
     }
 
     @V1
+    @LocationRequired
     public Group<Group<Venue>> venues(Location location, String query, int limit)
             throws FoursquareException, FoursquareError, IOException {
         return mFoursquareV1.venues(location.geolat, location.geolong, location.geohacc,
@@ -223,12 +227,21 @@ public class Foursquare {
     @interface V1 {
     }
 
+    /**
+     * This api call requires a location.
+     */
+    @interface LocationRequired {
+    }
+
     public static class Location {
         String geolat = null;
         String geolong = null;
         String geohacc = null;
         String geovacc = null;
         String geoalt = null;
+
+        public Location() {
+        }
 
         public Location(final String geolat, final String geolong, final String geohacc,
                 final String geovacc, final String geoalt) {

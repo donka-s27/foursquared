@@ -20,22 +20,13 @@
       android:summaryOn="@string/preferences_share_summary_on"
       android:summaryOff="@string/preferences_share_summary_off"
       android:defaultValue="true" />
-    <CheckBoxPreference
-      android:key="twitter_checkin"
-      android:enabled="true"
-      android:persistent="false"
-      android:dependency="share_checkin"
-      android:title="@string/preferences_twitter_checkin_title"
-      android:summaryOn="@string/preferences_twitter_checkin_summary_on"
-      android:summaryOff="@string/preferences_twitter_checkin_summary_off" />
   </PreferenceCategory>
-
   <PreferenceCategory
     android:title="@string/preferences_category_friends">
     <com.joelapenna.foursquared.preferences.ClickPreference
       android:key="friend_add"
       android:title="@string/preferences_friend_add_title"
-      android:summary="@string/preferences_friend_add_summary"/>
+      android:summary="@string/preferences_friend_add_summary" />
 
     <com.joelapenna.foursquared.preferences.ClickPreference
       android:key="friend_requests"
@@ -44,8 +35,15 @@
   </PreferenceCategory>
 
   <PreferenceCategory
-    android:title="@string/preferences_category_user_actions">
-
+    android:title="@string/preferences_other_settings">
+    <com.joelapenna.foursquared.preferences.ClickPreference
+      android:key="advanced_settings"
+      android:title="@string/preferences_additional_settings"
+      android:summary="@string/preferences_additional_settings_summary" />
+    <com.joelapenna.foursquared.preferences.ClickPreference
+      android:key="send_feedback"
+      android:title="@string/feedback_label"
+      android:summary="@string/send_feedback_preference_summary" />
     <com.joelapenna.foursquared.preferences.ClickPreference
       android:key="logout"
       android:title="@string/preferences_logout_title"

@@ -4,22 +4,26 @@
 
 package com.joelapenna.foursquared;
 
-import com.joelapenna.foursquare.error.FoursquareException;
+import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Badge;
 import com.joelapenna.foursquare.types.CheckinResult;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Mayor;
 import com.joelapenna.foursquare.types.Score;
 import com.joelapenna.foursquare.types.Special;
+import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquare.util.VenueUtils;
+import com.joelapenna.foursquared.error.LocationException;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
 import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.UserUtils;
 import com.joelapenna.foursquared.widget.BadgeWithIconListAdapter;
 import com.joelapenna.foursquared.widget.ScoreListAdapter;
 import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 import com.joelapenna.foursquared.widget.SpecialListAdapter;
+import com.joelapenna.foursquared.widget.VenueListAdapter;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -41,12 +45,14 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import java.util.Observable;
@@ -75,6 +81,7 @@ public class ShoutActivity extends Activity {
     private boolean mIsShouting = true;
     private boolean mTellFriends = true;
     private boolean mTellTwitter = false;
+    private boolean mTellFacebook = false;
     private boolean mImmediateCheckin = true;
 
     private String mShout = null;
@@ -82,10 +89,12 @@ public class ShoutActivity extends Activity {
     private BadgeWithIconListAdapter mBadgeListAdapter;
     private Button mCheckinButton;
     private CheckBox mTwitterCheckBox;
+    private CheckBox mFacebookCheckBox;
     private CheckBox mFriendsCheckBox;
     private EditText mShoutEditText;
     private Venue mVenue;
     private SpecialListAdapter mSpecialListAdapter;
+    private VenueListAdapter mNearSpecialListAdapter;
 
     AsyncTask<Void, Void, CheckinResult> mCheckinTask = null;
 
@@ -112,6 +121,7 @@ public class ShoutActivity extends Activity {
                 .getDefaultSharedPreferences(ShoutActivity.this);
         mTellFriends = settings.getBoolean(Preferences.PREFERENCE_SHARE_CHECKIN, mTellFriends);
         mTellTwitter = settings.getBoolean(Preferences.PREFERENCE_TWITTER_CHECKIN, mTellTwitter);
+        mTellFacebook = settings.getBoolean(Preferences.PREFERENCE_FACEBOOK_CHECKIN, mTellFacebook);
         // Implies there is no UI.
         if (getIntent().hasExtra(EXTRA_IMMEDIATE_CHECKIN)) {
             mImmediateCheckin = getIntent().getBooleanExtra(EXTRA_IMMEDIATE_CHECKIN, true);
@@ -193,10 +203,13 @@ public class ShoutActivity extends Activity {
 
     private void initListViewAdapters() {
         mListAdapter = new SeparatedListAdapter(this, R.layout.list_header);
-        ((ListView) findViewById(R.id.result_list)).setAdapter(mListAdapter);
+        ListView result_list = ((ListView) findViewById(R.id.result_list));
+        result_list.setAdapter(mListAdapter);
+        result_list.setOnItemClickListener(onCheckinItemClick);
         mScoreListAdapter = new ScoreListAdapter(this, ((Foursquared) getApplication())
                 .getRemoteResourceManager());
         mSpecialListAdapter = new SpecialListAdapter(this);
+        mNearSpecialListAdapter = new VenueListAdapter(this);
         mBadgeListAdapter = new BadgeWithIconListAdapter(this, ((Foursquared) getApplication())
                 .getRemoteResourceManager(), R.layout.badge_list_item);
     }
@@ -208,6 +221,7 @@ public class ShoutActivity extends Activity {
         mCheckinButton = (Button) findViewById(R.id.checkinButton);
         mFriendsCheckBox = (CheckBox) findViewById(R.id.tellFriendsCheckBox);
         mTwitterCheckBox = (CheckBox) findViewById(R.id.tellTwitterCheckBox);
+        mFacebookCheckBox = (CheckBox) findViewById(R.id.tellFacebookCheckBox);
         mShoutEditText = (EditText) findViewById(R.id.shoutEditText);
         mCheckinButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -229,15 +243,26 @@ public class ShoutActivity extends Activity {
                 mTwitterCheckBox.setEnabled(isChecked);
             }
         });
+        mFacebookCheckBox.setChecked(mTellFacebook);
+        mFacebookCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mTellFacebook = isChecked;
+                mFacebookCheckBox.setEnabled(isChecked);
+            }
+        });
         mFriendsCheckBox.setChecked(mTellFriends);
         mFriendsCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mTellFriends = isChecked;
                 mTwitterCheckBox.setEnabled(isChecked);
+                mFacebookCheckBox.setEnabled(isChecked);
                 if (!isChecked) {
                     mTellTwitter = false;
+                    mTellFacebook = false;
                     mTwitterCheckBox.setChecked(false);
+                    mFacebookCheckBox.setChecked(false);
                 }
             }
         });
@@ -303,11 +328,12 @@ public class ShoutActivity extends Activity {
                 venueId = mVenue.getId();
             }
             boolean isPrivate = !mTellFriends;
+            Foursquared foursquared = (Foursquared) getApplication();
+            Location location = foursquared.getLastKnownLocation();
             try {
-                Location location = ((Foursquared) getApplication()).getLastKnownLocation();
-                return ((Foursquared) getApplication()).getFoursquare().checkin(venueId, null,
+                return foursquared.getFoursquare().checkin(venueId, null,
                         LocationUtils.createFoursquareLocation(location), mShout, isPrivate,
-                        mTellTwitter);
+                        mTellTwitter, mTellFacebook);
             } catch (Exception e) {
                 Log.d(TAG, "Storing reason: ", e);
                 mReason = e;
@@ -382,9 +408,27 @@ public class ShoutActivity extends Activity {
         private void displayMayor(Mayor mayor) {
             if (mayor != null) {
                 // We're the mayor. Yay!
+                // TODO - Yay above is not true and there could be two mayor
+                // section sent
                 ((TextView) findViewById(R.id.mayor_message)).setText(mayor.getMessage());
                 findViewById(R.id.mayor_message).setVisibility(View.VISIBLE);
                 findViewById(R.id.mayor_crown).setVisibility(View.VISIBLE);
+                findViewById(R.id.photo).setVisibility(View.VISIBLE);
+                User mayorUser = mayor.getUser();
+                if (mayorUser == null) {
+                    // Section user was not returned with mayor - we're we
+                    try {
+                        Location location = ((Foursquared) getApplication()).getLastKnownLocation();
+                        mayorUser = ((Foursquared) getApplication()).getFoursquare().user(null,
+                                false, false, LocationUtils.createFoursquareLocation(location));
+
+                    } catch (Exception e) {
+                        Log.d(TAG, "Storing reason: ", e);
+                        // mReason = e;
+                    }
+
+                }
+                UserUtils.ensureUserPhoto(ShoutActivity.this, mayorUser, DEBUG, TAG);
             }
         }
 
@@ -418,22 +462,45 @@ public class ShoutActivity extends Activity {
 
         private boolean displaySpecials(final Group<Special> specials) {
             Group<Special> localSpecials = new Group<Special>();
-            Group<Special> nearbySpecials = new Group<Special>();
+            Group<Venue> nearbySpecials = new Group<Venue>();
             if (specials != null) {
                 for (int i = 0, size = specials.size(); i < size; i++) {
                     Special special = specials.get(i);
-                    if (special.getVenue() == null) {
+                    Venue venue = special.getVenue();
+                    if (venue == null) {
                         localSpecials.add(special);
                     } else {
-                        nearbySpecials.add(special);
+                        nearbySpecials.add(venue);
                     }
                 }
-                mSpecialListAdapter.setGroup(localSpecials);
-                mListAdapter.addSection(getResources().getString(R.string.checkin_specials),
-                        mSpecialListAdapter);
+                // TODO - add onItemClick to the items and possibly icon to
+                // nearby items.
+                if (localSpecials.size() > 0) {
+                    mSpecialListAdapter.setGroup(localSpecials);
+                    mListAdapter.addSection(getResources().getString(R.string.checkin_specials),
+                            mSpecialListAdapter);
+                }
+                if (nearbySpecials.size() > 0) {
+                    mNearSpecialListAdapter.setGroup(nearbySpecials);
+                    mListAdapter.addSection(getResources().getString(
+                            R.string.checkin_specials_nearby), mNearSpecialListAdapter);
+                }
                 return true;
             }
             return false;
         }
     }
+
+    OnItemClickListener onCheckinItemClick = new OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Object listItem = parent.getAdapter().getItem(position);
+            if (listItem instanceof Venue) {
+                Intent intent = new Intent(ShoutActivity.this, VenueActivity.class);
+                intent.putExtra(Foursquared.EXTRA_VENUE_ID, ((Venue) listItem).getId());
+                startActivity(intent);
+            }
+
+        }
+    };
 }
