@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<user>
+  <id>9711</id>
+  <firstname>Testuser</firstname>
+  <lastname>So and so</lastname>
+  <photo>http://playfoursquare.s3.amazonaws.com/userpix/9711_1245032443.jpg</photo>
+  <twitter_name>jlapenna_testuser</twitter_name>
+  <friendstatus>pendingyou</friendstatus>
+  <checkin>
+    <venue>
+      <id>23035</id>
+      <name>The Page</name>
+      <address>298 Divisadero St</address>
+      <crossstreet>at Page</crossstreet>
+      <geolat>37.7722</geolat>
+      <geolong>-122.437</geolong>
+    </venue>
+    <shout>Leave the poor damn monkeys alone, they've got problems enough as it is.</shout>
+  </checkin>
+  <settings>
+    <sendtotwitter type="boolean"></sendtotwitter>
+    <sendtofacebook type="boolean"></sendtofacebook>
+    <feeds_key>127e89691d51e7ce94c8dea27fddbe3d</feeds_key>
+  </settings>
+  <badges>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/crunked_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/bender_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/local_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/superuser_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/crunked_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/crunked_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/crunked_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/crunked_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+    <badge>
+      <name>Newbie</name>
+      <icon>http://playfoursquare.com/images/badges/crunked_on.png</icon>
+      <description>Congrats on your first check-in! </description>
+    </badge>
+  </badges>
+</user>
