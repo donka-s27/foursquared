@@ -16,7 +16,9 @@ import com.joelapenna.foursquare.parsers.CheckinParser;
 import com.joelapenna.foursquare.parsers.CheckinResultParser;
 import com.joelapenna.foursquare.parsers.CityParser;
 import com.joelapenna.foursquare.parsers.CredentialsParser;
+import com.joelapenna.foursquare.parsers.FriendInvitesResultParser;
 import com.joelapenna.foursquare.parsers.GroupParser;
+import com.joelapenna.foursquare.parsers.ResponseParser;
 import com.joelapenna.foursquare.parsers.TipParser;
 import com.joelapenna.foursquare.parsers.UserParser;
 import com.joelapenna.foursquare.parsers.VenueParser;
@@ -25,7 +27,9 @@ import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.CheckinResult;
 import com.joelapenna.foursquare.types.City;
 import com.joelapenna.foursquare.types.Credentials;
+import com.joelapenna.foursquare.types.FriendInvitesResult;
 import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Response;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
@@ -72,6 +76,8 @@ class FoursquareHttpApiV1 {
     private static final String URL_API_HISTORY = "/history";
     private static final String URL_API_TIP_TODO = "/tip/marktodo";
     private static final String URL_API_TIP_DONE = "/tip/markdone";
+    private static final String URL_API_FIND_FRIENDS_BY_PHONE_OR_EMAIL = "/findfriends/byphoneoremail";
+    private static final String URL_API_INVITE_BY_EMAIL = "/invite/byemail";
     
     private final DefaultHttpClient mHttpClient = AbstractHttpApi.createHttpClient();
     private HttpApi mHttpApi;
@@ -222,8 +228,8 @@ class FoursquareHttpApiV1 {
      * /checkin?vid=1234&venue=Noc%20Noc&shout=Come%20here&private=0&twitter=1
      */
     CheckinResult checkin(String vid, String venue, String geolat, String geolong, String geohacc,
-            String geovacc, String geoalt, String shout, boolean isPrivate, boolean twitter,
-            boolean facebook) throws FoursquareException, FoursquareError, IOException {
+            String geovacc, String geoalt, String shout, boolean isPrivate, boolean tellFollowers,
+            boolean twitter, boolean facebook) throws FoursquareException, FoursquareError, IOException {
         HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_CHECKIN), //
                 new BasicNameValuePair("vid", vid), //
                 new BasicNameValuePair("venue", venue), //
@@ -234,6 +240,7 @@ class FoursquareHttpApiV1 {
                 new BasicNameValuePair("geoalt", geoalt), //
                 new BasicNameValuePair("shout", shout), //
                 new BasicNameValuePair("private", (isPrivate) ? "1" : "0"), //
+                new BasicNameValuePair("followers", (tellFollowers) ? "1" : "0"), //
                 new BasicNameValuePair("twitter", (twitter) ? "1" : "0"), //
                 new BasicNameValuePair("facebook", (facebook) ? "1" : "0"), //
                 new BasicNameValuePair("markup", "android")); // used only by android for checkin result 'extras'.
@@ -440,6 +447,27 @@ class FoursquareHttpApiV1 {
         HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_TIP_DONE), //
                 new BasicNameValuePair("tid", tipId));
         return (Tip) mHttpApi.doHttpRequest(httpPost, new TipParser());
+    }
+    
+    /**
+     * /findfriends/byphoneoremail?p=comma-sep-list-of-phones&e=comma-sep-list-of-emails
+     */
+    public FriendInvitesResult findFriendsByPhoneOrEmail(String phones, String emails) throws FoursquareException,
+            FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_FIND_FRIENDS_BY_PHONE_OR_EMAIL), //
+                new BasicNameValuePair("p", phones),
+                new BasicNameValuePair("e", emails));
+        return (FriendInvitesResult) mHttpApi.doHttpRequest(httpPost, new FriendInvitesResultParser());
+    }
+    
+    /**
+     * /invite/byemail?q=comma-sep-list-of-emails
+     */
+    public Response inviteByEmail(String emails) throws FoursquareException,
+            FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_INVITE_BY_EMAIL), //
+                new BasicNameValuePair("q", emails));
+        return (Response) mHttpApi.doHttpRequest(httpPost, new ResponseParser());
     }
     
     private String fullUrl(String url) {

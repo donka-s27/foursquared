@@ -12,7 +12,7 @@ import com.joelapenna.foursquared.app.LoadableListActivity;
 import com.joelapenna.foursquared.error.LocationException;
 import com.joelapenna.foursquared.location.BestLocationListener;
 import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.util.Comparators;
+import com.joelapenna.foursquared.preferences.Preferences;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.UserUtils;
@@ -25,22 +25,31 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -69,6 +78,8 @@ public class NearbyVenuesActivity extends LoadableListActivity {
 
     private ListView mListView;
     private SeparatedListAdapter mListAdapter;
+    private LinearLayout mFooterView;
+    private TextView mTextViewFooter;
 
     private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
         @Override
@@ -95,7 +106,14 @@ public class NearbyVenuesActivity extends LoadableListActivity {
                 startItemActivity(venue);
             }
         });
-
+        
+        // We can dynamically add a footer to our loadable listview.
+        LayoutInflater inflater = LayoutInflater.from(this);
+        mFooterView = (LinearLayout)inflater.inflate(R.layout.geo_loc_address_view, null);
+        mTextViewFooter = (TextView)mFooterView.findViewById(R.id.footerTextView);
+        LinearLayout llMain = (LinearLayout)findViewById(R.id.main);
+        llMain.addView(mFooterView);
+        
         mSearchResultsObservable.addObserver(new Observer() {
             @Override
             public void update(Observable observable, Object data) {
@@ -107,8 +125,9 @@ public class NearbyVenuesActivity extends LoadableListActivity {
             if (DEBUG) Log.d(TAG, "Restoring state.");
             SearchHolder holder = (SearchHolder) getLastNonConfigurationInstance();
             if (holder.results != null) {
-                setSearchResults(holder.results);
+                setSearchResults(holder.results, holder.reverseGeoLoc);
             }
+            populateFooter(holder.reverseGeoLoc);
         }
         
         // We can reparse the delay startup time each onCreate().
@@ -230,10 +249,11 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         mListView.setAdapter(mListAdapter);
     }
 
-    public void setSearchResults(Group<Group<Venue>> searchResults) {
+    public void setSearchResults(Group<Group<Venue>> searchResults, String reverseGeoLoc) {
         if (DEBUG) Log.d(TAG, "Setting search results.");
         mSearchHolder.results = searchResults;
         mSearchResultsObservable.notifyObservers();
+        mSearchHolder.reverseGeoLoc = reverseGeoLoc;
     }
 
     void startItemActivity(Venue venue) {
@@ -250,10 +270,22 @@ public class NearbyVenuesActivity extends LoadableListActivity {
             setTitle(getString(R.string.title_search_inprogress_noquery));
         }
     }
-
+    
+    private void populateFooter(String reverseGeoLoc) {
+        mFooterView.setVisibility(View.VISIBLE);
+        mTextViewFooter.setText(reverseGeoLoc);
+    }
+    
     private class SearchTask extends AsyncTask<Void, Void, Group<Group<Venue>>> {
 
         private Exception mReason = null;
+        private String mReverseGeoLoc;
+        private boolean mClearGeolocationOnSearch;
+        
+        public SearchTask(boolean clearGeolocationOnSearch) {
+            super();
+            mClearGeolocationOnSearch = clearGeolocationOnSearch;
+        }
 
         @Override
         public void onPreExecute() {
@@ -261,12 +293,37 @@ public class NearbyVenuesActivity extends LoadableListActivity {
             setProgressBarIndeterminateVisibility(true);
             ensureTitle(false);
             setLoadingView();
+
+            if (mClearGeolocationOnSearch) {
+                Foursquared foursquared = ((Foursquared) getApplication());
+                foursquared.clearLastKnownLocation();
+                foursquared.removeLocationUpdates(mSearchLocationObserver);
+                foursquared.requestLocationUpdates(mSearchLocationObserver);
+            }
         }
 
         @Override
         public Group<Group<Venue>> doInBackground(Void... params) {
+            
+            Foursquare foursquare = ((Foursquared) getApplication()).getFoursquare();
+            
             try {
-                return search();
+                // If the user has chosen to clear their geolocation on each search, wait briefly
+                // for a new fix to come in. The two-second wait time is arbitrary and can be 
+                // changed to something more intelligent.
+                if (mClearGeolocationOnSearch) {
+                    Thread.sleep(2000);
+                }
+                
+                Location location = ((Foursquared) getApplication()).getLastKnownLocationOrThrow();
+                
+                Group<Group<Venue>> results = search(foursquare, location);
+                
+                // Try to get the geolocation associated with the search.
+                mReverseGeoLoc = getGeocode(location);
+                
+                return results;
+                
             } catch (Exception e) {
                 mReason = e;
             }
@@ -279,26 +336,67 @@ public class NearbyVenuesActivity extends LoadableListActivity {
                 if (groups == null) {
                     NotificationsUtil.ToastReasonForFailure(NearbyVenuesActivity.this, mReason);
                 }
-                setSearchResults(groups);
+                setSearchResults(groups, mReverseGeoLoc);
 
             } finally {
                 setProgressBarIndeterminateVisibility(false);
                 ensureTitle(true);
                 setEmptyView();
             }
+            
+            populateFooter(mReverseGeoLoc);
         }
 
-        public Group<Group<Venue>> search() throws FoursquareException, LocationException,
-                IOException {
-            Foursquare foursquare = ((Foursquared) getApplication()).getFoursquare();
-            Location location = ((Foursquared) getApplication()).getLastKnownLocationOrThrow();
+        public Group<Group<Venue>> search(Foursquare foursquare, Location location) 
+            throws FoursquareException, LocationException, IOException {
 
             Group<Group<Venue>> groups = foursquare.venues(LocationUtils
                     .createFoursquareLocation(location), mSearchHolder.query, 30);
-            for (int i = 0; i < groups.size(); i++) {
-                Collections.sort(groups.get(i), Comparators.getVenueDistanceComparator());
-            }
+            
+            // We can sort the returned venues by distance, but now the foursquare api should
+            // do a smart-sort for us by popularity and distance, see here for more info:
+            // http://blog.foursquare.com/post/589698188/weve-just-made-the-places-screen-smarter
+            //for (int i = 0; i < groups.size(); i++) {
+            //      Collections.sort(groups.get(i), Comparators.getVenueDistanceComparator());
+            //}
+            
             return groups;
+        }
+        
+        private String getGeocode(Location location) {
+            Geocoder geocoded = new Geocoder(getApplicationContext(), Locale.getDefault());   
+            try {
+                List<Address> addresses = geocoded.getFromLocation(
+                        location.getLatitude(), location.getLongitude(), 1);
+                if (addresses.size() > 0) {
+                    Address address = addresses.get(0);
+
+                    StringBuilder sb = new StringBuilder(128);
+                    sb.append("Near ");
+                    sb.append(address.getAddressLine(0));
+                    if (addresses.size() > 1) {
+                        sb.append(", ");
+                        sb.append(address.getAddressLine(1));
+                    } 
+                    if (addresses.size() > 2) {
+                        sb.append(", ");
+                        sb.append(address.getAddressLine(2));
+                    }
+                    
+                    if (!TextUtils.isEmpty(address.getLocality())) {
+                        if (sb.length() > 0) {
+                            sb.append(", ");
+                        }  
+                        sb.append(address.getLocality());
+                    }
+
+                    return sb.toString();
+                }
+            } catch (Exception ex) {
+                if (DEBUG) Log.d(TAG, "SearchTask: error geocoding current location.", ex);
+            }
+            
+            return null;
         }
     }
 
@@ -317,7 +415,8 @@ public class NearbyVenuesActivity extends LoadableListActivity {
 
             switch (msg.what) {
                 case MESSAGE_FORCE_SEARCH:
-                    mSearchTask = (SearchTask) new SearchTask().execute();
+                    mSearchTask = (SearchTask) new SearchTask(
+                            getClearGeolocationOnSearch()).execute();
                     return;
 
                 case MESSAGE_STOP_SEARCH:
@@ -332,15 +431,21 @@ public class NearbyVenuesActivity extends LoadableListActivity {
                             || AsyncTask.Status.FINISHED.equals(mSearchTask.getStatus())
                             && !mFirstSearchCompleted) {
                         mFirstSearchCompleted = true;
-                        mSearchTask = (SearchTask) new SearchTask().execute();
+                        mSearchTask = (SearchTask) new SearchTask(
+                                getClearGeolocationOnSearch()).execute();
                     }
                     return;
 
                 default:
             }
         }
-
     }
+    
+    private boolean getClearGeolocationOnSearch() {
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean cacheGeolocation = settings.getBoolean(Preferences.PREFERENCE_CACHE_GEOLOCATION_FOR_SEARCHES, true);
+        return !cacheGeolocation;
+    } 
 
     private class SearchResultsObservable extends Observable {
 
@@ -375,5 +480,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
     private static class SearchHolder {
         Group<Group<Venue>> results;
         String query;
+        String reverseGeoLoc;
     }
 }

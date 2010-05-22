@@ -12,6 +12,7 @@
   android:paddingRight="12dip"
   android:paddingTop="5dip"
   android:paddingBottom="5dip"
+  android:paddingLeft="10dip"
   > 
   
   <LinearLayout
@@ -45,12 +46,13 @@
       android:paddingLeft="10dip" />
    
    </LinearLayout>  
-      
+  
   <Button
     android:id="@+id/addFriendListItemAddButton"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:textAppearance="@android:style/TextAppearance.Small" 
-    android:text="Add" />
-    
+    android:text=" Add  " 
+    style="@style/sendInviteStyle"
+    android:drawableLeft="@drawable/add_friend" />
+
 </LinearLayout>

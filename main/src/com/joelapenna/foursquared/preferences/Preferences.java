@@ -11,6 +11,7 @@ import com.joelapenna.foursquare.types.City;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
+import com.joelapenna.foursquared.util.UserUtils;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -58,6 +59,9 @@ public class Preferences {
     
     // Extra info about the user, their gender, to control icon used for 'me' in the UI.
     private static final String PREFERENCE_GENDER = "gender";
+    
+    // Extra info, can the user have followers or not.
+    public static final String PREFERENCE_CAN_HAVE_FOLLOWERS = "can_have_followers";
 
     // Not-in-XML preferences for dumpcatcher
     public static final String PREFERENCE_DUMPCATCHER_CLIENT = "dumpcatcher_client";
@@ -65,6 +69,10 @@ public class Preferences {
     // Keeps track of the last changelog version shown to the user at startup.
     private static final String PREFERENCE_LAST_SEEN_CHANGELOG_VERSION 
         = "last_seen_changelog_version";
+
+    // User can choose to clear geolocation on each search.
+    public static final String PREFERENCE_CACHE_GEOLOCATION_FOR_SEARCHES
+        = "cache_geolocation_for_searches";
     
     
     /**
@@ -76,6 +84,9 @@ public class Preferences {
         if (!preferences.contains(PREFERENCE_STARTUP_TAB)) {
             String[] startupTabValues = resources.getStringArray(R.array.startup_tabs_values);
             editor.putString(PREFERENCE_STARTUP_TAB, startupTabValues[0]);
+        }
+        if (!preferences.contains(PREFERENCE_CACHE_GEOLOCATION_FOR_SEARCHES)) {
+            editor.putBoolean(PREFERENCE_CACHE_GEOLOCATION_FOR_SEARCHES, true);
         }
         editor.commit();
     }
@@ -163,6 +174,7 @@ public class Preferences {
             editor.putBoolean(PREFERENCE_TWITTER_CHECKIN, user.getSettings().sendtotwitter());
             editor.putBoolean(PREFERENCE_FACEBOOK_CHECKIN, user.getSettings().sendtofacebook());
             editor.putString(PREFERENCE_GENDER, user.getGender());
+            editor.putBoolean(PREFERENCE_CAN_HAVE_FOLLOWERS, UserUtils.getCanHaveFollowers(user));
             if (DEBUG) Log.d(TAG, "Setting user info");
         } else {
             if (Preferences.DEBUG) Log.d(Preferences.TAG, "Unable to lookup user.");

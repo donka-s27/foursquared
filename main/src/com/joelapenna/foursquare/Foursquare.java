@@ -11,7 +11,9 @@ import com.joelapenna.foursquare.types.Category;
 import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.CheckinResult;
 import com.joelapenna.foursquare.types.Credentials;
+import com.joelapenna.foursquare.types.FriendInvitesResult;
 import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Response;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
@@ -111,12 +113,13 @@ public class Foursquare {
 
     @V1
     public CheckinResult checkin(String venueId, String venueName, Location location, String shout,
-            boolean isPrivate, boolean twitter, boolean facebook) throws FoursquareException,
+            boolean isPrivate, boolean tellFollowers, boolean twitter, boolean facebook) 
+            throws FoursquareException,
             FoursquareError,
             IOException {
         return mFoursquareV1.checkin(venueId, venueName, location.geolat, location.geolong,
-                location.geohacc, location.geovacc, location.geoalt, shout, isPrivate, twitter,
-                facebook);
+                location.geohacc, location.geovacc, location.geoalt, shout, isPrivate, 
+                tellFollowers, twitter, facebook);
     }
 
     @V1
@@ -229,6 +232,18 @@ public class Foursquare {
     public Tip tipMarkDone(String tipId) 
         throws FoursquareException, FoursquareError, IOException {
         return mFoursquareV1.tipMarkDone(tipId);
+    }
+    
+    @V1
+    public FriendInvitesResult findFriendsByPhoneOrEmail(String phones, String emails)
+        throws FoursquareException, FoursquareCredentialsException, FoursquareError, IOException {
+        return mFoursquareV1.findFriendsByPhoneOrEmail(phones, emails);
+    }
+    
+    @V1
+    public Response inviteByEmail(String emails) 
+        throws FoursquareException, FoursquareCredentialsException, FoursquareError, IOException {
+        return mFoursquareV1.inviteByEmail(emails);
     }
     
     public static final FoursquareHttpApiV1 createHttpApi(String domain, String clientVersion,
