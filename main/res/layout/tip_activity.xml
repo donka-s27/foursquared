@@ -20,7 +20,7 @@
     android:paddingBottom="10dip" 
     android:orientation="horizontal"
     >
-
+    <!-- 
     <ImageView
       android:id="@+id/tipActivityPhoto"
       android:layout_width="60dip"
@@ -30,15 +30,30 @@
       android:src="@drawable/blank_boy"
       android:scaleType="fitCenter"  
       android:gravity="center_vertical" />
-      
-    <TextView 
-      android:id="@+id/tipActivityName" 
-      android:layout_width="0dip" 
+    -->
+    
+    <LinearLayout
+      android:orientation="vertical"
+      android:layout_width="0dip"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      android:paddingLeft="8dip"
-      android:textAppearance="@style/TextViewStyleUserDetailsActivityTitle" />
-      
+      android:paddingLeft="8dip" >
+       
+      <TextView 
+        android:id="@+id/tipActivityName" 
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextViewStyleUserDetailsActivityTitle"
+        android:text="Venue Name" />
+    
+      <TextView 
+        android:id="@+id/tipActivityAddress"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:text="Venue Address" />
+        
+    </LinearLayout>
+    
     <LinearLayout 
       android:layout_width="wrap_content" 
       android:layout_height="fill_parent"
@@ -57,10 +72,63 @@
     </LinearLayout>
         
   </LinearLayout>
- 
+  
+  <LinearLayout 
+    android:layout_width="fill_parent" 
+    android:layout_height="8dip"
+    android:background="@color/color_bright_green"
+    >
+  </LinearLayout>
+  <!-- 
   <ListView 
     android:id="@+id/tipActivityListView"
     android:layout_height="fill_parent"
     android:layout_width="fill_parent" />
+  --> 
+  
+  <LinearLayout 
+    android:layout_width="fill_parent" 
+    android:layout_height="0dip"
+    android:layout_weight="1"
+    android:background="#FFF"
+    android:paddingLeft="8dip"
+    android:paddingRight="8dip"
+    android:paddingTop="17dip"
+    android:orientation="vertical" >
+    
+    <TextView 
+      android:id="@+id/tipActivityBody"
+      android:layout_width="wrap_content" 
+      android:layout_height="wrap_content"
+      android:text="Tip Body"  />
+      
+    <TextView 
+      android:id="@+id/tipActivityDate"
+      android:layout_width="wrap_content" 
+      android:layout_height="wrap_content"
+      android:text="Tip Date"  />
         
+  </LinearLayout>
+  
+  <LinearLayout 
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:background="#EEE"
+    android:padding="8dip"
+    android:orientation="vertical" >
+    
+    <Button
+      android:id="@+id/tipActivityyAddTodoList"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/tip_activity_btn_add_todo_list" /> 
+      
+    <Button
+      android:id="@+id/tipActivityIveDoneThis"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/tip_activity_btn_ive_done_this" />
+  
+  </LinearLayout>
+  
 </LinearLayout>
