@@ -241,12 +241,16 @@
   <string name="user_mayorships_activity_no_info">This user has no mayorships.</string>
   <string name="changelog_activity_title">Foursquare Changelog</string>
   <string name="tip_activity_by">by</string>
+  <!--
   <string name="tip_activity_action_todo">Add to my To-Do list</string>
   <string name="tip_activity_action_done_this">I\'ve done this!</string>
+  -->
   <string name="tip_activity_prgoress_title">Tips</string>
   <string name="tip_activity_prgoress_message">Updating...</string>
   <string name="tip_activity_prgoress_complete_todo">Tip has been marked as a to-do!</string>
   <string name="tip_activity_prgoress_complete_done">Tip has been marked as done!</string>
+  <string name="tip_activity_btn_add_todo_list">ADD THIS TO MY TO-DO LIST</string>
+  <string name="tip_activity_btn_ive_done_this">I\'VE DONE THIS!</string>
   <string name="sign_up_gender">Gender</string>
   <string name="sign_up_progress_bar_message_send_request">Joining Foursquare...</string>
   <string name="venue_activity_checkin_button">CHECK-IN HERE</string>

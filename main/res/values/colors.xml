@@ -42,5 +42,7 @@
         name="color_score_list_adapter_highlight">#EEEEEE</color>
     <color
         name="color_score_mayor_section_background">#DDDDDD</color>
+    <color 
+        name="color_bright_green">#a6da00</color>
         
 </resources>

@@ -54,13 +54,13 @@ public class VenueTipsActivity extends LoadableListActivity {
         getListView().setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-                VenueActivity parent = (VenueActivity)getParent();
+                //VenueActivity parent = (VenueActivity)getParent();
                 Tip tip = (Tip)adapter.getItemAtPosition(position);
                 Intent intent = new Intent(VenueTipsActivity.this, TipActivity.class);
                 intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
-                if (parent.venueObservable.getVenue() != null) {
-                    intent.putExtra(TipActivity.EXTRA_VENUE_NAME, parent.venueObservable.getVenue().getName());
-                }
+                //if (parent.venueObservable.getVenue() != null) {
+                //    intent.putExtra(TipActivity.EXTRA_VENUE_NAME, parent.venueObservable.getVenue().getName());
+                //}
                 startActivity(intent);
             }
         });

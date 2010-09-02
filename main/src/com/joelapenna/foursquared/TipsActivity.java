@@ -145,11 +145,10 @@ public class TipsActivity extends LoadableListActivityWithView {
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //User user = (User) parent.getAdapter().getItem(position);
-                //Intent intent = new Intent(UserFriendsActivity.this, UserDetailsActivity.class);
-                //intent.putExtra(UserDetailsActivity.EXTRA_USER_PARCEL, user);
-                //intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
-                //startActivity(intent);
+                Tip tip = (Tip) parent.getAdapter().getItem(position);
+                Intent intent = new Intent(TipsActivity.this, TipActivity.class);
+                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
+                startActivity(intent);
             }
         });
         
