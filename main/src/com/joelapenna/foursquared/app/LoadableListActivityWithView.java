@@ -9,11 +9,8 @@ import com.joelapenna.foursquared.R;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 /**
  * This is pretty much a direct copy of LoadableListActivity. It just gives the caller
@@ -30,32 +27,42 @@ import android.widget.TextView;
  */
 public class LoadableListActivityWithView extends ListActivity {
 
-    private ProgressBar mEmptyProgress;
-    private TextView mEmptyText;
+    private LinearLayout mLayoutHeader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.loadable_list_activity_with_view);
-        mEmptyProgress = (ProgressBar)findViewById(R.id.emptyProgress);
-        mEmptyText = (TextView)findViewById(R.id.emptyText);
-
-        setLoadingView(); 
+        mLayoutHeader = (LinearLayout)findViewById(R.id.header);
     }
- 
+
     public void setEmptyView(View view) {
         LinearLayout parent = (LinearLayout)findViewById(R.id.loadableListHolder);
-        parent.removeAllViews();
+
+        parent.getChildAt(0).setVisibility(View.GONE);
+        if (parent.getChildCount() > 1) {
+            parent.removeViewAt(1);
+        }
+        
         parent.addView(view);
     }
  
     public void setLoadingView() {
-        mEmptyProgress.setVisibility(ViewGroup.VISIBLE);
-        mEmptyText.setText(R.string.loading);
-    }
+        LinearLayout parent = (LinearLayout)findViewById(R.id.loadableListHolder);
 
+        if (parent.getChildCount() > 1) {
+            parent.removeViewAt(1);
+        }
+        
+        parent.getChildAt(0).setVisibility(View.VISIBLE);
+    }
+    
     public int getNoSearchResultsStringId() {
         return R.string.no_search_results;
+    }
+    
+    public LinearLayout getHeaderLayout() {
+        return mLayoutHeader;
     }
 }

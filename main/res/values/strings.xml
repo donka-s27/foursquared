@@ -312,4 +312,7 @@
   <string name="settings_user_info_label_user_id">User ID:</string>
   <string name="settings_user_info_label_username">User Name:</string>
   <string name="settings_user_info_label_email">Email:</string>
+  <string name="tips_activity_btn_friends_only">Friends\' Tips</string>
+  <string name="tips_activity_btn_everyone">All Tips</string> 
+  <string name="tips_activity_menu_refresh">Refresh</string>
 </resources>

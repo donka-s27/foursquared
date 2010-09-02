@@ -320,23 +320,24 @@ class FoursquareHttpApiV1 {
                 );
         return (Venue) mHttpApi.doHttpRequest(httpGet, new VenueParser());
     }
-
+    
     /**
      * /tips?geolat=37.770900&geolong=-122.436987&l=1
      */
     @SuppressWarnings("unchecked")
-    Group<Group<Tip>> tips(String geolat, String geolong, String geohacc, String geovacc,
-            String geoalt, int limit) throws FoursquareException, FoursquareError, IOException {
+    Group<Tip> tips(String geolat, String geolong, String geohacc, String geovacc,
+            String geoalt, String filter, int limit) throws FoursquareException, FoursquareError, IOException {
         HttpGet httpGet = mHttpApi.createHttpGet(fullUrl(URL_API_TIPS), //
                 new BasicNameValuePair("geolat", geolat), //
                 new BasicNameValuePair("geolong", geolong), //
                 new BasicNameValuePair("geohacc", geohacc), //
                 new BasicNameValuePair("geovacc", geovacc), //
                 new BasicNameValuePair("geoalt", geoalt), //
+                new BasicNameValuePair("filter", filter), //
                 new BasicNameValuePair("l", String.valueOf(limit)) //
                 );
-        return (Group<Group<Tip>>) mHttpApi.doHttpRequest(httpGet, new GroupParser(new GroupParser(
-                new TipParser())));
+        return (Group<Tip>) mHttpApi.doHttpRequest(httpGet, new GroupParser(
+                new TipParser()));
     }
 
     /*

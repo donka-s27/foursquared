@@ -20,9 +20,12 @@ public class Tip implements FoursquareType, Parcelable {
     private String mCreated;
     private String mDistance;
     private String mId;
+    private Tip.Stats mStats;
+    private String mStatus;
     private String mText;
     private User mUser;
     private Venue mVenue;
+
 
     public Tip() {
     }
@@ -31,6 +34,12 @@ public class Tip implements FoursquareType, Parcelable {
         mCreated = ParcelUtils.readStringFromParcel(in);
         mDistance = ParcelUtils.readStringFromParcel(in);
         mId = ParcelUtils.readStringFromParcel(in);
+        
+        if (in.readInt() == 1) {
+            mStats = in.readParcelable(Tip.Stats.class.getClassLoader());
+        }
+        
+        mStatus = ParcelUtils.readStringFromParcel(in);
         mText = ParcelUtils.readStringFromParcel(in);
         
         if (in.readInt() == 1) {
@@ -38,7 +47,7 @@ public class Tip implements FoursquareType, Parcelable {
         }
         
         if (in.readInt() == 1) {
-            mUser = in.readParcelable(Venue.class.getClassLoader());
+            mVenue = in.readParcelable(Venue.class.getClassLoader());
         }
     }
     
@@ -76,6 +85,22 @@ public class Tip implements FoursquareType, Parcelable {
     public void setId(String id) {
         mId = id;
     }
+    
+    public Tip.Stats getStats() {
+        return mStats;
+    }
+    
+    public void setStats(Tip.Stats stats) {
+        mStats = stats;
+    }
+    
+    public String getStatus() {
+        return mStatus;
+    }
+    
+    public void setStatus(String status) {
+        mStatus = status;
+    }
 
     public String getText() {
         return mText;
@@ -106,6 +131,15 @@ public class Tip implements FoursquareType, Parcelable {
         ParcelUtils.writeStringToParcel(out, mCreated);
         ParcelUtils.writeStringToParcel(out, mDistance);
         ParcelUtils.writeStringToParcel(out, mId);
+        
+        if (mStats != null) {
+            out.writeInt(1);
+            out.writeParcelable(mStats, flags);
+        } else {
+            out.writeInt(0);
+        }
+
+        ParcelUtils.writeStringToParcel(out, mStatus);
         ParcelUtils.writeStringToParcel(out, mText);
         
         if (mUser != null) {
@@ -126,5 +160,110 @@ public class Tip implements FoursquareType, Parcelable {
     @Override
     public int describeContents() {
         return 0;
+    }
+    
+    
+    public static class Stats implements FoursquareType, Parcelable {
+
+        private int mDoneCount;
+        private int mTodoCount;
+        
+        public Stats() {
+        }
+
+        private Stats(Parcel in) {
+            mDoneCount = in.readInt();
+            mTodoCount = in.readInt();
+        }
+        
+        public static final Parcelable.Creator<Tip.Stats> CREATOR = new Parcelable.Creator<Tip.Stats>() {
+            public Tip.Stats createFromParcel(Parcel in) {
+                return new Tip.Stats(in);
+            }
+
+            @Override
+            public Tip.Stats[] newArray(int size) {
+                return new Tip.Stats[size];
+            }
+        };
+        
+        public int getDoneCount() {
+            return mDoneCount;
+        }
+        
+        public void setDoneCount(int doneCount) {
+            mDoneCount = doneCount;
+        }
+        
+        public int getTodoCount() {
+            return mTodoCount;
+        }
+        
+        public void setTodoCount(int todoCount) {
+            mTodoCount = todoCount;
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            out.writeInt(mDoneCount);
+            out.writeInt(mTodoCount);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+    }
+    
+    public static class Status implements FoursquareType, Parcelable {
+
+        private int mDone;
+        private int mTodo;
+        
+        public Status() {
+        }
+
+        private Status(Parcel in) {
+            mDone = in.readInt();
+            mTodo = in.readInt();
+        }
+        
+        public static final Parcelable.Creator<Tip.Status> CREATOR = new Parcelable.Creator<Tip.Status>() {
+            public Tip.Status createFromParcel(Parcel in) {
+                return new Tip.Status(in);
+            }
+
+            @Override
+            public Tip.Status[] newArray(int size) {
+                return new Tip.Status[size];
+            }
+        };
+        
+        public int getDone() {
+            return mDone;
+        }
+        
+        public void setDone(int done) {
+            mDone = done;
+        }
+        
+        public int getTodo() {
+            return mTodo;
+        }
+        
+        public void setTodo(int todo) {
+            mTodo = todo;
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            out.writeInt(mDone);
+            out.writeInt(mTodo);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
     }
 }

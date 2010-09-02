@@ -412,6 +412,10 @@
       android:name=".WebViewActivity" >
     </activity> 
     
+    <activity
+      android:name=".TipsActivity" >
+    </activity> 
+    
     <receiver
       android:name=".appwidget.FriendsAppWidgetProvider"
       android:label="@string/friends_appwidget_3x3_label">

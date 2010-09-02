@@ -44,6 +44,12 @@ public class TipParser extends AbstractParser<Tip> {
             } else if ("id".equals(name)) {
                 tip.setId(parser.nextText());
 
+            } else if ("stats".equals(name)) {
+                tip.setStats(new TipParser.StatsParser().parse(parser));
+                
+            } else if ("status".equals(name)) {
+                tip.setStatus(parser.nextText());
+                
             } else if ("text".equals(name)) {
                 tip.setText(parser.nextText());
 
@@ -60,5 +66,34 @@ public class TipParser extends AbstractParser<Tip> {
             }
         }
         return tip;
+    }
+    
+    public static class StatsParser extends AbstractParser<Tip.Stats> {
+        private static final Logger LOG = Logger.getLogger(StatsParser.class.getCanonicalName());
+        private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
+
+        @Override
+        public Tip.Stats parseInner(XmlPullParser parser) throws XmlPullParserException, IOException,
+                FoursquareError, FoursquareParseException {
+            parser.require(XmlPullParser.START_TAG, null, null);
+
+            Tip.Stats stats = new Tip.Stats();
+
+            while (parser.nextTag() == XmlPullParser.START_TAG) {
+                String name = parser.getName();
+                if ("donecount".equals(name)) {
+                    stats.setDoneCount(Integer.parseInt(parser.nextText()));
+                    
+                } else if ("todocount".equals(name)) {
+                    stats.setTodoCount(Integer.parseInt(parser.nextText()));
+
+                } else {
+                    // Consume something we don't understand.
+                    if (DEBUG) LOG.log(Level.FINE, "Found tag that we don't recognize: " + name);
+                    skipSubTree(parser);
+                }
+            }
+            return stats;
+        }
     }
 }
