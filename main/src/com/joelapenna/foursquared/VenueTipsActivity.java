@@ -10,7 +10,7 @@ import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.app.LoadableListActivity;
 import com.joelapenna.foursquared.util.Comparators;
 import com.joelapenna.foursquared.widget.SeparatedListAdapter;
-import com.joelapenna.foursquared.widget.TipListAdapter;
+import com.joelapenna.foursquared.widget.TipsListAdapter;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -122,9 +122,10 @@ public class VenueTipsActivity extends LoadableListActivity {
         int groupCount = groups.size();
         for (int groupsIndex = 0; groupsIndex < groupCount; groupsIndex++) {
             Group<Tip> group = groups.get(groupsIndex);
-            TipListAdapter groupAdapter = new TipListAdapter(
+            TipsListAdapter groupAdapter = new TipsListAdapter(
                 this, ((Foursquared)getApplication()).getRemoteResourceManager());
             groupAdapter.setGroup(group);
+            groupAdapter.setDisplayTipVenueTitles(false);
             mListAdapter.addSection(group.getType(), groupAdapter);
         }
         mListAdapter.notifyDataSetInvalidated();

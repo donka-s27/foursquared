@@ -4,7 +4,6 @@
 
 package com.joelapenna.foursquare.parsers;
 
-import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.error.FoursquareError;
 import com.joelapenna.foursquare.error.FoursquareParseException;
 import com.joelapenna.foursquare.types.FoursquareType;
@@ -12,6 +11,8 @@ import com.joelapenna.foursquare.types.FoursquareType;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
+
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +25,7 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractParser<T extends FoursquareType> implements Parser<T> {
     private static final Logger LOG = Logger.getLogger(AbstractParser.class.getCanonicalName());
-    private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
+    private static final boolean DEBUG = true;//Foursquare.PARSER_DEBUG;
 
     private static XmlPullParserFactory sFactory;
     static {
@@ -76,7 +77,8 @@ public abstract class AbstractParser<T extends FoursquareType> implements Parser
                         }
                     }
                     is.close();
-                    LOG.log(Level.FINE, sb.toString());
+              //      LOG.log(Level.FINE, sb.toString());
+                    Log.e("###", sb.toString());
                 }
                 parser.setInput(new StringReader(sb.toString()));
             } else {

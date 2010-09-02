@@ -401,7 +401,6 @@ public class FriendsActivity extends LoadableListActivityWithView {
             if (DEBUG) Log.d(TAG, "SearchTask: onPreExecute()");
             setProgressBarIndeterminateVisibility(true);
             ensureTitle(false);
-            setLoadingView();
         }
 
         @Override
