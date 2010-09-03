@@ -9,7 +9,7 @@ import com.joelapenna.foursquare.error.FoursquareCredentialsException;
 import com.joelapenna.foursquare.error.FoursquareError;
 import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.error.FoursquareParseException;
-import com.joelapenna.foursquare.parsers.Parser;
+import com.joelapenna.foursquare.parsers.json.Parser;
 import com.joelapenna.foursquare.types.FoursquareType;
 
 import oauth.signpost.OAuthConsumer;

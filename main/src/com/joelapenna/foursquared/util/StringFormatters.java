@@ -11,6 +11,9 @@ import com.joelapenna.foursquare.types.Venue;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -158,5 +161,19 @@ public class StringFormatters {
         } catch (ParseException e) {
             return created;
         }
+    }
+    
+    /**
+     * Reads an inputstream into a string.
+     */
+    public static String inputStreamToString(InputStream is) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+        }
+        is.close();
+        return sb.toString();
     }
 }

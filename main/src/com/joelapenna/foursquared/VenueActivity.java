@@ -396,6 +396,7 @@ public class VenueActivity extends TabActivity {
                         LocationUtils.createFoursquareLocation(((Foursquared) getApplication())
                                 .getLastKnownLocation()));
             } catch (Exception e) {
+                Log.e(TAG, "Error getting venue details.", e);
                 mReason = e;
             }
             return null;
