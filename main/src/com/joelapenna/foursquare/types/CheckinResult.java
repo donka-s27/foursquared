@@ -83,7 +83,7 @@ public class CheckinResult implements FoursquareType {
     public Group<Special> getSpecials() {
         return mSpecials;
     }
-
+    
     public void setSpecials(Group<Special> specials) {
         mSpecials = specials;
     }

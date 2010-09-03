@@ -12,19 +12,18 @@ import com.joelapenna.foursquare.http.AbstractHttpApi;
 import com.joelapenna.foursquare.http.HttpApi;
 import com.joelapenna.foursquare.http.HttpApiWithBasicAuth;
 import com.joelapenna.foursquare.http.HttpApiWithOAuth;
-import com.joelapenna.foursquare.parsers.AbstractParser;
-import com.joelapenna.foursquare.parsers.CategoryParser;
-import com.joelapenna.foursquare.parsers.CheckinParser;
-import com.joelapenna.foursquare.parsers.CheckinResultParser;
-import com.joelapenna.foursquare.parsers.CityParser;
-import com.joelapenna.foursquare.parsers.CredentialsParser;
-import com.joelapenna.foursquare.parsers.FriendInvitesResultParser;
-import com.joelapenna.foursquare.parsers.GroupParser;
-import com.joelapenna.foursquare.parsers.ResponseParser;
-import com.joelapenna.foursquare.parsers.SettingsParser;
-import com.joelapenna.foursquare.parsers.TipParser;
-import com.joelapenna.foursquare.parsers.UserParser;
-import com.joelapenna.foursquare.parsers.VenueParser;
+import com.joelapenna.foursquare.parsers.json.CategoryParser;
+import com.joelapenna.foursquare.parsers.json.CheckinParser;
+import com.joelapenna.foursquare.parsers.json.CheckinResultParser;
+import com.joelapenna.foursquare.parsers.json.CityParser;
+import com.joelapenna.foursquare.parsers.json.CredentialsParser;
+import com.joelapenna.foursquare.parsers.json.FriendInvitesResultParser;
+import com.joelapenna.foursquare.parsers.json.GroupParser;
+import com.joelapenna.foursquare.parsers.json.ResponseParser;
+import com.joelapenna.foursquare.parsers.json.SettingsParser;
+import com.joelapenna.foursquare.parsers.json.TipParser;
+import com.joelapenna.foursquare.parsers.json.UserParser;
+import com.joelapenna.foursquare.parsers.json.VenueParser;
 import com.joelapenna.foursquare.types.Category;
 import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.CheckinResult;
@@ -45,12 +44,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -65,6 +65,8 @@ class FoursquareHttpApiV1 {
             .getLogger(FoursquareHttpApiV1.class.getCanonicalName());
     private static final boolean DEBUG = Foursquare.DEBUG;
 
+    private static final String DATATYPE = ".json";
+    
     private static final String URL_API_AUTHEXCHANGE = "/authexchange";
 
     private static final String URL_API_ADDVENUE = "/addvenue";
@@ -580,7 +582,7 @@ class FoursquareHttpApiV1 {
     }
     
     private String fullUrl(String url) {
-        return mApiBaseUrl + url;
+        return mApiBaseUrl + url + DATATYPE;
     }
     
     /**
@@ -629,13 +631,20 @@ class FoursquareHttpApiV1 {
         fileInputStream.close(); 
         dos.flush(); 
         dos.close(); 
-        
+     
         UserParser parser = new UserParser();
-        InputStream is = conn.getInputStream();
+        //InputStream is = conn.getInputStream();
+        //try {
+        //    return parser.parse(AbstractParser.createXmlPullParser(is));
+        //} finally {
+        //    is.close();
+        //}
         try {
-            return parser.parse(AbstractParser.createXmlPullParser(is));
-        } finally {
-            is.close();
+            return parser.parse(new JSONObject(conn.getResponseMessage()));
+//            return parser.parse(AbstractParser.createXmlPullParser(is));
+        } catch (JSONException ex) {
+            throw new FoursquareParseException(
+                    "Error parsing user photo upload response, invalid json.");
         }
     }
 }

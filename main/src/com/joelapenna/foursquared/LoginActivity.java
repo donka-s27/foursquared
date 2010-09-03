@@ -193,7 +193,7 @@ public class LoginActivity extends Activity {
                 boolean loggedIn = Preferences.loginUser(foursquare, phoneNumber, password,
                         location, editor);
 
-                // Make sure prefs make a round trip.
+                // Make sure prefs makes a round trip.
                 String userId = Preferences.getUserId(prefs);
                 if (TextUtils.isEmpty(userId)) {
                     if (DEBUG) Log.d(TAG, "Preference store calls failed");

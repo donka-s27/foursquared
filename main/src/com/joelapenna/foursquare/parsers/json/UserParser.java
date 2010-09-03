@@ -1,0 +1,97 @@
+/**
+ * Copyright 2010 Mark Wyszomierski
+ */
+package com.joelapenna.foursquare.parsers.json;
+
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.types.User;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+/**
+ * @date July 13, 2010
+ * @author Mark Wyszomierski (markww@gmail.com)
+ */
+public class UserParser extends AbstractParser<User> {
+    
+    private static final String TAG = "UserParser";
+    private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
+    private static final Logger LOG = Logger.getLogger(TipParser.class.getCanonicalName());
+    
+    @Override
+    public User parse(JSONObject json) throws JSONException {
+        
+        if (DEBUG) {
+            LOG.log(Level.FINE, "Parser: In " + TAG + ": " + json.toString());
+        }
+        
+        User user = new User();
+        if (json.has("badges")) {
+            user.setBadges(
+                new GroupParser(
+                    new BadgeParser()).parse(json.getJSONArray("badges")));
+        }  
+        if (json.has("checkin")) {
+            user.setCheckin(new CheckinParser().parse(json.getJSONObject("checkin")));
+        }
+        if (json.has("created")) {
+            user.setCreated(json.getString("created"));
+        }
+        if (json.has("email")) {
+            user.setEmail(json.getString("email"));
+        }
+        if (json.has("facebook")) {
+            user.setFacebook(json.getString("facebook"));
+        }
+        if (json.has("firstname")) {
+            user.setFirstname(json.getString("firstname"));
+        }
+        if (json.has("friendstatus")) {
+            user.setFriendstatus(json.getString("friendstatus"));
+        }
+        if (json.has("gender")) {
+            user.setGender(json.getString("gender"));
+        }
+        if (json.has("id")) {
+            user.setId(json.getString("id"));
+        } 
+        if (json.has("lastname")) {
+            user.setLastname(json.getString("lastname"));
+        }
+        if (json.has("mayor")) {
+            user.setMayorships(
+                new GroupParser(
+                    new VenueParser()).parse(json.getJSONArray("mayor")));
+        }
+        if (json.has("mayorcount")) {
+            user.setMayorCount(json.getInt("mayorcount"));
+        }
+        if (json.has("phone")) {
+            user.setPhone(json.getString("phone"));
+        }
+        if (json.has("photo")) {
+            user.setPhoto(json.getString("photo"));
+        }
+        if (json.has("settings")) {
+            user.setSettings(new SettingsParser().parse(json.getJSONObject("settings")));
+        } 
+        if (json.has("twitter")) {
+            user.setTwitter(json.getString("twitter"));
+        } 
+        if (json.has("types")) {
+            user.setTypes(new TypesParser().parseAsJSONArray(json.getJSONArray("types")));
+        }
+ 
+        return user;
+    }
+    
+    //@Override
+    //public String getObjectName() {
+    //    return "user";
+    //}
+}
