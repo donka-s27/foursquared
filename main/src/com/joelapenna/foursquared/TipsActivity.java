@@ -47,6 +47,8 @@ public class TipsActivity extends LoadableListActivityWithView {
     static final String TAG = "TipsActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
+    private static final int ACTIVITY_TIP = 500;
+    
     private StateHolder mStateHolder;
     private TipsListAdapter mListAdapter;
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
@@ -151,7 +153,7 @@ public class TipsActivity extends LoadableListActivityWithView {
                 Tip tip = (Tip) parent.getAdapter().getItem(position);
                 Intent intent = new Intent(TipsActivity.this, TipActivity.class);
                 intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
-                startActivity(intent);
+                startActivityForResult(intent, ACTIVITY_TIP);
             }
         });
         
@@ -199,7 +201,19 @@ public class TipsActivity extends LoadableListActivityWithView {
 
         return super.onOptionsItemSelected(item);
     }
-
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == ACTIVITY_TIP) {
+            updateTip((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_PARCEL_RETURNED));
+        }
+    }
+    
+    private void updateTip(Tip tip) {
+        mStateHolder.updateTip(tip);
+        getListView().invalidateViews();
+    }
+    
     private void onStartTaskTips() {
         mStateHolder.setIsRunningTaskTips(true);
         
@@ -407,6 +421,20 @@ public class TipsActivity extends LoadableListActivityWithView {
         
         public void setRanOnce(boolean ranOnce) {
             mRanOnce = ranOnce;
+        }
+        
+        public void updateTip(Tip tip) {
+            updateTipFromArray(tip, mTipsFriends);
+            updateTipFromArray(tip, mTipsEveryone);
+        }
+        
+        private void updateTipFromArray(Tip tip, Group<Tip> target) {
+            for (Tip it : target) {
+                if (it.getId().equals(tip.getId())) {
+                    it.setStatus(tip.getStatus());
+                    break;
+                }
+            }
         }
     }
     
