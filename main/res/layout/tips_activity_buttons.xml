@@ -11,7 +11,7 @@
   android:paddingLeft="10dip"
   android:paddingRight="10dip"
   android:background="@drawable/header_blue">
-
+ 
    <com.joelapenna.foursquared.widget.SegmentedButton
       android:id="@+id/segmented"
       android:layout_width="fill_parent"

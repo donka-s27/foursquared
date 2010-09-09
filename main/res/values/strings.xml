@@ -241,17 +241,9 @@
   <string name="user_mayorships_activity_no_info">This user has no mayorships.</string>
   <string name="changelog_activity_title">Foursquare Changelog</string>
   <string name="tip_activity_by">by</string>
-  <!--
-  <string name="tip_activity_action_todo">Add to my To-Do list</string>
-  <string name="tip_activity_action_done_this">I\'ve done this!</string>
-  -->
-  <string name="tip_activity_prgoress_title">Tips</string>
-  <string name="tip_activity_prgoress_message">Updating...</string>
-  <string name="tip_activity_prgoress_complete_todo">Tip has been marked as a to-do!</string>
-  <string name="tip_activity_prgoress_complete_done">Tip has been marked as done!</string>
-  <string name="tip_activity_btn_add_todo_list">ADD THIS TO MY TO-DO LIST</string>
-  <string name="tip_activity_btn_ive_done_this">I\'VE DONE THIS!</string>
-  <string name="sign_up_gender">Gender</string>
+  <string name="tip_activity_progress_title">Tips</string> 
+  <string name="tip_activity_progress_message">Updating...</string>
+  <string name="sign_up_gender">Gender</string> 
   <string name="sign_up_progress_bar_message_send_request">Joining Foursquare...</string>
   <string name="venue_activity_checkin_button">CHECK-IN HERE</string>
   <string name="venue_activity_checkin_button_quick">QUICK CHECK-IN HERE</string>
@@ -323,4 +315,10 @@
   <string name="tip_age_months">%s month%s ago</string>
   <string name="tip_age_years">%s year%s ago</string>
   <string name="tip_age_via">" (via %s)"</string>
+  <string name="tip_activity_created">"Created %s by "</string>
+  <string name="tip_activity_btn_tip_0">ADD TO MY TO-DO LIST</string>
+  <string name="tip_activity_btn_tip_1">REMOVE FROM MY TO-DO LIST</string>
+  <string name="tip_activity_btn_tip_2">I\'VE DONE THIS</string>
+  <string name="tip_activity_btn_tip_3">UNDO THIS</string>
+  <string name="tip_activity_btn_tip_4">CONGRATS! YOU\'VE DONE THIS</string>
 </resources>
