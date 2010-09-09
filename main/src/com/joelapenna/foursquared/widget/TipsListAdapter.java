@@ -11,8 +11,10 @@ import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
+import com.joelapenna.foursquared.util.TipUtils;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -25,6 +27,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -40,22 +44,26 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
 
     private LayoutInflater mInflater;
     private int mLayoutToInflate;
+    private Resources mResources;
     private RemoteResourceManager mRrm;
     private RemoteResourceManagerObserver mResourcesObserver;
     private Handler mHandler = new Handler();
     private int mLoadedPhotoIndex;
     private boolean mDisplayTipVenueTitles;
+    private Map<String, String> mCachedTimestamps;
 
     
     public TipsListAdapter(Context context, RemoteResourceManager rrm) {
         super(context);
         mInflater = LayoutInflater.from(context);
         mLayoutToInflate = R.layout.tip_list_item;
+        mResources = context.getResources();
         mRrm = rrm;
         mResourcesObserver = new RemoteResourceManagerObserver();
         mLoadedPhotoIndex = 0;
         mDisplayTipVenueTitles = true;
-
+        mCachedTimestamps = new HashMap<String, String>();
+        
         mRrm.addObserver(mResourcesObserver);
     }
     
@@ -93,7 +101,7 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
             holder.friendCountTodo = (TextView) convertView.findViewById(R.id.tvFriendCountAsTodo);
             holder.friendCountCompletedImg = (ImageView) convertView.findViewById(R.id.ivFriendCountCompleted);
             holder.friendCountCompleted = (TextView) convertView.findViewById(R.id.tvFriendCountCompleted);
-            holder.completed = (ImageView) convertView.findViewById(R.id.ivTipCompleted);
+            holder.corner = (ImageView) convertView.findViewById(R.id.ivTipCorner);
 
             convertView.setTag(holder);
         } else {
@@ -116,18 +124,20 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
         }
 
         if (mDisplayTipVenueTitles && tip.getVenue() != null) {
-            holder.title.setText("@" + tip.getVenue().getName());
+            holder.title.setText("@ " + tip.getVenue().getName());
             holder.title.setVisibility(View.VISIBLE);
         } else {
             holder.title.setVisibility(View.GONE);
         }
         
         holder.body.setText(tip.getText());
-        holder.dateAndAuthor.setText(tip.getCreated());
+        holder.dateAndAuthor.setText(mCachedTimestamps.get(tip.getId()));
         if (tip.getUser() != null) {
             holder.dateAndAuthor.setText(
-                    holder.dateAndAuthor.getText() + 
-                    " via " + StringFormatters.getUserFullName(tip.getUser()));
+                    holder.dateAndAuthor.getText() +
+                    mResources.getString(
+                            R.string.tip_age_via, 
+                            StringFormatters.getUserFullName(tip.getUser())));
         }
         
         if (tip.getStats().getTodoCount() > 0) {
@@ -147,18 +157,15 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
             holder.friendCountCompletedImg.setVisibility(View.GONE);
             holder.friendCountCompleted.setVisibility(View.GONE);
         }
-        
-        if (tip.getStatus() != null) {
-            holder.completed.setVisibility(View.VISIBLE);
-            if (tip.getStatus().equals("done")) {
-                holder.completed.setImageResource(R.drawable.crown_small);
-                
-            } else if (tip.getStatus().equals("todo")) {
-                holder.completed.setImageResource(R.drawable.facebook_icon);
-                
-            }
+
+        if (TipUtils.isDone(tip)) {
+            holder.corner.setVisibility(View.VISIBLE);
+            holder.corner.setImageResource(R.drawable.tip_list_item_corner_done);
+        } else if (TipUtils.isTodo(tip)) {
+            holder.corner.setVisibility(View.VISIBLE);
+            holder.corner.setImageResource(R.drawable.tip_list_item_corner_todo);
         } else {
-            holder.completed.setVisibility(View.GONE);
+            holder.corner.setVisibility(View.GONE);
         }
         
         return convertView;
@@ -175,12 +182,18 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
         mLoadedPhotoIndex = 0;
         
         mHandler.postDelayed(mRunnableLoadPhotos, 10L);
+        
+        mCachedTimestamps.clear();
+        for (Tip it : g) {
+            String formatted = StringFormatters.getTipAge(mResources, it.getCreated()); 
+            mCachedTimestamps.put(it.getId(), formatted);
+        }
     }
     
     public void setDisplayTipVenueTitles(boolean displayTipVenueTitles) {
         mDisplayTipVenueTitles = displayTipVenueTitles;
     }
-
+    
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
@@ -219,6 +232,6 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
         TextView friendCountTodo;
         ImageView friendCountCompletedImg;
         TextView friendCountCompleted;
-        ImageView completed;
+        ImageView corner;
     }
 }

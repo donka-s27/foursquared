@@ -7,15 +7,19 @@ package com.joelapenna.foursquared.util;
 import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.R;
 
+import android.content.res.Resources;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -175,5 +179,37 @@ public class StringFormatters {
         }
         is.close();
         return sb.toString();
+    }
+    
+    public static String getTipAge(Resources res, String created) {
+        Calendar then = Calendar.getInstance();
+        then.setTime(new Date(created));
+        Calendar now = Calendar.getInstance();
+        now.setTime(new Date(System.currentTimeMillis()));
+        
+        if (now.get(Calendar.YEAR) == then.get(Calendar.YEAR)) {
+            if (now.get(Calendar.MONTH) == then.get(Calendar.MONTH)) {
+                int diffDays = now.get(Calendar.DAY_OF_MONTH)- then.get(Calendar.DAY_OF_MONTH);
+                if (diffDays == 1) {
+                    return res.getString(R.string.tip_age_days, "1", "");
+                } else {
+                    return res.getString(R.string.tip_age_days, String.valueOf(diffDays), "s");
+                }
+            } else {
+                int diffMonths = now.get(Calendar.MONTH) - then.get(Calendar.MONTH);
+                if (diffMonths == 1) {
+                    return res.getString(R.string.tip_age_months, "1", "");
+                } else {
+                    return res.getString(R.string.tip_age_months, String.valueOf(diffMonths), "s");
+                }
+            }
+        } else {
+            int diffYears = now.get(Calendar.YEAR) - then.get(Calendar.YEAR);
+            if (diffYears == 1) {
+                return res.getString(R.string.tip_age_years, "1", "");
+            } else {
+                return res.getString(R.string.tip_age_years, String.valueOf(diffYears), "s");
+            }
+        }
     }
 }

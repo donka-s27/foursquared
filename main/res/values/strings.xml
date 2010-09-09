@@ -316,7 +316,11 @@
   <string name="settings_user_info_label_user_id">User ID:</string>
   <string name="settings_user_info_label_username">User Name:</string>
   <string name="settings_user_info_label_email">Email:</string>
-  <string name="tips_activity_btn_friends_only">Friends\' Tips</string>
-  <string name="tips_activity_btn_everyone">All Tips</string> 
+  <string name="tips_activity_btn_friends_only">FRIENDS\' TIPS</string>
+  <string name="tips_activity_btn_everyone">ALL TIPS</string> 
   <string name="tips_activity_menu_refresh">Refresh</string>
+  <string name="tip_age_days">%s day%s ago</string>
+  <string name="tip_age_months">%s month%s ago</string>
+  <string name="tip_age_years">%s year%s ago</string>
+  <string name="tip_age_via">" (via %s)"</string>
 </resources>

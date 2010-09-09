@@ -12,7 +12,9 @@ import com.joelapenna.foursquared.app.LoadableListActivityWithView;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.TipsListAdapter;
+import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,9 +28,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -51,6 +51,7 @@ public class TipsActivity extends LoadableListActivityWithView {
     private TipsListAdapter mListAdapter;
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
     private LinearLayout mLayoutButtons;
+    private SegmentedButton mSegmentedButton;
     private ScrollView mLayoutEmpty;
     
     private static final int MENU_REFRESH = 0;
@@ -123,25 +124,27 @@ public class TipsActivity extends LoadableListActivityWithView {
         mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.tips_activity_buttons, getHeaderLayout());
         mLayoutButtons.setVisibility(View.VISIBLE);
         
-        Button btnFriendsOnly = (Button) mLayoutButtons.findViewById(R.id.btnTipsFriendsOnly);
-        btnFriendsOnly.setOnClickListener(new OnClickListener() {
+        mSegmentedButton = (SegmentedButton)findViewById(R.id.segmented);
+        if (mStateHolder.mFriendsOnly) {
+            mSegmentedButton.setPushedButtonIndex(0);
+        } else {
+            mSegmentedButton.setPushedButtonIndex(1);
+        }
+        
+        mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
-            public void onClick(View v) {
-                mStateHolder.startTaskTips(TipsActivity.this, true);
+            public void onClick(int index) {
+                if (index == 0) {
+                    mStateHolder.startTaskTips(TipsActivity.this, true);
+                } else {
+                    mStateHolder.startTaskTips(TipsActivity.this, false);
+                }
             }
         });
-        
-        Button btnEveryone = (Button) mLayoutButtons.findViewById(R.id.btnTipsEveryone);
-        btnEveryone.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mStateHolder.startTaskTips(TipsActivity.this, false);
-            }
-        });
-        
+
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
-        listView.setSmoothScrollbarEnabled(true);
+        listView.setSmoothScrollbarEnabled(false);
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -346,6 +349,7 @@ public class TipsActivity extends LoadableListActivityWithView {
             mRanOnce = false;
             mTipsFriends = new Group<Tip>();
             mTipsEveryone = new Group<Tip>();
+            mFriendsOnly = true;
         }
         
         public Group<Tip> getTipsFriends() {

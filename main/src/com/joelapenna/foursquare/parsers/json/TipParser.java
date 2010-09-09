@@ -3,13 +3,10 @@
  */
 package com.joelapenna.foursquare.parsers.json;
 
-import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Tip;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import android.util.Log;
 
 
 /**
@@ -24,7 +21,7 @@ public class TipParser extends AbstractParser<Tip> {
         Tip obj = new Tip();
         if (json.has("created")) {
             obj.setCreated(json.getString("created"));
-        } 
+        }
         if (json.has("distance")) {
             obj.setDistance(json.getString("distance"));
         } 
@@ -51,17 +48,8 @@ public class TipParser extends AbstractParser<Tip> {
     }
         
     public static class StatsParser extends AbstractParser<Tip.Stats> {
-
-        private static final String TAG = "TipParser.StatsParser";
-        private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
-        
         @Override
         public Tip.Stats parse(JSONObject json) throws JSONException {
-            
-            if (DEBUG) {
-                Log.d(TAG, "Parser: In " + TAG + "..");
-            }
-            
             Tip.Stats stats = new Tip.Stats();
             if (json.has("donecount")) {
                 stats.setDoneCount(json.getInt("donecount"));

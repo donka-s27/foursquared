@@ -17,6 +17,7 @@ import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Response;
 import com.joelapenna.foursquare.types.Settings;
 import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
 
@@ -232,15 +233,33 @@ public class Foursquare {
     }
     
     @V1
-    public Tip tipMarkTodo(String tipId) 
+    public Todo markTodo(String tid) 
         throws FoursquareException, FoursquareError, IOException {
-        return mFoursquareV1.tipMarkTodo(tipId);
+        return mFoursquareV1.markTodo(tid);
+    }
+
+    @V1
+    public Tip markIgnore(String tid) 
+        throws FoursquareException, FoursquareError, IOException {
+        return mFoursquareV1.markIgnore(tid);
+    }
+
+    @V1
+    public Tip markDone(String tid) 
+        throws FoursquareException, FoursquareError, IOException {
+        return mFoursquareV1.markDone(tid);
+    }
+
+    @V1
+    public Tip unmarkTodo(String tid) 
+        throws FoursquareException, FoursquareError, IOException {
+        return mFoursquareV1.unmarkTodo(tid);
     }
     
     @V1
-    public Tip tipMarkDone(String tipId) 
+    public Tip unmarkDone(String tid) 
         throws FoursquareException, FoursquareError, IOException {
-        return mFoursquareV1.tipMarkDone(tipId);
+        return mFoursquareV1.unmarkDone(tid);
     }
     
     @V1

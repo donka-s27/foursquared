@@ -6,7 +6,9 @@ package com.joelapenna.foursquared;
 
 import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.util.TipUtils;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -47,9 +49,6 @@ public class TipActivity extends Activity {
     public static final String EXTRA_TIP_PARCEL = Foursquared.PACKAGE_NAME
         + ".TipActivity.EXTRA_TIP_PARCEL";
     
-    public static final int RESULT_TIP_MARKED_TODO = -2;
-    public static final int RESULT_TIP_MARKED_DONE = -3;
-    
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
     
@@ -86,6 +85,8 @@ public class TipActivity extends Activity {
             }
         }
         
+        setResult(Activity.RESULT_OK, buildTipResultIntent());
+        
         ensureUi();
     }
     
@@ -115,6 +116,8 @@ public class TipActivity extends Activity {
     }
 
     private void ensureUi() {
+        Tip tip = mStateHolder.getTip();
+        
         LinearLayout llHeader = (LinearLayout)findViewById(R.id.tipActivityHeaderView);
         llHeader.setOnClickListener(new OnClickListener() {
             @Override
@@ -127,41 +130,74 @@ public class TipActivity extends Activity {
         //tvTitle.setText(
         //    getResources().getString(R.string.tip_activity_by) + " " +
         //    StringFormatters.getUserFullName(mStateHolder.getTip().getUser()));
-        tvTitle.setText(mStateHolder.getTip().getVenue().getName());
+        tvTitle.setText(tip.getVenue().getName());
         
         TextView tvAddress = (TextView)findViewById(R.id.tipActivityAddress);
-        tvAddress.setText(mStateHolder.getTip().getVenue().getAddress());
+        tvAddress.setText(tip.getVenue().getAddress());
         
         TextView tvBody = (TextView)findViewById(R.id.tipActivityBody);
-        tvBody.setText(mStateHolder.getTip().getText());
+        tvBody.setText(tip.getText());
         
         TextView tvDate = (TextView)findViewById(R.id.tipActivityDate);
-        tvDate.setText(mStateHolder.getTip().getCreated());
+        tvDate.setText(tip.getCreated());
         
-        Button btnAddTodoList = (Button)findViewById(R.id.tipActivityyAddTodoList);
-        btnAddTodoList.setOnClickListener(new OnClickListener() {
+        Button btn1 = (Button)findViewById(R.id.tipActivityyAddTodoList);
+        Button btn2 = (Button)findViewById(R.id.tipActivityIveDoneThis);
+        
+        
+        if (TipUtils.isTodo(tip)) {
+            btn1.setText("REMOVE FROM MY TO-DO LIST");
+            btn2.setText("I'VE DONE THIS");
+        } else if (TipUtils.isDone(tip)) {
+            btn1.setText("ADD TO MY TO-DO LIST");
+            btn2.setText("UNMARK");
+        } else {
+            btn1.setText("ADD TO MY TO-DO LIST");
+            btn2.setText("I'VE DONE THIS");
+        }
+        
+        btn1.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mStateHolder.startTipTask(TipActivity.this, mStateHolder.getTip().getId(), 
-                        TipTask.ACTION_TODO);
+                onBtnTodo();
             }
         });
         
-        Button btnIveDoneThis = (Button)findViewById(R.id.tipActivityIveDoneThis);
-        btnIveDoneThis.setOnClickListener(new OnClickListener() {
+        btn2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mStateHolder.startTipTask(TipActivity.this, mStateHolder.getTip().getId(), 
-                        TipTask.ACTION_DONE);
+                onBtnDone();
             }
         });
     }
     
+    private void onBtnTodo() {
+        Tip tip = mStateHolder.getTip();
+        if (TipUtils.isTodo(tip)) {
+            mStateHolder.startTipTask(TipActivity.this, mStateHolder.getTip().getId(), 
+                    TipTask.ACTION_UNMARK_TODO);
+        } else {
+            mStateHolder.startTipTask(TipActivity.this, mStateHolder.getTip().getId(), 
+                    TipTask.ACTION_TODO);
+        }
+    }
+    
+    private void onBtnDone() {
+        Tip tip = mStateHolder.getTip();
+        if (TipUtils.isDone(tip)) {
+            mStateHolder.startTipTask(TipActivity.this, mStateHolder.getTip().getId(), 
+                    TipTask.ACTION_UNMARK_DONE);
+        } else {
+            mStateHolder.startTipTask(TipActivity.this, mStateHolder.getTip().getId(), 
+                    TipTask.ACTION_DONE);
+        }
+    }
+    
     private void showVenueDetailsActivity(Venue venue) {
-        //Intent intent = new Intent(this, UserDetailsActivity.class);
-        //intent.putExtra(UserDetailsActivity.EXTRA_USER_ID, userId);
-        //intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
-        //startActivity(intent);
+        Intent intent = new Intent(this, VenueActivity.class);
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.putExtra(Foursquared.EXTRA_VENUE_ID, venue.getId());
+        startActivity(intent);
     }
     
     private void startProgressBar(int task) {
@@ -170,12 +206,20 @@ public class TipActivity extends Activity {
             String message = "";
             switch (task) {
                 case TipTask.ACTION_TODO:
+                    message = "marking as TODO...";
   //                  message = getResources().getString(
   //                      R.string.tip_activity_action_todo);
                     break;
                 case TipTask.ACTION_DONE:
+                    message = "marking as DONE...";
   //                  message = getResources().getString(
   //                      R.string.tip_activity_action_done_this);
+                    break;
+                case TipTask.ACTION_UNMARK_TODO:
+                    message = "un-marking TODO...";
+                    break;
+                case TipTask.ACTION_UNMARK_DONE:
+                    message = "un-marking DONE...";
                     break;
             }
 
@@ -192,27 +236,53 @@ public class TipActivity extends Activity {
         }
     }
     
+    private Intent buildTipResultIntent() {
+        Intent intent = new Intent();
+        intent.putExtra("", mStateHolder.getTip());
+        return intent;
+    }
+    
     private void onTipTaskComplete(Tip tip, int type, Exception ex) {
         stopProgressBar();
         mStateHolder.setIsRunningTipTask(false);
         if (tip != null) {
+            // Update tip in stateholder.
+            Log.e("EEE", "Ok here it is: " + tip.getStatus());
+            mStateHolder.getTip().setStatus(tip.getStatus());
+            Log.e("TTT", "Ok here it is: " + mStateHolder.getTip().getStatus());
+            
+            // Update tip for return to caller if they're interested.
+            setResult(Activity.RESULT_OK, buildTipResultIntent());
+            
             String message = "";
             switch (type) {
                 case TipTask.ACTION_TODO:
-                    message = getResources().getString(
-                            R.string.tip_activity_prgoress_complete_todo);
-                    setResult(RESULT_TIP_MARKED_TODO);
+                    //message = getResources().getString(
+                    //        R.string.tip_activity_prgoress_complete_todo);
+                    message = "Ok marked as TODO! " + mStateHolder.getTip().getStatus();
                     break;
                 case TipTask.ACTION_DONE:
-                    message = getResources().getString(
-                            R.string.tip_activity_prgoress_complete_done);
-                    setResult(RESULT_TIP_MARKED_DONE);
+                    //message = getResources().getString(
+                    //        R.string.tip_activity_prgoress_complete_done);
+                    message = "Ok marked as DONE! " + mStateHolder.getTip().getStatus();
+                    break;
+                case TipTask.ACTION_UNMARK_TODO:
+                    //message = getResources().getString(
+                    //        R.string.tip_activity_prgoress_complete_done);
+                    message = "Ok UN-MARKED TODO! " + mStateHolder.getTip().getStatus();
+                    break;
+                case TipTask.ACTION_UNMARK_DONE:
+                    //message = getResources().getString(
+                    //        R.string.tip_activity_prgoress_complete_done);
+                    message = "Ok UN-MARKED DONE! " + mStateHolder.getTip().getStatus();
                     break;
             }
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, ex.toString(), Toast.LENGTH_LONG).show();
         }
+        
+        ensureUi();
     }
     
     private static class TipTask extends AsyncTask<String, Void, Tip> {
@@ -221,8 +291,10 @@ public class TipActivity extends Activity {
         private int mTask;
         private Exception mReason;
         
-        public static final int ACTION_TODO = 0;
-        public static final int ACTION_DONE = 1;
+        public static final int ACTION_TODO        = 0;
+        public static final int ACTION_DONE        = 1;
+        public static final int ACTION_UNMARK_TODO = 2;
+        public static final int ACTION_UNMARK_DONE = 3;
 
         public TipTask(TipActivity activity, String tipid, int task) {
             mActivity = activity;
@@ -252,10 +324,21 @@ public class TipActivity extends Activity {
                 Tip tip = null;
                 switch (mTask) {
                     case ACTION_TODO:
-                        tip = foursquare.tipMarkTodo(mTipId);
+                        Todo todo = foursquare.markTodo(mTipId);
+                        tip = todo.getTip();
+                        //tip = foursquare.tipMarkTodo(mTipId);
                         break;
                     case ACTION_DONE:
-                        tip = foursquare.tipMarkDone(mTipId);
+                        tip = foursquare.markDone(mTipId);
+                        //tip = foursquare.tipMarkDone(mTipId);
+                        break;
+                    case ACTION_UNMARK_TODO:
+    //                    tip = foursquare.unmark(mTipId, Foursquare.MarkApiTypes.Tip);
+                        //tip = foursquare.tipMarkDone(mTipId);
+                        break;
+                    case ACTION_UNMARK_DONE:
+    //                    tip = foursquare.unmark(mTipId, Foursquare.MarkApiTypes.Tip);
+                        //tip = foursquare.tipMarkDone(mTipId);
                         break;
                 }
                 return tip;

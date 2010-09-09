@@ -98,11 +98,15 @@ abstract public class AbstractHttpApi implements HttpApi {
                     Iterator<String> it = (Iterator<String>)json.keys();
                     if (it.hasNext()) {
                         String key = (String)it.next();
-                        Object obj = json.get(key);
-                        if (obj instanceof JSONArray) {
-                            return parser.parse((JSONArray)obj);
+                        if (key.equals("error")) {
+                            throw new FoursquareException(json.getString(key));
                         } else {
-                            return parser.parse((JSONObject)obj);
+                            Object obj = json.get(key);
+                            if (obj instanceof JSONArray) {
+                                return parser.parse((JSONArray)obj);
+                            } else {
+                                return parser.parse((JSONObject)obj);
+                            }
                         }
                     } else {
                         throw new FoursquareException("Error parsing JSON response, object had no single child key.");
