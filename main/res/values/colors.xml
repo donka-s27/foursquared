@@ -44,5 +44,9 @@
         name="color_score_mayor_section_background">#DDDDDD</color>
     <color 
         name="color_bright_green">#a6da00</color>
+    <color
+        name="list_item_background">#e9e9e9</color>
+    <color
+        name="transparent">#00000000</color>
         
 </resources>

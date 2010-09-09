@@ -6,11 +6,12 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"
-  android:paddingTop="5dip"
+  android:paddingTop="0dip"
   android:paddingLeft="7dip"
-  android:paddingRight="5dip"
+  android:paddingRight="0dip"
   android:paddingBottom="5dip"
-  style="@style/listItemStyle" >
+  android:background="@drawable/listview_item"
+  >
   
   <ImageView
     android:id="@+id/ivAuthor"
@@ -21,37 +22,40 @@
     android:layout_alignParentLeft="true"
     android:padding="3dip"
     android:src="@drawable/blank_boy"
-    android:scaleType="fitXY" />
-    
-    <!-- 
-        android:textAppearance="@style/TextViewStyleTipListItemTip"
-    -->
+    android:scaleType="fitXY"
+    android:layout_marginTop="5dip" />
     
     <LinearLayout
       android:layout_width="0dip"
       android:layout_height="wrap_content"
       android:layout_weight="1"
       android:orientation="vertical"
-      android:paddingLeft="8dip" > 
+      android:paddingLeft="8dip"
+      android:layout_marginTop="5dip" > 
         
       <TextView
         android:id="@+id/tvTitle"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Title" />
+        android:text="Title"
+        android:textAppearance="@style/TextViewStyleTipListItemTitle" />
         
       <TextView
         android:id="@+id/tvBody"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Body" />
+        android:text="Body"
+        android:textAppearance="@style/TextViewStyleTipListItemBody" />
 
       <TextView
         android:id="@+id/tvDateAndAuthor"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:maxLines="1"
-        android:text="Date and Author" />
+        android:text="Date and Author"
+        android:paddingTop="1dip"
+        android:paddingBottom="1dip"
+        android:textAppearance="@style/TextViewStyleTipListItemDateAuthor" />
 
       <LinearLayout
         android:layout_width="fill_parent"
@@ -60,52 +64,54 @@
       
         <ImageView
           android:id="@+id/ivFriendCountAsTodo"
-	      android:layout_height="20dip"
-       	  android:layout_width="20dip"
-          android:src="@drawable/crown_small"
-          android:scaleType="fitXY" />
+       	  android:layout_width="13dip"
+	      android:layout_height="10dip"
+          android:src="@drawable/tip_list_item_done"
+          android:scaleType="fitXY"
+          android:layout_marginTop="3dip"
+          android:layout_marginBottom="2dip" />
     
         <TextView
           android:id="@+id/tvFriendCountAsTodo"
           android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
+          android:layout_height="fill_parent"
           android:text="A"
-          android:paddingRight="10dip" />
+          android:paddingLeft="5dip"
+          android:paddingRight="10dip"
+          android:gravity="center_vertical"
+          android:textAppearance="@style/TextViewStyleTipListItemCountTodo" />
       
         <ImageView
           android:id="@+id/ivFriendCountCompleted"
-	      android:layout_height="20dip"
-       	  android:layout_width="20dip"
-          android:src="@drawable/crown_small"
-          android:scaleType="fitXY" />
+       	  android:layout_width="10dip"
+	      android:layout_height="10dip"
+          android:src="@drawable/tip_list_item_todo"
+          android:scaleType="fitXY"
+          android:layout_marginTop="3dip"
+          android:layout_marginBottom="2dip" />
     
         <TextView
           android:id="@+id/tvFriendCountCompleted"
           android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="B" />
+          android:layout_height="fill_parent"
+          android:text="B"
+          android:paddingLeft="5dip"
+          android:paddingRight="10dip"
+          android:gravity="center_vertical"
+          android:textAppearance="@style/TextViewStyleTipListItemCountDone" />
               
       </LinearLayout>
       
   </LinearLayout>
   
-  <!--
-  <LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingLeft="8dip" > 
-    -->
-    <ImageView
-      android:id="@+id/ivTipCompleted"
-      android:layout_width="20dip"
-	  android:layout_height="20dip"
-      android:src="@drawable/crown_small"
-      android:scaleType="fitXY"
-      android:gravity="right" />
-      
-      <!--
-  </LinearLayout>
-  -->
+  <ImageView
+    android:id="@+id/ivTipCorner"
+    android:src="@drawable/tip_list_item_corner_todo"
+    android:layout_width="22dip"
+    android:layout_height="22dip"
+    android:scaleType="fitXY"
+    android:gravity="right"
+    android:padding="0dip"
+    />
   
 </LinearLayout>

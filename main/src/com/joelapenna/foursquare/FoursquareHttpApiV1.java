@@ -22,6 +22,7 @@ import com.joelapenna.foursquare.parsers.json.GroupParser;
 import com.joelapenna.foursquare.parsers.json.ResponseParser;
 import com.joelapenna.foursquare.parsers.json.SettingsParser;
 import com.joelapenna.foursquare.parsers.json.TipParser;
+import com.joelapenna.foursquare.parsers.json.TodoParser;
 import com.joelapenna.foursquare.parsers.json.UserParser;
 import com.joelapenna.foursquare.parsers.json.VenueParser;
 import com.joelapenna.foursquare.types.Category;
@@ -34,6 +35,7 @@ import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Response;
 import com.joelapenna.foursquare.types.Settings;
 import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.util.Base64Coder;
@@ -89,8 +91,6 @@ class FoursquareHttpApiV1 {
     private static final String URL_API_FIND_FRIENDS_BY_TWITTER = "/findfriends/bytwitter";
     private static final String URL_API_CATEGORIES = "/categories";
     private static final String URL_API_HISTORY = "/history";
-    private static final String URL_API_TIP_TODO = "/tip/marktodo";
-    private static final String URL_API_TIP_DONE = "/tip/markdone";
     private static final String URL_API_FIND_FRIENDS_BY_PHONE_OR_EMAIL = "/findfriends/byphoneoremail";
     private static final String URL_API_INVITE_BY_EMAIL = "/invite/byemail";
     private static final String URL_API_SETPINGS = "/settings/setpings";
@@ -99,6 +99,12 @@ class FoursquareHttpApiV1 {
     private static final String URL_API_VENUE_FLAG_DUPLICATE = "/venue/flagduplicate";
     private static final String URL_API_VENUE_PROPOSE_EDIT = "/venue/proposeedit";
     private static final String URL_API_USER_UPDATE = "/user/update";
+    private static final String URL_API_MARK_TODO = "/mark/todo";
+    private static final String URL_API_MARK_IGNORE = "/mark/ignore";
+    private static final String URL_API_MARK_DONE = "/mark/done";
+    private static final String URL_API_UNMARK_TODO = "/unmark/todo";
+    private static final String URL_API_UNMARK_DONE = "/unmark/done";
+    private static final String URL_API_ADD_TIP = "/addtip";
     
     private final DefaultHttpClient mHttpClient = AbstractHttpApi.createHttpClient();
     private HttpApi mHttpApi;
@@ -465,25 +471,68 @@ class FoursquareHttpApiV1 {
     }
     
     /**
-     * /tip/marktodo
+     * /mark/todo
      */
-    public Tip tipMarkTodo(String tipId) throws FoursquareException,
-            FoursquareCredentialsException, FoursquareError, IOException {
-        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_TIP_TODO), //
-                new BasicNameValuePair("tid", tipId));
+    public Todo markTodo(String tid) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_MARK_TODO), //
+                new BasicNameValuePair("tid", tid));
+        return (Todo) mHttpApi.doHttpRequest(httpPost, new TodoParser());
+    }
+    
+    /**
+     * /mark/ignore
+     */
+    public Tip markIgnore(String tid) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_MARK_IGNORE), //
+                new BasicNameValuePair("tid", tid));
         return (Tip) mHttpApi.doHttpRequest(httpPost, new TipParser());
     }
     
     /**
-     * /tip/markdone
+     * /mark/done
      */
-    public Tip tipMarkDone(String tipId) throws FoursquareException,
-            FoursquareCredentialsException, FoursquareError, IOException {
-        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_TIP_DONE), //
-                new BasicNameValuePair("tid", tipId));
+    public Tip markDone(String tid) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_MARK_DONE), //
+                new BasicNameValuePair("tid", tid));
         return (Tip) mHttpApi.doHttpRequest(httpPost, new TipParser());
     }
     
+    /**
+     * /unmark/todo
+     */
+    public Tip unmarkTodo(String tid) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_UNMARK_TODO), //
+                    new BasicNameValuePair("tid", tid));
+        return (Tip) mHttpApi.doHttpRequest(httpPost, new TipParser());
+    }
+    
+    /**
+     * /unmark/done
+     */
+    public Tip unmarkDone(String tid) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_UNMARK_DONE), //
+                    new BasicNameValuePair("tid", tid));
+        return (Tip) mHttpApi.doHttpRequest(httpPost, new TipParser());
+    }
+    
+    /**
+     * This is only used when marking a venue as a to-do.
+     * /addtip
+     */
+    public Todo addTip(String vid, String text) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_ADD_TIP), //
+                    new BasicNameValuePair("vid", vid),
+                    new BasicNameValuePair("text", text),
+                    new BasicNameValuePair("type", "todo"));
+        return (Todo) mHttpApi.doHttpRequest(httpPost, new TodoParser());
+    }
+
     /**
      * /findfriends/byphoneoremail?p=comma-sep-list-of-phones&e=comma-sep-list-of-emails
      */
