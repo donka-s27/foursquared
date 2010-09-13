@@ -309,6 +309,7 @@
   <string name="tips_activity_btn_everyone">ALL TIPS</string> 
   <string name="tips_activity_menu_refresh">Refresh</string>
   <string name="tips_activity_no_tips">No Tips Found!</string>
+  <string name="tip_age_today">today</string>
   <string name="tip_age_days">%s day%s ago</string>
   <string name="tip_age_months">%s month%s ago</string>
   <string name="tip_age_years">%s year%s ago</string>

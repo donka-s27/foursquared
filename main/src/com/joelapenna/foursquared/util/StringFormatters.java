@@ -12,7 +12,6 @@ import com.joelapenna.foursquared.R;
 import android.content.res.Resources;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -190,7 +189,9 @@ public class StringFormatters {
         if (now.get(Calendar.YEAR) == then.get(Calendar.YEAR)) {
             if (now.get(Calendar.MONTH) == then.get(Calendar.MONTH)) {
                 int diffDays = now.get(Calendar.DAY_OF_MONTH)- then.get(Calendar.DAY_OF_MONTH);
-                if (diffDays == 1) {
+                if (diffDays == 0) {
+                    return res.getString(R.string.tip_age_today);
+                } else if (diffDays == 1) {
                     return res.getString(R.string.tip_age_days, "1", "");
                 } else {
                     return res.getString(R.string.tip_age_days, String.valueOf(diffDays), "s");
