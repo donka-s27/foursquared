@@ -82,7 +82,8 @@ public class TipsActivity extends LoadableListActivityWithView {
 
         ensureUi();
         
-        if (!mStateHolder.getRanOnce()) {
+        // Friend tips is shown first by default so auto-fetch it if necessary.
+        if (!mStateHolder.getRanOnceTipsFriends()) {
             mStateHolder.startTaskTips(this, true);
         }
     }
@@ -114,17 +115,37 @@ public class TipsActivity extends LoadableListActivityWithView {
     }
 
     private void ensureUi() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.tips_activity_buttons, getHeaderLayout());
+        mLayoutButtons.setVisibility(View.VISIBLE);
+        
+        mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
+                R.layout.tips_activity_empty, null);     
+        mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
+        
+        
         mListAdapter = new TipsListAdapter(this, 
             ((Foursquared) getApplication()).getRemoteResourceManager());
         if (mStateHolder.getFriendsOnly()) {
             mListAdapter.setGroup(mStateHolder.getTipsFriends());
+            if (mStateHolder.getTipsFriends().size() == 0) {
+                if (mStateHolder.getRanOnceTipsFriends()) {
+                    setEmptyView(mLayoutEmpty);
+                } else {
+                    setLoadingView();
+                }
+            }
         } else {
             mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+            if (mStateHolder.getTipsEveryone().size() == 0) {
+                if (mStateHolder.getRanOnceTipsEveryone()) {
+                    setEmptyView(mLayoutEmpty);
+                } else {
+                    setLoadingView();
+                }
+            }
         }
-        
-        LayoutInflater inflater = LayoutInflater.from(this);
-        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.tips_activity_buttons, getHeaderLayout());
-        mLayoutButtons.setVisibility(View.VISIBLE);
         
         mSegmentedButton = (SegmentedButton)findViewById(R.id.segmented);
         if (mStateHolder.mFriendsOnly) {
@@ -132,33 +153,36 @@ public class TipsActivity extends LoadableListActivityWithView {
         } else {
             mSegmentedButton.setPushedButtonIndex(1);
         }
-        
+
         mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
-                boolean update = false;
                 if (index == 0) {
+                    mStateHolder.setFriendsOnly(true);
+                    mListAdapter.setGroup(mStateHolder.getTipsFriends());
                     if (mStateHolder.getTipsFriends().size() < 1) {
-                        mStateHolder.startTaskTips(TipsActivity.this, true);
-                    } else {
-                        mStateHolder.setFriendsOnly(true);
-                        mListAdapter.setGroup(mStateHolder.getTipsFriends());
-                        update = true;
-                    } 
+                        if (mStateHolder.getRanOnceTipsFriends()) {
+                            setEmptyView(mLayoutEmpty);
+                        } else {
+                            setLoadingView();
+                            mStateHolder.startTaskTips(TipsActivity.this, true);
+                        }
+                    }
                 } else {
+                    mStateHolder.setFriendsOnly(false);
+                    mListAdapter.setGroup(mStateHolder.getTipsEveryone());
                     if (mStateHolder.getTipsEveryone().size() < 1) {
-                        mStateHolder.startTaskTips(TipsActivity.this, false);
-                    } else {
-                        mStateHolder.setFriendsOnly(false);
-                        mListAdapter.setGroup(mStateHolder.getTipsEveryone());
-                        update = true;
+                        if (mStateHolder.getRanOnceTipsEveryone()) {
+                            setEmptyView(mLayoutEmpty);
+                        } else {
+                            setLoadingView();
+                            mStateHolder.startTaskTips(TipsActivity.this, false);
+                        }
                     }
                 }
                 
-                if (update) {
-                    mListAdapter.notifyDataSetChanged();
-                    getListView().setSelection(0);
-                }
+                mListAdapter.notifyDataSetChanged();
+                getListView().setSelection(0);
             }
         });
 
@@ -174,27 +198,12 @@ public class TipsActivity extends LoadableListActivityWithView {
                 startActivityForResult(intent, ACTIVITY_TIP);
             }
         });
-        
-        mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
-                R.layout.tips_activity_empty, null);     
-        mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
-        
-        if (!mStateHolder.getRanOnce() || mStateHolder.getIsRunningTaskTips()) {
+
+        if (mStateHolder.getIsRunningTaskTipsFriends() || 
+            mStateHolder.getIsRunningTaskTipsEveryone()) {
             setProgressBarIndeterminateVisibility(true);
-            setLoadingView();
-        }
-        else {
+        } else {
             setProgressBarIndeterminateVisibility(false);
-            if (mStateHolder.getFriendsOnly()) {
-                if (mStateHolder.getTipsFriends().size() == 0) {
-                    setEmptyView(mLayoutEmpty);
-                }
-            } else {
-                if (mStateHolder.getTipsEveryone().size() == 0) {
-                    setEmptyView(mLayoutEmpty);
-                }
-            }
         }
     }
     
@@ -233,11 +242,12 @@ public class TipsActivity extends LoadableListActivityWithView {
     }
     
     private void onStartTaskTips() {
-        mStateHolder.setIsRunningTaskTips(true);
         if (mListAdapter != null) {
             if (mStateHolder.getFriendsOnly()) {
+                mStateHolder.setIsRunningTaskTipsFriends(true);
                 mListAdapter.setGroup(mStateHolder.getTipsFriends());
             } else {
+                mStateHolder.setIsRunningTaskTipsEveryone(true);
                 mListAdapter.setGroup(mStateHolder.getTipsEveryone());
             }
             mListAdapter.notifyDataSetChanged();
@@ -282,25 +292,30 @@ public class TipsActivity extends LoadableListActivityWithView {
             NotificationsUtil.ToastReasonForFailure(this, ex);
         }
         
-        if (update) {
-            mListAdapter.notifyDataSetChanged();
-            getListView().setSelection(0);
-        }
-        
-        mStateHolder.setIsRunningTaskTips(false);
-        mStateHolder.setRanOnce(true);
-        setProgressBarIndeterminateVisibility(false);
-        
-        if (mStateHolder.getFriendsOnly()) {
+        if (friendsOnly) {
+            mStateHolder.setIsRunningTaskTipsFriends(false);
+            mStateHolder.setRanOnceTipsFriends(true);
             if (mStateHolder.getTipsFriends().size() == 0 && 
                     mSegmentedButton.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
+            mStateHolder.setIsRunningTaskTipsEveryone(false);
+            mStateHolder.setRanOnceTipsEveryone(true);
             if (mStateHolder.getTipsEveryone().size() == 0 &&
                     mSegmentedButton.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
+        }
+        
+        if (update) {
+            mListAdapter.notifyDataSetChanged();
+            getListView().setSelection(0);
+        }
+        
+        if (!mStateHolder.getIsRunningTaskTipsFriends() &&
+            !mStateHolder.getIsRunningTaskTipsEveryone()) {
+            setProgressBarIndeterminateVisibility(false);
         }
     }
     
@@ -328,7 +343,7 @@ public class TipsActivity extends LoadableListActivityWithView {
             try {
                 Foursquared foursquared = (Foursquared) mActivity.getApplication();
                 Foursquare foursquare = foursquared.getFoursquare();
-             
+
                 Location loc = foursquared.getLastKnownLocation();
                 if (loc == null) {
                     try { Thread.sleep(3000); } catch (InterruptedException ex) {}
@@ -376,17 +391,22 @@ public class TipsActivity extends LoadableListActivityWithView {
         /** Tips by everyone. */
         private Group<Tip> mTipsEveryone;
         
-        private TaskTips mTaskTips;
-        private boolean mIsRunningTaskTips;
+        private TaskTips mTaskTipsFriends;
+        private TaskTips mTaskTipsEveryone;
+        private boolean mIsRunningTaskTipsFriends;
+        private boolean mIsRunningTaskTipsEveryone;
         
         private boolean mFriendsOnly;
 
-        private boolean mRanOnce;
+        private boolean mRanOnceTipsFriends;
+        private boolean mRanOnceTipsEveryone;
         
         
         public StateHolder() {
-            mIsRunningTaskTips = false;
-            mRanOnce = false;
+            mIsRunningTaskTipsFriends = false;
+            mIsRunningTaskTipsEveryone = false;
+            mRanOnceTipsFriends = false;
+            mRanOnceTipsEveryone = false;
             mTipsFriends = new Group<Tip>();
             mTipsEveryone = new Group<Tip>();
             mFriendsOnly = true;
@@ -411,29 +431,56 @@ public class TipsActivity extends LoadableListActivityWithView {
         public void startTaskTips(TipsActivity activity,
                                   boolean friendsOnly) {
             mFriendsOnly = friendsOnly;
-            mIsRunningTaskTips = true;
-            mTaskTips = new TaskTips(activity, friendsOnly);
-            mTaskTips.execute();
-        }
-
-        public void setActivity(TipsActivity activity) {
-            if (mTaskTips != null) {
-                mTaskTips.setActivity(activity);
+            if (friendsOnly) {
+                if (mIsRunningTaskTipsFriends) {
+                    return;
+                }
+                mIsRunningTaskTipsFriends = true;
+                mTaskTipsFriends = new TaskTips(activity, friendsOnly);
+                mTaskTipsFriends.execute();
+            } else {
+                if (mIsRunningTaskTipsEveryone) {
+                    return;
+                }
+                mIsRunningTaskTipsEveryone = true;
+                mTaskTipsEveryone = new TaskTips(activity, friendsOnly);
+                mTaskTipsEveryone.execute();
             }
         }
 
-        public boolean getIsRunningTaskTips() {
-            return mIsRunningTaskTips;
-        }
-        
-        public void setIsRunningTaskTips(boolean isRunning) {
-            mIsRunningTaskTips = isRunning;
+        public void setActivity(TipsActivity activity) {
+            if (mTaskTipsFriends != null) {
+                mTaskTipsFriends.setActivity(activity);
+            }
+            if (mTaskTipsEveryone != null) {
+                mTaskTipsEveryone.setActivity(activity);
+            }
         }
 
+        public boolean getIsRunningTaskTipsFriends() {
+            return mIsRunningTaskTipsFriends;
+        }
+        
+        public void setIsRunningTaskTipsFriends(boolean isRunning) {
+            mIsRunningTaskTipsFriends = isRunning;
+        }
+
+        public boolean getIsRunningTaskTipsEveryone() {
+            return mIsRunningTaskTipsEveryone;
+        }
+        
+        public void setIsRunningTaskTipsEveryone(boolean isRunning) {
+            mIsRunningTaskTipsEveryone = isRunning;
+        }
+        
         public void cancelTasks() {
-            if (mTaskTips != null) {
-                mTaskTips.setActivity(null);
-                mTaskTips.cancel(true);
+            if (mTaskTipsFriends != null) {
+                mTaskTipsFriends.setActivity(null);
+                mTaskTipsFriends.cancel(true);
+            }
+            if (mTaskTipsEveryone != null) {
+                mTaskTipsEveryone.setActivity(null);
+                mTaskTipsEveryone.cancel(true);
             }
         }
         
@@ -445,12 +492,20 @@ public class TipsActivity extends LoadableListActivityWithView {
             mFriendsOnly = friendsOnly;
         }
         
-        public boolean getRanOnce() {
-            return mRanOnce;
+        public boolean getRanOnceTipsFriends() {
+            return mRanOnceTipsFriends;
         }
         
-        public void setRanOnce(boolean ranOnce) {
-            mRanOnce = ranOnce;
+        public void setRanOnceTipsFriends(boolean ranOnce) {
+            mRanOnceTipsFriends = ranOnce;
+        }
+        
+        public boolean getRanOnceTipsEveryone() {
+            return mRanOnceTipsEveryone;
+        }
+        
+        public void setRanOnceTipsEveryone(boolean ranOnce) {
+            mRanOnceTipsEveryone = ranOnce;
         }
         
         public void updateTip(Tip tip) {

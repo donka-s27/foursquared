@@ -84,7 +84,8 @@ public class TodosActivity extends LoadableListActivityWithView {
 
         ensureUi();
         
-        if (!mStateHolder.getRanOnce()) {
+        // Recent todos is shown first by default so auto-fetch it if necessary.
+        if (!mStateHolder.getRanOnceTodosRecent()) {
             mStateHolder.startTaskTodos(this, true);
         }
     }
@@ -116,17 +117,38 @@ public class TodosActivity extends LoadableListActivityWithView {
     }
 
     private void ensureUi() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.todos_activity_buttons, getHeaderLayout());
+        mLayoutButtons.setVisibility(View.VISIBLE);
+        
+        mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
+                R.layout.todos_activity_empty, null);     
+        mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
+        
+        
         mListAdapter = new TodosListAdapter(this, 
             ((Foursquared) getApplication()).getRemoteResourceManager());
         if (mStateHolder.getRecentOnly()) {
             mListAdapter.setGroup(mStateHolder.getTodosRecent());
+            if (mStateHolder.getTodosRecent().size() == 0) {
+                if (mStateHolder.getRanOnceTodosRecent()) {
+                    setEmptyView(mLayoutEmpty);
+                } else {
+                    setLoadingView();
+                }
+            }
         } else {
             mListAdapter.setGroup(mStateHolder.getTodosNearby());
+            if (mStateHolder.getTodosNearby().size() == 0) {
+                if (mStateHolder.getRanOnceTodosNearby()) {
+                    setEmptyView(mLayoutEmpty);
+                } else {
+                    setLoadingView();
+                }
+            }
         }
         
-        LayoutInflater inflater = LayoutInflater.from(this);
-        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.todos_activity_buttons, getHeaderLayout());
-        mLayoutButtons.setVisibility(View.VISIBLE);
         
         mSegmentedButton = (SegmentedButton)findViewById(R.id.segmented);
         if (mStateHolder.getRecentOnly()) {
@@ -138,29 +160,32 @@ public class TodosActivity extends LoadableListActivityWithView {
         mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
-                boolean update = false;
                 if (index == 0) {
+                    mStateHolder.setRecentOnly(true);
+                    mListAdapter.setGroup(mStateHolder.getTodosRecent());
                     if (mStateHolder.getTodosRecent().size() < 1) {
-                        mStateHolder.startTaskTodos(TodosActivity.this, true);
-                    } else {
-                        mStateHolder.setRecentOnly(true);
-                        mListAdapter.setGroup(mStateHolder.getTodosRecent());
-                        update = true;
-                    } 
+                        if (mStateHolder.getRanOnceTodosRecent()) {
+                            setEmptyView(mLayoutEmpty);
+                        } else {
+                            setLoadingView();
+                            mStateHolder.startTaskTodos(TodosActivity.this, true);
+                        }
+                    }
                 } else {
+                    mStateHolder.setRecentOnly(false);
+                    mListAdapter.setGroup(mStateHolder.getTodosNearby());
                     if (mStateHolder.getTodosNearby().size() < 1) {
-                        mStateHolder.startTaskTodos(TodosActivity.this, false);
-                    } else {
-                        mStateHolder.setRecentOnly(false);
-                        mListAdapter.setGroup(mStateHolder.getTodosNearby());
-                        update = true;
+                        if (mStateHolder.getRanOnceTodosNearby()) {
+                            setEmptyView(mLayoutEmpty);
+                        } else {
+                            setLoadingView();
+                            mStateHolder.startTaskTodos(TodosActivity.this, false);
+                        }
                     }
                 }
                 
-                if (update) {
-                    mListAdapter.notifyDataSetChanged();
-                    getListView().setSelection(0);
-                }
+                mListAdapter.notifyDataSetChanged();
+                getListView().setSelection(0);
             }
         });
 
@@ -178,26 +203,11 @@ public class TodosActivity extends LoadableListActivityWithView {
             }
         });
         
-        mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
-                R.layout.tips_activity_empty, null);     
-        mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
-        
-        if (!mStateHolder.getRanOnce() || mStateHolder.getIsRunningTaskTodos()) {
+        if (mStateHolder.getIsRunningTaskTodosRecent() || 
+            mStateHolder.getIsRunningTaskTodosNearby()) {
             setProgressBarIndeterminateVisibility(true);
-            setLoadingView();
-        }
-        else {
+        } else {
             setProgressBarIndeterminateVisibility(false);
-            if (mStateHolder.getRecentOnly()) {
-                if (mStateHolder.getTodosRecent().size() == 0) {
-                    setEmptyView(mLayoutEmpty);
-                }
-            } else {
-                if (mStateHolder.getTodosNearby().size() == 0) {
-                    setEmptyView(mLayoutEmpty);
-                }
-            }
         }
     }
     
@@ -238,11 +248,12 @@ public class TodosActivity extends LoadableListActivityWithView {
     }
     
     private void onStartTaskTodos() {
-        mStateHolder.setIsRunningTaskTodos(true);
         if (mListAdapter != null) {
             if (mStateHolder.getRecentOnly()) {
+                mStateHolder.setIsRunningTaskTodosRecent(true);
                 mListAdapter.setGroup(mStateHolder.getTodosRecent());
             } else {
+                mStateHolder.setIsRunningTaskTodosNearby(true);
                 mListAdapter.setGroup(mStateHolder.getTodosNearby());
             }
             mListAdapter.notifyDataSetChanged();
@@ -253,20 +264,19 @@ public class TodosActivity extends LoadableListActivityWithView {
     }
     
     private void onTaskTodosComplete(Group<Todo> group, boolean recentOnly, Exception ex) {
+        boolean update = false;
         if (group != null) {
             if (recentOnly) {
                 mStateHolder.setTodosRecent(group);
                 if (mSegmentedButton.getSelectedButtonIndex() == 0) {
                     mListAdapter.setGroup(mStateHolder.getTodosRecent());
-                    mListAdapter.notifyDataSetChanged();
-                    getListView().setSelection(0);
+                    update = true;
                 }
             } else {
                 mStateHolder.setTodosNearby(group);
                 if (mSegmentedButton.getSelectedButtonIndex() == 1) {
                     mListAdapter.setGroup(mStateHolder.getTodosNearby());
-                    mListAdapter.notifyDataSetChanged();
-                    getListView().setSelection(0);
+                    update = true;
                 }
             }
         }
@@ -275,35 +285,43 @@ public class TodosActivity extends LoadableListActivityWithView {
                 mStateHolder.setTodosRecent(new Group<Todo>());
                 if (mSegmentedButton.getSelectedButtonIndex() == 0) {
                     mListAdapter.setGroup(mStateHolder.getTodosRecent());
-                    mListAdapter.notifyDataSetChanged();
-                    getListView().setSelection(0);
+                    update = true;
                 }
             } else {
                 mStateHolder.setTodosNearby(new Group<Todo>());
                 if (mSegmentedButton.getSelectedButtonIndex() == 1) {
                     mListAdapter.setGroup(mStateHolder.getTodosNearby());
-                    mListAdapter.notifyDataSetChanged();
-                    getListView().setSelection(0);
+                    update = true;
                 }
             }
             
             NotificationsUtil.ToastReasonForFailure(this, ex);
         }
         
-        mStateHolder.setIsRunningTaskTodos(false);
-        mStateHolder.setRanOnce(true);
-        setProgressBarIndeterminateVisibility(false);
-        
-        if (mStateHolder.getRecentOnly()) {
+        if (recentOnly) {
+            mStateHolder.setIsRunningTaskTodosRecent(false);
+            mStateHolder.setRanOnceTodosRecent(true);
             if (mStateHolder.getTodosRecent().size() == 0 && 
                     mSegmentedButton.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
-            if (mStateHolder.getTodosNearby().size() == 0 && 
+            mStateHolder.setIsRunningTaskTodosNearby(false);
+            mStateHolder.setRanOnceTodosNearby(true);
+            if (mStateHolder.getTodosNearby().size() == 0 &&
                     mSegmentedButton.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
+        }
+        
+        if (update) {
+            mListAdapter.notifyDataSetChanged();
+            getListView().setSelection(0);
+        }
+        
+        if (!mStateHolder.getIsRunningTaskTodosRecent() &&
+            !mStateHolder.getIsRunningTaskTodosNearby()) {
+            setProgressBarIndeterminateVisibility(false);
         }
     }
     
@@ -331,7 +349,7 @@ public class TodosActivity extends LoadableListActivityWithView {
             try {
                 Foursquared foursquared = (Foursquared) mActivity.getApplication();
                 Foursquare foursquare = foursquared.getFoursquare();
-             
+
                 Location loc = foursquared.getLastKnownLocation();
                 if (loc == null) {
                     try { Thread.sleep(3000); } catch (InterruptedException ex) {}
@@ -375,15 +393,20 @@ public class TodosActivity extends LoadableListActivityWithView {
         
         private Group<Todo> mTodosRecent;
         private Group<Todo> mTodosNearby;
-        private boolean mIsRunningTaskTodos;
+        private boolean mIsRunningTaskTodosRecent;
+        private boolean mIsRunningTaskTodosNearby;
         private boolean mRecentOnly;
-        private boolean mRanOnce;
-        private TaskTodos mTaskTodos;
+        private boolean mRanOnceTodosRecent;
+        private boolean mRanOnceTodosNearby;
+        private TaskTodos mTaskTodosRecent;
+        private TaskTodos mTaskTodosNearby;
         
         
         public StateHolder() {
-            mIsRunningTaskTodos = false;
-            mRanOnce = false;
+            mIsRunningTaskTodosRecent = false;
+            mIsRunningTaskTodosNearby = false;
+            mRanOnceTodosRecent = false;
+            mRanOnceTodosNearby = false;
             mTodosRecent = new Group<Todo>();
             mTodosNearby = new Group<Todo>();
             mRecentOnly = true;
@@ -408,29 +431,56 @@ public class TodosActivity extends LoadableListActivityWithView {
         public void startTaskTodos(TodosActivity activity,
                                    boolean recentOnly) {
             mRecentOnly = recentOnly;
-            mIsRunningTaskTodos = true;
-            mTaskTodos = new TaskTodos(activity, recentOnly);
-            mTaskTodos.execute();
-        }
-
-        public void setActivity(TodosActivity activity) {
-            if (mTaskTodos != null) {
-                mTaskTodos.setActivity(activity);
+            if (recentOnly) {
+                if (mIsRunningTaskTodosRecent) {
+                    return;
+                }
+                mIsRunningTaskTodosRecent = true;
+                mTaskTodosRecent = new TaskTodos(activity, recentOnly);
+                mTaskTodosRecent.execute();
+            } else {
+                if (mIsRunningTaskTodosNearby) {
+                    return;
+                }
+                mIsRunningTaskTodosNearby = true;
+                mTaskTodosNearby = new TaskTodos(activity, recentOnly);
+                mTaskTodosNearby.execute();
             }
         }
 
-        public boolean getIsRunningTaskTodos() {
-            return mIsRunningTaskTodos;
+        public void setActivity(TodosActivity activity) {
+            if (mTaskTodosRecent != null) {
+                mTaskTodosRecent.setActivity(activity);
+            }
+            if (mTaskTodosNearby != null) {
+                mTaskTodosNearby.setActivity(activity);
+            }
+        }
+
+        public boolean getIsRunningTaskTodosRecent() {
+            return mIsRunningTaskTodosRecent;
         }
         
-        public void setIsRunningTaskTodos(boolean isRunning) {
-            mIsRunningTaskTodos = isRunning;
+        public void setIsRunningTaskTodosRecent(boolean isRunning) {
+            mIsRunningTaskTodosRecent = isRunning;
+        }
+        
+        public boolean getIsRunningTaskTodosNearby() {
+            return mIsRunningTaskTodosNearby;
+        }
+        
+        public void setIsRunningTaskTodosNearby(boolean isRunning) {
+            mIsRunningTaskTodosNearby = isRunning;
         }
 
         public void cancelTasks() {
-            if (mTaskTodos != null) {
-                mTaskTodos.setActivity(null);
-                mTaskTodos.cancel(true);
+            if (mTaskTodosRecent != null) {
+                mTaskTodosRecent.setActivity(null);
+                mTaskTodosRecent.cancel(true);
+            }
+            if (mTaskTodosNearby != null) {
+                mTaskTodosNearby.setActivity(null);
+                mTaskTodosNearby.cancel(true);
             }
         }
         
@@ -442,12 +492,20 @@ public class TodosActivity extends LoadableListActivityWithView {
             mRecentOnly = recentOnly;
         }
         
-        public boolean getRanOnce() {
-            return mRanOnce;
+        public boolean getRanOnceTodosRecent() {
+            return mRanOnceTodosRecent;
         }
         
-        public void setRanOnce(boolean ranOnce) {
-            mRanOnce = ranOnce;
+        public void setRanOnceTodosRecent(boolean ranOnce) {
+            mRanOnceTodosRecent = ranOnce;
+        }
+        
+        public boolean getRanOnceTodosNearby() {
+            return mRanOnceTodosNearby;
+        }
+        
+        public void setRanOnceTodosNearby(boolean ranOnce) {
+            mRanOnceTodosNearby = ranOnce;
         }
         
         public void updateTodo(String todoId, Tip tip) {
