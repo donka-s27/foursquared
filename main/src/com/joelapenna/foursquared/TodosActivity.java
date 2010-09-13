@@ -138,12 +138,14 @@ public class TodosActivity extends LoadableListActivityWithView {
         mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
+                boolean update = false;
                 if (index == 0) {
                     if (mStateHolder.getTodosRecent().size() < 1) {
                         mStateHolder.startTaskTodos(TodosActivity.this, true);
                     } else {
                         mStateHolder.setRecentOnly(true);
                         mListAdapter.setGroup(mStateHolder.getTodosRecent());
+                        update = true;
                     } 
                 } else {
                     if (mStateHolder.getTodosNearby().size() < 1) {
@@ -151,7 +153,13 @@ public class TodosActivity extends LoadableListActivityWithView {
                     } else {
                         mStateHolder.setRecentOnly(false);
                         mListAdapter.setGroup(mStateHolder.getTodosNearby());
+                        update = true;
                     }
+                }
+                
+                if (update) {
+                    mListAdapter.notifyDataSetChanged();
+                    getListView().setSelection(0);
                 }
             }
         });
@@ -231,60 +239,69 @@ public class TodosActivity extends LoadableListActivityWithView {
     
     private void onStartTaskTodos() {
         mStateHolder.setIsRunningTaskTodos(true);
-        
         if (mListAdapter != null) {
-            mListAdapter.removeObserver();
-            mListAdapter = new TodosListAdapter(this, 
-                    ((Foursquared) getApplication()).getRemoteResourceManager());
             if (mStateHolder.getRecentOnly()) {
                 mListAdapter.setGroup(mStateHolder.getTodosRecent());
             } else {
                 mListAdapter.setGroup(mStateHolder.getTodosNearby());
             }
-            
-            getListView().setAdapter(mListAdapter);
+            mListAdapter.notifyDataSetChanged();
         }
-        
+
         setProgressBarIndeterminateVisibility(true);
         setLoadingView();
     }
     
     private void onTaskTodosComplete(Group<Todo> group, boolean recentOnly, Exception ex) {
-        mListAdapter.removeObserver();
-        mListAdapter = new TodosListAdapter(this, 
-            ((Foursquared) getApplication()).getRemoteResourceManager());
         if (group != null) {
             if (recentOnly) {
                 mStateHolder.setTodosRecent(group);
-                mListAdapter.setGroup(mStateHolder.getTodosRecent());
+                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                    mListAdapter.setGroup(mStateHolder.getTodosRecent());
+                    mListAdapter.notifyDataSetChanged();
+                    getListView().setSelection(0);
+                }
             } else {
                 mStateHolder.setTodosNearby(group);
-                mListAdapter.setGroup(mStateHolder.getTodosNearby());
+                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                    mListAdapter.setGroup(mStateHolder.getTodosNearby());
+                    mListAdapter.notifyDataSetChanged();
+                    getListView().setSelection(0);
+                }
             }
         }
         else {
             if (recentOnly) {
                 mStateHolder.setTodosRecent(new Group<Todo>());
-                mListAdapter.setGroup(mStateHolder.getTodosRecent());
+                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                    mListAdapter.setGroup(mStateHolder.getTodosRecent());
+                    mListAdapter.notifyDataSetChanged();
+                    getListView().setSelection(0);
+                }
             } else {
                 mStateHolder.setTodosNearby(new Group<Todo>());
-                mListAdapter.setGroup(mStateHolder.getTodosNearby());
+                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                    mListAdapter.setGroup(mStateHolder.getTodosNearby());
+                    mListAdapter.notifyDataSetChanged();
+                    getListView().setSelection(0);
+                }
             }
             
             NotificationsUtil.ToastReasonForFailure(this, ex);
         }
-        getListView().setAdapter(mListAdapter);
         
         mStateHolder.setIsRunningTaskTodos(false);
         mStateHolder.setRanOnce(true);
         setProgressBarIndeterminateVisibility(false);
         
         if (mStateHolder.getRecentOnly()) {
-            if (mStateHolder.getTodosRecent().size() == 0) {
+            if (mStateHolder.getTodosRecent().size() == 0 && 
+                    mSegmentedButton.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
-            if (mStateHolder.getTodosNearby().size() == 0) {
+            if (mStateHolder.getTodosNearby().size() == 0 && 
+                    mSegmentedButton.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
         }
