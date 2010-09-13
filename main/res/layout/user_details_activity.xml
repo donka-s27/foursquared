@@ -12,7 +12,8 @@
   <LinearLayout
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"> 
+    android:layout_height="fill_parent"
+    android:background="@color/listview_item" > 
         
         
   <!-- This is the top header, contains user's picture etc. -->
@@ -163,7 +164,7 @@
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent"
     android:gravity="center"
-    android:background="@color/white" > 
+    android:background="@color/listview_item"  > 
     
     <ProgressBar 
       android:id="@+id/userDetailsActivityProgressBar" 

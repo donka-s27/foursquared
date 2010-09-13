@@ -221,6 +221,9 @@ public class SegmentedButton extends LinearLayout {
         public void onClick(View v) {
             Button btnNext = (Button)v;
             int btnNextIndex = ((Integer)btnNext.getTag()).intValue();
+            if (btnNextIndex == mSelectedButtonIndex) {
+                return;
+            }
             
             handleStateChange(mSelectedButtonIndex, btnNextIndex);
 

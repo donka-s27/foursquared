@@ -136,12 +136,14 @@ public class TipsActivity extends LoadableListActivityWithView {
         mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
+                boolean update = false;
                 if (index == 0) {
                     if (mStateHolder.getTipsFriends().size() < 1) {
                         mStateHolder.startTaskTips(TipsActivity.this, true);
                     } else {
                         mStateHolder.setFriendsOnly(true);
                         mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                        update = true;
                     } 
                 } else {
                     if (mStateHolder.getTipsEveryone().size() < 1) {
@@ -149,7 +151,13 @@ public class TipsActivity extends LoadableListActivityWithView {
                     } else {
                         mStateHolder.setFriendsOnly(false);
                         mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                        update = true;
                     }
+                }
+                
+                if (update) {
+                    mListAdapter.notifyDataSetChanged();
+                    getListView().setSelection(0);
                 }
             }
         });
@@ -226,60 +234,71 @@ public class TipsActivity extends LoadableListActivityWithView {
     
     private void onStartTaskTips() {
         mStateHolder.setIsRunningTaskTips(true);
-        
         if (mListAdapter != null) {
-            mListAdapter.removeObserver();
-            mListAdapter = new TipsListAdapter(this, 
-                    ((Foursquared) getApplication()).getRemoteResourceManager());
             if (mStateHolder.getFriendsOnly()) {
                 mListAdapter.setGroup(mStateHolder.getTipsFriends());
             } else {
                 mListAdapter.setGroup(mStateHolder.getTipsEveryone());
             }
-            
-            getListView().setAdapter(mListAdapter);
+            mListAdapter.notifyDataSetChanged();
         }
-        
+
         setProgressBarIndeterminateVisibility(true);
         setLoadingView();
     }
     
     private void onTaskTipsComplete(Group<Tip> group, boolean friendsOnly, Exception ex) {
-        mListAdapter.removeObserver();
-        mListAdapter = new TipsListAdapter(this, 
-            ((Foursquared) getApplication()).getRemoteResourceManager());
+        boolean update = false;
         if (group != null) {
             if (friendsOnly) {
                 mStateHolder.setTipsFriends(group);
-                mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                    mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                    update = true;
+                }
             } else {
                 mStateHolder.setTipsEveryone(group);
-                mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                    mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                    update = true;
+                }
             }
         }
         else {
             if (friendsOnly) {
                 mStateHolder.setTipsFriends(new Group<Tip>());
-                mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                    mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                    update = true;
+                }
             } else {
                 mStateHolder.setTipsEveryone(new Group<Tip>());
-                mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                    mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                    update = true;
+                }
             }
             
             NotificationsUtil.ToastReasonForFailure(this, ex);
         }
-        getListView().setAdapter(mListAdapter);
+        
+        if (update) {
+            mListAdapter.notifyDataSetChanged();
+            getListView().setSelection(0);
+        }
         
         mStateHolder.setIsRunningTaskTips(false);
         mStateHolder.setRanOnce(true);
         setProgressBarIndeterminateVisibility(false);
         
         if (mStateHolder.getFriendsOnly()) {
-            if (mStateHolder.getTipsFriends().size() == 0) {
+            if (mStateHolder.getTipsFriends().size() == 0 && 
+                    mSegmentedButton.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
-            if (mStateHolder.getTipsEveryone().size() == 0) {
+            if (mStateHolder.getTipsEveryone().size() == 0 &&
+                    mSegmentedButton.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
         }
