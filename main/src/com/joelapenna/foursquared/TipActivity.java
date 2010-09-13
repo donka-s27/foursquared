@@ -104,7 +104,7 @@ public class TipActivity extends Activity {
         super.onResume();
         
         if (mStateHolder.getIsRunningTipTask()) {
-            startProgressBar(mStateHolder.getTask());
+            startProgressBar();
         }
     }
     
@@ -252,7 +252,7 @@ public class TipActivity extends Activity {
         startActivity(intent);
     }
     
-    private void startProgressBar(int task) {
+    private void startProgressBar() {
         if (mDlgProgress == null) {
             mDlgProgress = ProgressDialog.show(
                 this, 
@@ -322,13 +322,9 @@ public class TipActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
-            mActivity.startProgressBar(mTask);
+            mActivity.startProgressBar();
         }
         
-        public int getTask() {
-            return mTask;
-        }
-
         @Override
         protected Tip doInBackground(String... params) {
             try {
@@ -395,10 +391,6 @@ public class TipActivity extends Activity {
             return mTip;
         }
         
-        public int getTask() {
-            return mTipTask.getTask();
-        }
-
         public void startTipTask(TipActivity activity, String tipId, int task) {
             mIsRunningTipTask = true;
             mTipTask = new TipTask(activity, tipId, task);
