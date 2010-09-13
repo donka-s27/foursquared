@@ -31,6 +31,8 @@ public class LoadableListActivity extends ListActivity {
         mEmptyProgress = (ProgressBar)findViewById(R.id.emptyProgress);
         mEmptyText = (TextView)findViewById(R.id.emptyText);
         setLoadingView();
+        
+        getListView().setDividerHeight(0);
     }
 
     public void setEmptyView() {

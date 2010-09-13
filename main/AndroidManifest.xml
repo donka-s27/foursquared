@@ -415,6 +415,10 @@
     <activity
       android:name=".TipsActivity" >
     </activity> 
+        
+    <activity
+      android:name=".TodosActivity" >
+    </activity> 
     
     <receiver
       android:name=".appwidget.FriendsAppWidgetProvider"

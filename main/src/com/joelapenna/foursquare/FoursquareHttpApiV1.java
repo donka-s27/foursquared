@@ -80,6 +80,7 @@ class FoursquareHttpApiV1 {
     private static final String URL_API_VENUE = "/venue";
     private static final String URL_API_VENUES = "/venues";
     private static final String URL_API_TIPS = "/tips";
+    private static final String URL_API_TODOS = "/todos";
     private static final String URL_API_FRIEND_REQUESTS = "/friend/requests";
     private static final String URL_API_FRIEND_APPROVE = "/friend/approve";
     private static final String URL_API_FRIEND_DENY = "/friend/deny";
@@ -347,7 +348,33 @@ class FoursquareHttpApiV1 {
         return (Group<Tip>) mHttpApi.doHttpRequest(httpGet, new GroupParser(
                 new TipParser()));
     }
-
+    
+    /**
+     * /todos?geolat=37.770900&geolong=-122.436987&l=1&sort=[recent|nearby]
+     */
+    @SuppressWarnings("unchecked")
+    Group<Todo> todos(String geolat, String geolong, String geohacc, String geovacc,
+            String geoalt, boolean recent, boolean nearby, int limit) 
+            throws FoursquareException, FoursquareError, IOException {
+        String sort = null;
+        if (recent) {
+            sort = "recent";
+        } else if (nearby) {
+            sort = "nearby";
+        }
+        HttpGet httpGet = mHttpApi.createHttpGet(fullUrl(URL_API_TODOS), //
+                new BasicNameValuePair("geolat", geolat), //
+                new BasicNameValuePair("geolong", geolong), //
+                new BasicNameValuePair("geohacc", geohacc), //
+                new BasicNameValuePair("geovacc", geovacc), //
+                new BasicNameValuePair("geoalt", geoalt), //
+                new BasicNameValuePair("sort", sort), //
+                new BasicNameValuePair("l", String.valueOf(limit)) //
+               );
+        return (Group<Todo>) mHttpApi.doHttpRequest(httpGet, new GroupParser(
+                new TodoParser()));
+    }
+    
     /*
      * /friends?uid=9937
      */

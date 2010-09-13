@@ -35,6 +35,8 @@ public class LoadableListActivityWithView extends ListActivity {
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.loadable_list_activity_with_view);
         mLayoutHeader = (LinearLayout)findViewById(R.id.header);
+        
+        getListView().setDividerHeight(0);
     }
 
     public void setEmptyView(View view) {

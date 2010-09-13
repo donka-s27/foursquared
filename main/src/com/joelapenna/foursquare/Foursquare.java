@@ -171,6 +171,13 @@ public class Foursquare {
     }
 
     @V1
+    public Group<Todo> todos(Location location, boolean recent, boolean nearby, int limit) 
+            throws FoursquareException, FoursquareError, IOException {
+        return mFoursquareV1.todos(location.geolat, location.geolong, location.geohacc,
+                location.geovacc, location.geoalt, recent, nearby, limit);
+    }
+
+    @V1
     public User user(String user, boolean mayor, boolean badges, Location location)
             throws FoursquareException, FoursquareError, IOException {
         if (location != null) {
