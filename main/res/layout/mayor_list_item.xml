@@ -7,7 +7,8 @@
   android:layout_height="?android:attr/listPreferredItemHeight"
   android:paddingBottom="10dip"
   android:paddingRight="10dip"
-  style="@style/listItemStyle">
+  style="@style/listItemStyle"
+  android:background="@drawable/listview_item" >
     
   <ImageView
     android:id="@+id/photo"
