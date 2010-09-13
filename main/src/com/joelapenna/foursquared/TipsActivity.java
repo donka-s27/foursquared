@@ -32,6 +32,7 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import java.util.Observable;
@@ -137,9 +138,19 @@ public class TipsActivity extends LoadableListActivityWithView {
             @Override
             public void onClick(int index) {
                 if (index == 0) {
-                    mStateHolder.startTaskTips(TipsActivity.this, true);
+                    if (mStateHolder.getTipsFriends().size() < 1) {
+                        mStateHolder.startTaskTips(TipsActivity.this, true);
+                    } else {
+                        mStateHolder.setFriendsOnly(true);
+                        mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                    } 
                 } else {
-                    mStateHolder.startTaskTips(TipsActivity.this, false);
+                    if (mStateHolder.getTipsEveryone().size() < 1) {
+                        mStateHolder.startTaskTips(TipsActivity.this, false);
+                    } else {
+                        mStateHolder.setFriendsOnly(false);
+                        mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                    }
                 }
             }
         });
@@ -217,9 +228,6 @@ public class TipsActivity extends LoadableListActivityWithView {
     private void onStartTaskTips() {
         mStateHolder.setIsRunningTaskTips(true);
         
-        mStateHolder.setTipsFriends(new Group<Tip>());
-        mStateHolder.setTipsEveryone(new Group<Tip>());
-
         if (mListAdapter != null) {
             mListAdapter.removeObserver();
             mListAdapter = new TipsListAdapter(this, 
@@ -413,6 +421,10 @@ public class TipsActivity extends LoadableListActivityWithView {
         
         public boolean getFriendsOnly() {
             return mFriendsOnly;
+        }
+        
+        public void setFriendsOnly(boolean friendsOnly) {
+            mFriendsOnly = friendsOnly;
         }
         
         public boolean getRanOnce() {

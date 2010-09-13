@@ -137,9 +137,19 @@ public class TodosActivity extends LoadableListActivityWithView {
             @Override
             public void onClick(int index) {
                 if (index == 0) {
-                    mStateHolder.startTaskTodos(TodosActivity.this, true);
+                    if (mStateHolder.getTodosRecent().size() < 1) {
+                        mStateHolder.startTaskTodos(TodosActivity.this, true);
+                    } else {
+                        mStateHolder.setRecentOnly(true);
+                        mListAdapter.setGroup(mStateHolder.getTodosRecent());
+                    } 
                 } else {
-                    mStateHolder.startTaskTodos(TodosActivity.this, false);
+                    if (mStateHolder.getTodosNearby().size() < 1) {
+                        mStateHolder.startTaskTodos(TodosActivity.this, false);
+                    } else {
+                        mStateHolder.setRecentOnly(false);
+                        mListAdapter.setGroup(mStateHolder.getTodosNearby());
+                    }
                 }
             }
         });
@@ -219,9 +229,6 @@ public class TodosActivity extends LoadableListActivityWithView {
     private void onStartTaskTodos() {
         mStateHolder.setIsRunningTaskTodos(true);
         
-        mStateHolder.setTodosRecent(new Group<Todo>());
-        mStateHolder.setTodosNearby(new Group<Todo>());
-
         if (mListAdapter != null) {
             mListAdapter.removeObserver();
             mListAdapter = new TodosListAdapter(this, 
@@ -409,6 +416,10 @@ public class TodosActivity extends LoadableListActivityWithView {
         
         public boolean getRecentOnly() {
             return mRecentOnly;
+        }
+        
+        public void setRecentOnly(boolean recentOnly) {
+            mRecentOnly = recentOnly;
         }
         
         public boolean getRanOnce() {
