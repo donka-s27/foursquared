@@ -4,23 +4,9 @@
 
 package com.joelapenna.foursquared.util;
 
-import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Tip;
-import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquared.Foursquared;
-import com.joelapenna.foursquared.R;
 
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
-import android.widget.ImageView;
-
-import java.io.IOException;
-import java.util.Observable;
 
 /**
  * @date September 2, 2010.
