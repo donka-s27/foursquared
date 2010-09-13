@@ -32,7 +32,6 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import java.util.Observable;

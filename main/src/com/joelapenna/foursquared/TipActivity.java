@@ -30,18 +30,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * Shows actions available for a tip:
+ * Shows actions a user can perform as a tip, which includes marking a tip
+ * as a to-do, marking a tip as done, un-marking a tip. You can pass in a
+ * to-do parent id, which will be echoed back in the returned activity
+ * intent. If the to-do parent id is supplied, then some of the displayed
+ * ui elements will change to make it clear that the user is looking at
+ * one of their to-dos vs a tip.
  * 
- * <ul>
- *   <li>Add to my to-do list</li>
- *   <li>I've done this!</li>
- * </ul>
- * 
- * The foursquare API doesn't tell us whether we've already marked a tip as
- * to-do or already done, so we just keep presenting the same options to the
- * user every time they look at this screen.
- * 
- * @date March 24, 2010
+ * @date September 2, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  * 
  */
@@ -51,8 +47,12 @@ public class TipActivity extends Activity {
 
     public static final String EXTRA_TIP_PARCEL = Foursquared.PACKAGE_NAME
         + ".TipActivity.EXTRA_TIP_PARCEL";
+    public static final String EXTRA_TIP_TODO_PARENT_ID = Foursquared.PACKAGE_NAME
+        + ".TipActivity.EXTRA_TIP_TODO_PARENT_ID";
     public static final String EXTRA_TIP_PARCEL_RETURNED = Foursquared.PACKAGE_NAME
-    + ".TipActivity.EXTRA_TIP_PARCEL_RETURNED";
+        + ".TipActivity.EXTRA_TIP_PARCEL_RETURNED";
+    public static final String EXTRA_TIP_TODO_PARENT_ID_RETURNED = Foursquared.PACKAGE_NAME
+        + ".TipActivity.EXTRA_TIP_TODO_PARENT_ID_RETURNED";
     
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
@@ -83,6 +83,10 @@ public class TipActivity extends Activity {
                 
                 Tip tip = getIntent().getExtras().getParcelable(EXTRA_TIP_PARCEL);
                 mStateHolder.setTip(tip);
+                
+                if (getIntent().hasExtra(EXTRA_TIP_TODO_PARENT_ID)) {
+                    mStateHolder.setTodoId(getIntent().getStringExtra(EXTRA_TIP_TODO_PARENT_ID));
+                }
             } else {
                 Log.e(TAG, "TipActivity requires a tip pareclable in its intent extras.");
                 finish();
@@ -153,15 +157,22 @@ public class TipActivity extends Activity {
         tvDate.setText(created);
         
         TextView tvAuthor = (TextView)findViewById(R.id.tipActivityAuthor);
-        tvAuthor.setText(tip.getUser().getFirstname());
-        tvAuthor.setClickable(true);
-        tvAuthor.setFocusable(true);
-        tvAuthor.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showUserDetailsActivity(mStateHolder.getTip().getUser());
-            }
-        });
+        if (tip.getUser() != null) {
+            tvAuthor.setText(tip.getUser().getFirstname());
+            tvAuthor.setClickable(true);
+            tvAuthor.setFocusable(true);
+            tvAuthor.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showUserDetailsActivity(mStateHolder.getTip().getUser());
+                }
+            });
+            
+            tvDate.setText(tvDate.getText() + getResources().getString(
+                    R.string.tip_activity_created_by));
+        } else {
+            tvAuthor.setText("");
+        }
         
         Button btn1 = (Button)findViewById(R.id.tipActivityyAddTodoList);
         Button btn2 = (Button)findViewById(R.id.tipActivityIveDoneThis);
@@ -245,7 +256,9 @@ public class TipActivity extends Activity {
         if (mDlgProgress == null) {
             mDlgProgress = ProgressDialog.show(
                 this, 
-                getResources().getString(R.string.tip_activity_progress_title),
+                mStateHolder.getTodoId() != null ?
+                getResources().getString(R.string.tip_activity_progress_title_todo) :
+                getResources().getString(R.string.tip_activity_progress_title_tip),
                 getResources().getString(R.string.tip_activity_progress_message));
         }
         mDlgProgress.show();
@@ -261,6 +274,9 @@ public class TipActivity extends Activity {
     private Intent buildTipResultIntent() {
         Intent intent = new Intent();
         intent.putExtra(EXTRA_TIP_PARCEL_RETURNED, mStateHolder.getTip());
+        if (!TextUtils.isEmpty(mStateHolder.getTodoId())) {
+            intent.putExtra(EXTRA_TIP_TODO_PARENT_ID_RETURNED, mStateHolder.getTodoId());
+        }
         return intent;
     }
     
@@ -364,6 +380,7 @@ public class TipActivity extends Activity {
         private Tip mTip;
         private TipTask mTipTask;
         private boolean mIsRunningTipTask;
+        private String mTodoId;
         
         
         public StateHolder() {
@@ -400,6 +417,14 @@ public class TipActivity extends Activity {
         
         public boolean getIsRunningTipTask() {
             return mIsRunningTipTask;
+        }
+        
+        public String getTodoId() {
+            return mTodoId;
+        }
+        
+        public void setTodoId(String todoId) {
+            mTodoId = todoId;
         }
     }
 }
