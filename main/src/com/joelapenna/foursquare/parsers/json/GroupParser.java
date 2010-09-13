@@ -43,7 +43,7 @@ public class GroupParser extends AbstractParser<Group> {
     public Group<FoursquareType> parse(JSONObject json) throws JSONException {
 
         if (DEBUG) {
-            LOG.log(Level.FINE, "Parser: In " + TAG + ": " + json.toString());
+            LOG.log(Level.FINE, "Parser: In " + TAG + ": with [" + json.toString() + "].");
         }
         
         Group<FoursquareType> group = new Group<FoursquareType>();
@@ -73,7 +73,7 @@ public class GroupParser extends AbstractParser<Group> {
     public Group parse(JSONArray array) throws JSONException {
         
         if (DEBUG) {
-            LOG.log(Level.FINE, "Parser: In " + TAG + ": " + array.toString());
+            LOG.log(Level.FINE, "Parser: In " + TAG + ": given [" + array.toString() + "].");
         }
         
         Group<FoursquareType> group = new Group<FoursquareType>();

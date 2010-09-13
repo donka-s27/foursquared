@@ -19,6 +19,12 @@ public class TodoParser extends AbstractParser<Todo> {
     public Todo parse(JSONObject json) throws JSONException {
   
         Todo obj = new Todo();
+        if (json.has("created")) {
+            obj.setCreated(json.getString("created"));
+        }
+        if (json.has("id")) {
+            obj.setCreated(json.getString("id"));
+        }
         if (json.has("tip")) {
             obj.setTip(new TipParser().parse(json.getJSONObject("tip")));
         }

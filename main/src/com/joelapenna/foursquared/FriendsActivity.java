@@ -302,6 +302,8 @@ public class FriendsActivity extends LoadableListActivityWithView {
         
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
+        //listView.setDivider(getResources().getDrawable(R.drawable.divider));
+        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

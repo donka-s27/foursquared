@@ -321,4 +321,7 @@
   <string name="tip_activity_btn_tip_2">I\'VE DONE THIS</string>
   <string name="tip_activity_btn_tip_3">UNDO THIS</string>
   <string name="tip_activity_btn_tip_4">CONGRATS! YOU\'VE DONE THIS</string>
+  <string name="todos_activity_btn_recent">RECENT</string>
+  <string name="todos_activity_btn_nearby">NEARBY</string>
+  <string name="todo_added_date">"added %s"</string>
 </resources>

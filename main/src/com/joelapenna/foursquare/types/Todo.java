@@ -4,6 +4,8 @@
 
 package com.joelapenna.foursquare.types;
 
+import com.joelapenna.foursquare.util.ParcelUtils;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -13,6 +15,8 @@ import android.os.Parcelable;
  */
 public class Todo implements FoursquareType, Parcelable {
 
+    private String mCreated;
+    private String mId;
     private Tip mTip;
     private Venue mVenue;
 
@@ -20,6 +24,8 @@ public class Todo implements FoursquareType, Parcelable {
     }
 
     private Todo(Parcel in) {
+        mCreated = ParcelUtils.readStringFromParcel(in);
+        mId = ParcelUtils.readStringFromParcel(in);
         if (in.readInt() == 1) {
             mTip = in.readParcelable(Tip.class.getClassLoader());
         }
@@ -39,6 +45,22 @@ public class Todo implements FoursquareType, Parcelable {
             return new Todo[size];
         }
     };
+    
+    public String getCreated() {
+        return mCreated;
+    }
+    
+    public void setCreated(String created) {
+        mCreated = created;
+    }
+    
+    public String getId() {
+        return mId;
+    }
+    
+    public void setId(String id) {
+        mId = id;
+    }
 
     public Tip getTip() {
         return mTip;
@@ -58,6 +80,9 @@ public class Todo implements FoursquareType, Parcelable {
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
+        ParcelUtils.writeStringToParcel(out, mCreated);
+        ParcelUtils.writeStringToParcel(out, mId);
+        
         if (mTip != null) {
             out.writeInt(1);
             out.writeParcelable(mTip, flags);
