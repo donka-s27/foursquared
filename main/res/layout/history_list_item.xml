@@ -10,7 +10,9 @@
   android:paddingRight="8dip"
   android:paddingTop="5dip"
   android:paddingBottom="8dip"
-  android:orientation="horizontal">
+  android:orientation="horizontal"
+  android:background="@drawable/listview_item"
+  >
 
   <ImageView
     android:id="@+id/icon"
