@@ -7,11 +7,13 @@ package com.joelapenna.foursquared;
 import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquared.app.LoadableListActivityWithView;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.TipUtils;
 import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.TodosListAdapter;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
@@ -47,7 +49,7 @@ public class TodosActivity extends LoadableListActivityWithView {
     static final String TAG = "TodosActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
-    private static final int ACTIVITY_TODO = 500;
+    private static final int ACTIVITY_TIP = 500;
     
     private StateHolder mStateHolder;
     private TodosListAdapter mListAdapter;
@@ -160,12 +162,11 @@ public class TodosActivity extends LoadableListActivityWithView {
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                /*
                 Todo todo = (Todo) parent.getAdapter().getItem(position);
-                Intent intent = new Intent(TodosActivity.this, TodoActivity.class);
-                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo);
-                startActivityForResult(intent, ACTIVITY_TODO);
-                */
+                Intent intent = new Intent(TodosActivity.this, TipActivity.class);
+                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
+                intent.putExtra(TipActivity.EXTRA_TIP_TODO_PARENT_ID, todo.getId());
+                startActivityForResult(intent, ACTIVITY_TIP);
             }
         });
         
@@ -216,13 +217,15 @@ public class TodosActivity extends LoadableListActivityWithView {
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == ACTIVITY_TODO) {
-            //updateTodo((Tip)data.getParcelableExtra(TodoActivity.EXTRA_TODO_PARCEL_RETURNED));
+        if (requestCode == ACTIVITY_TIP) {
+            Tip tip = (Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_PARCEL_RETURNED);
+            String todoId = data.getStringExtra(TipActivity.EXTRA_TIP_TODO_PARENT_ID_RETURNED);
+            updateTodo(todoId, tip);
         }
     }
     
-    private void updateTodo(Todo todo) {
-        mStateHolder.updateTodo(todo);
+    private void updateTodo(String todoId, Tip tip) {
+        mStateHolder.updateTodo(todoId, tip);
         getListView().invalidateViews();
     }
     
@@ -430,17 +433,20 @@ public class TodosActivity extends LoadableListActivityWithView {
             mRanOnce = ranOnce;
         }
         
-        public void updateTodo(Todo todo) {
-            updateTodoFromArray(todo, mTodosRecent);
-            updateTodoFromArray(todo, mTodosNearby);
+        public void updateTodo(String todoId, Tip tip) {
+            updateTodoFromArray(todoId, tip, mTodosRecent);
+            updateTodoFromArray(todoId, tip, mTodosNearby);
         }
         
-        private void updateTodoFromArray(Todo todo, Group<Todo> target) {
-            for (Todo it : target) {
-                //if (it.getId().equals(tip.getId())) {
-                //    it.setStatus(tip.getStatus());
-                //    break;
-                //}
+        private void updateTodoFromArray(String todoId, Tip tip, Group<Todo> target) {
+            for (int i = 0, m = target.size(); i < m; i++) {
+                Todo todo = target.get(i);
+                if (todo.getId().equals(todoId)) {
+                    if (TipUtils.isDone(tip) || !TipUtils.isTodo(tip)) {
+                        target.remove(i);       
+                    }
+                    break;
+                }
             }
         }
     }
