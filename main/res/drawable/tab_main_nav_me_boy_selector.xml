@@ -6,8 +6,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
   <item
     android:state_selected="true"
-    android:drawable="@drawable/me_tab_girl_selected" />
+    android:drawable="@drawable/tab_main_nav_me_boy_on" />
   <item
     android:state_selected="false"
-    android:drawable="@drawable/me_tab_girl_unselected" />
+    android:drawable="@drawable/tab_main_nav_me_boy_off" />
 </selector>

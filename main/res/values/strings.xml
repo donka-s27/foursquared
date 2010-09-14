@@ -232,7 +232,6 @@
   <string name="user_details_activity_set_photo_progress_message">Updating your photo...</string>
   <string name="user_details_activity_set_photo_success">Photo updated ok!</string>
   <string name="user_details_activity_set_photo_cancel">Set photo request cancelled.</string>
-  <string name="main_activity_tab_title_me">Me</string>
   <string name="checkin_execute_activity_progress_bar_message">Checking-in...</string>
   <string name="shout_execute_activity_progress_bar_message">Posting shout...</string>
   <string name="checkin_result_dialog_badges">Badges</string>
@@ -328,4 +327,9 @@
   <string name="todos_activity_btn_nearby">NEARBY</string>
   <string name="todos_activity_no_todos">No To-Dos Here!</string>
   <string name="todo_added_date">"added %s"</string>
+  <string name="tab_main_nav_friends">Friends</string>
+  <string name="tab_main_nav_nearby">Places</string>
+  <string name="tab_main_nav_tips">Tips</string>
+  <string name="tab_main_nav_todos">To-Do</string>
+  <string name="tab_main_nav_me">Me</string>
 </resources>
