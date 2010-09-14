@@ -24,7 +24,6 @@ import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TextView;
 
@@ -109,8 +108,7 @@ public class MainActivity extends TabActivity {
         
         // 1.5 can't display tabs within tabs, so we won't have the 'me' tab for
         // 1.5 users. They can access the 'me' page through the context menu.
-        int sdk = new Integer(Build.VERSION.SDK).intValue();
-        if (sdk > 3) {
+        if (getAndroidVersion() > 3) {
             // 'Me' tab, just shows our own info. At this point we should have a
             // stored user id, and a user gender to control the image which is
             // displayed on the tab.
@@ -156,5 +154,9 @@ public class MainActivity extends TabActivity {
             Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
+    }
+    
+    public static final int getAndroidVersion() {
+        return (new Integer(Build.VERSION.SDK)).intValue();
     }
 }
