@@ -302,7 +302,6 @@ public class FriendsActivity extends LoadableListActivityWithView {
         
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
-        //listView.setDivider(getResources().getDrawable(R.drawable.divider));
         listView.setDividerHeight(0);
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -327,8 +326,7 @@ public class FriendsActivity extends LoadableListActivityWithView {
         // If we don't explicitly set the layout to be fill/fill after inflating, the layout jumps
         // to a wrap/wrap layout. Furthermore, sdk 3 crashes with the original layout using two
         // buttons in a horizontal LinearLayout.
-        int sdk = new Integer(Build.VERSION.SDK).intValue(); 
-        if (sdk > 3) {
+        if (MainActivity.getAndroidVersion() > 3) {
             mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
                     R.layout.friends_activity_empty, null);
         } else {

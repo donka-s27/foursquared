@@ -358,7 +358,7 @@ public class Foursquare {
         }
         return builder.build().toString();
     }
-
+    
     /**
      * This api is supported in the V1 API documented at:
      * http://groups.google.com/group/foursquare-api/web/api-documentation

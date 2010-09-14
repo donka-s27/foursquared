@@ -9,6 +9,7 @@ import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquared.FoursquaredSettings;
+import com.joelapenna.foursquared.MainActivity;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.CheckinTimestampSort;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
@@ -51,6 +52,7 @@ public class CheckinListAdapter extends BaseCheckinAdapter implements Observable
     private RemoteResourceManagerObserver mResourcesObserver;
     private Handler mHandler = new Handler();
     private HashMap<String, String> mCachedTimestamps;
+    private boolean mIsSdk3;
     
     
     public CheckinListAdapter(Context context, RemoteResourceManager rrm) {
@@ -61,6 +63,8 @@ public class CheckinListAdapter extends BaseCheckinAdapter implements Observable
         mCachedTimestamps = new HashMap<String, String>();
 
         mRrm.addObserver(mResourcesObserver);
+        
+        mIsSdk3 = MainActivity.getAndroidVersion() == 3;
     }
     
     public void removeObserver() {
@@ -118,7 +122,11 @@ public class CheckinListAdapter extends BaseCheckinAdapter implements Observable
             holder.secondLine.setVisibility(View.VISIBLE);
             holder.secondLine.setText(checkinMsgLine2);
         } else {
-            holder.secondLine.setVisibility(View.GONE);
+            if (!mIsSdk3) {
+                holder.secondLine.setVisibility(View.GONE);
+            } else {
+                holder.secondLine.setVisibility(View.INVISIBLE);
+            }
         }
         holder.timeTextView.setText(checkinMsgLine3);
         
