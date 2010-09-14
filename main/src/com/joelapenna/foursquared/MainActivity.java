@@ -19,8 +19,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.Window;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TabHost;
+import android.widget.TextView;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -82,23 +88,24 @@ public class MainActivity extends TabActivity {
         String startupTab = settings.getString(
                 Preferences.PREFERENCE_STARTUP_TAB, startupTabValues[0]);
         Intent intent = new Intent(this, NearbyVenuesActivity.class);
+        
         if (startupTab.equals(startupTabValues[0])) {
-            TabsUtil.addNativeLookingTab(this, mTabHost, "t1", getString(R.string.checkins_label), 
-                    R.drawable.friends_tab, new Intent(this, FriendsActivity.class));
-            TabsUtil.addNativeLookingTab(this, mTabHost, "t2", getString(R.string.nearby_label), 
-                    R.drawable.places_tab, intent);
+            addTab(getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector, 
+                    1, new Intent(this, FriendsActivity.class));
+            addTab(getString(R.string.tab_main_nav_nearby), R.drawable.tab_main_nav_nearby_selector, 
+                    2, intent);
         } else {
             intent.putExtra(NearbyVenuesActivity.INTENT_EXTRA_STARTUP_GEOLOC_DELAY, 4000L);
-            TabsUtil.addNativeLookingTab(this, mTabHost, "t1", getString(R.string.nearby_label), 
-                    R.drawable.places_tab, intent);
-            TabsUtil.addNativeLookingTab(this, mTabHost, "t2", getString(R.string.checkins_label), 
-                    R.drawable.friends_tab, new Intent(this, FriendsActivity.class));
+            addTab(getString(R.string.tab_main_nav_nearby), R.drawable.tab_main_nav_nearby_selector, 
+                    1, intent);
+            addTab(getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector,
+                    2, new Intent(this, FriendsActivity.class));
         } 
 
-        TabsUtil.addNativeLookingTab(this, mTabHost, "t3", "Tips", //getString(R.string.checkins_label), 
-                R.drawable.friends_tab, new Intent(this, TipsActivity.class));
-        TabsUtil.addNativeLookingTab(this, mTabHost, "t4", "To-Do", //getString(R.string.checkins_label), 
-                R.drawable.friends_tab, new Intent(this, TodosActivity.class));
+        addTab(getString(R.string.tab_main_nav_tips), R.drawable.tab_main_nav_tips_selector, 
+                3, new Intent(this, TipsActivity.class));
+        addTab(getString(R.string.tab_main_nav_todos), R.drawable.tab_main_nav_todos_selector, 
+                4, new Intent(this, TodosActivity.class));
         
         // 1.5 can't display tabs within tabs, so we won't have the 'me' tab for
         // 1.5 users. They can access the 'me' page through the context menu.
@@ -113,11 +120,30 @@ public class MainActivity extends TabActivity {
             Intent intentTabMe = new Intent(this, UserDetailsActivity.class);
             intentTabMe.putExtra(UserDetailsActivity.EXTRA_USER_ID, userId == null ? "unknown"
                     : userId);
-            TabsUtil.addNativeLookingTab(this, mTabHost, "t5", getString(R.string.main_activity_tab_title_me), 
-                    UserUtils.getDrawableForMeTabByGender(userGender), intentTabMe);
+            addTab(getString(R.string.tab_main_nav_me), 
+                    UserUtils.getDrawableForMeTabByGender(userGender), 5, intentTabMe);
+            
+        } else {
+            FrameLayout flTabContent = (FrameLayout)findViewById(android.R.id.tabcontent);
+            flTabContent.setPadding(0, 0, 0, 0);
         }
-        
-        mTabHost.setCurrentTab(0);
+    }
+    
+    private void addTab(String title, int drawable, int index, Intent intent) {
+        TabHost.TabSpec spec = mTabHost.newTabSpec("tab" + index);
+        spec.setContent(intent);
+        View view = prepareTabView(title, drawable);
+        TabsUtil.setTabIndicator(spec, title, getResources().getDrawable(drawable), view);
+        mTabHost.addTab(spec);
+    }
+    
+    private View prepareTabView(String text, int drawable) {
+        View view = LayoutInflater.from(this).inflate(R.layout.tab_main_nav, null);
+        TextView tv = (TextView) view.findViewById(R.id.tvTitle);
+        tv.setText(text);
+        ImageView iv = (ImageView) view.findViewById(R.id.ivIcon);
+        iv.setImageResource(drawable);
+        return view;
     }
     
     private void redirectToLoginActivity() {

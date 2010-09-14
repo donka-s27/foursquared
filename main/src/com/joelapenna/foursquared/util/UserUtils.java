@@ -98,12 +98,10 @@ public class UserUtils {
     }
     
     public static int getDrawableForMeTabByGender(String gender) {
-        if (gender == null) {
-            return R.drawable.me_tab_boy;
-        } else if (gender.equals("female")) {
-            return R.drawable.me_tab_girl;
+        if (gender != null && gender.equals("female")) {
+            return R.drawable.tab_main_nav_me_girl_selector;
         } else {
-            return R.drawable.me_tab_boy;
+            return R.drawable.tab_main_nav_me_boy_selector;
         }
     }
     

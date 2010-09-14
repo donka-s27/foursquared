@@ -11,7 +11,7 @@
   android:paddingRight="0dip"
   android:paddingBottom="5dip"
   android:background="@drawable/listview_item"
-  >
+  > 
 
   <ImageView
     android:id="@+id/ivVenueCategory"

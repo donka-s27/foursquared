@@ -305,7 +305,7 @@ public class VenueActivity extends TabActivity {
 
         tag = (String) this.getText(R.string.venue_checkins_tab);
         intent = new Intent(this, VenueCheckinsActivity.class);
-        TabsUtil.addNativeLookingTab(this, tabHost, "t1", tag, R.drawable.friends_tab, intent);
+        TabsUtil.addNativeLookingTab(this, tabHost, "t1", tag, R.drawable.tab_main_nav_friends_selector, intent);
 
         tag = (String) this.getText(R.string.map_label);
         intent = new Intent(this, VenueMapActivity.class);
