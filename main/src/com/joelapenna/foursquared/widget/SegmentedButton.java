@@ -42,6 +42,8 @@ public class SegmentedButton extends LinearLayout {
     private int mStrokeWidth;
     private int mCornerRadius;
     private int mTextStyle;
+    private int mBtnPaddingTop;
+    private int mBtnPaddingBottom;
     
     private OnClickListenerSegmentedButton mOnClickListenerExternal;
     
@@ -73,6 +75,9 @@ public class SegmentedButton extends LinearLayout {
         mStrokeWidth = a.getDimensionPixelSize(R.styleable.SegmentedButton_strokeWidth, 1);
         mCornerRadius = a.getDimensionPixelSize(R.styleable.SegmentedButton_cornerRadius, 4);
         mTextStyle = a.getResourceId(R.styleable.SegmentedButton_textStyle, -1);
+        mBtnPaddingTop = a.getDimensionPixelSize(R.styleable.SegmentedButton_btnPaddingTop, 0);
+        mBtnPaddingBottom = a.getDimensionPixelSize(R.styleable.SegmentedButton_btnPaddingBottom, 0);
+        
     
         a.recycle();
     
@@ -109,12 +114,13 @@ public class SegmentedButton extends LinearLayout {
                     button.setBackgroundDrawable(mBgCenterOn);
                 }
             }
-            
-            addView(button,
+            LinearLayout.LayoutParams llp = 
                 new LinearLayout.LayoutParams(
-                    0, 
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    1));
+                        0, 
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1);
+            addView(button, llp);
+            button.setPadding(0, mBtnPaddingTop, 0, mBtnPaddingBottom);
         }
     }
     
@@ -206,7 +212,7 @@ public class SegmentedButton extends LinearLayout {
                 android.R.attr.state_selected, android.R.attr.state_enabled});
         return res;
     }
-            
+
     private GradientDrawable buildGradientDrawable(int colorStart, int colorEnd, int strokeWidth, int strokeColor) {
         GradientDrawable gd = new GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
@@ -266,6 +272,9 @@ public class SegmentedButton extends LinearLayout {
                 btnNext.setBackgroundDrawable(mBgCenterOff);
             }
         }
+        
+        btnLast.setPadding(0, mBtnPaddingTop, 0, mBtnPaddingBottom);
+        btnNext.setPadding(0, mBtnPaddingTop, 0, mBtnPaddingBottom);
         
         mSelectedButtonIndex = btnNextIndex;
     }

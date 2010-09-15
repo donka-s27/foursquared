@@ -28,6 +28,8 @@
       foursquared:strokeWidth="1dip"
       foursquared:cornerRadius="4dip"
       foursquared:textStyle="@style/TextViewStyleHeaderButtonBlue"
+      foursquared:btnPaddingTop="7dip"
+      foursquared:btnPaddingBottom="7dip"
       /> 
         
 </LinearLayout>
