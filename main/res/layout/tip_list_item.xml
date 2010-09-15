@@ -2,7 +2,7 @@
 
   <!-- Copyright 2010 Mark Wyszomierski -->
 
-<LinearLayout
+<RelativeLayout 
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"
@@ -23,86 +23,78 @@
     android:padding="3dip"
     android:src="@drawable/blank_boy"
     android:scaleType="fitXY"
-    android:layout_marginTop="5dip" />
-    
-    <LinearLayout
-      android:layout_width="0dip"
-      android:layout_height="wrap_content"
-      android:layout_weight="1"
-      android:orientation="vertical"
-      android:paddingLeft="8dip"
-      android:layout_marginTop="5dip" > 
+    android:layout_marginTop="5dip"
+    android:layout_marginRight="8dip" />
+    />
+  
+  <TextView
+    android:id="@+id/tvTitle"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="5dip"
+    android:layout_marginRight="12dip"
+    android:text="Title"
+    android:maxLines="1"
+    android:singleLine="true"
+    android:textAppearance="@style/TextViewStyleTipListItemTitle"
+    android:layout_toRightOf="@id/ivAuthor" />
         
-      <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Title"
-        android:textAppearance="@style/TextViewStyleTipListItemTitle" />
-        
-      <TextView
-        android:id="@+id/tvBody"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Body"
-        android:textAppearance="@style/TextViewStyleTipListItemBody" />
+  <TextView
+    android:id="@+id/tvBody"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="12dip"
+    android:text="Body"
+    android:textAppearance="@style/TextViewStyleTipListItemBody"
+    android:layout_toRightOf="@id/ivAuthor"
+    android:layout_below="@id/tvTitle" />
 
-      <TextView
-        android:id="@+id/tvDateAndAuthor"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:maxLines="1"
-        android:text="Date and Author"
-        android:paddingTop="1dip"
-        android:paddingBottom="1dip"
-        android:textAppearance="@style/TextViewStyleTipListItemDateAuthor" />
+  <TextView
+    android:id="@+id/tvDateAndAuthor"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="12dip"
+    android:text="Date and Author"
+    android:paddingTop="1dip"
+    android:paddingBottom="1dip"
+    android:maxLines="1"
+    android:singleLine="true"
+    android:textAppearance="@style/TextViewStyleTipListItemDateAuthor"
+    android:layout_toRightOf="@id/ivAuthor"
+    android:layout_below="@id/tvBody" />
 
-      <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" > 
+  <LinearLayout
+    android:id="@+id/layoutStats"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="12dip"
+    android:orientation="horizontal"
+    android:layout_toRightOf="@id/ivAuthor"
+    android:layout_below="@id/tvDateAndAuthor" > 
       
-        <ImageView
-          android:id="@+id/ivFriendCountAsTodo"
-       	  android:layout_width="13dip"
-	      android:layout_height="10dip"
-          android:src="@drawable/tip_list_item_done"
-          android:scaleType="fitXY"
-          android:layout_marginTop="3dip"
-          android:layout_marginBottom="2dip" />
+    <ImageView
+      android:id="@+id/ivFriendCountCompleted"
+      android:layout_width="10dip"
+	  android:layout_height="10dip"
+      android:src="@drawable/tip_list_item_todo"
+      android:scaleType="fitXY"
+      android:layout_marginTop="3dip"
+      android:layout_marginBottom="2dip" />
     
-        <TextView
-          android:id="@+id/tvFriendCountAsTodo"
-          android:layout_width="wrap_content"
-          android:layout_height="fill_parent"
-          android:text="A"
-          android:paddingLeft="5dip"
-          android:paddingRight="10dip"
-          android:gravity="center_vertical"
-          android:textAppearance="@style/TextViewStyleTipListItemCountTodo" />
-      
-        <ImageView
-          android:id="@+id/ivFriendCountCompleted"
-       	  android:layout_width="10dip"
-	      android:layout_height="10dip"
-          android:src="@drawable/tip_list_item_todo"
-          android:scaleType="fitXY"
-          android:layout_marginTop="3dip"
-          android:layout_marginBottom="2dip" />
-    
-        <TextView
-          android:id="@+id/tvFriendCountCompleted"
-          android:layout_width="wrap_content"
-          android:layout_height="fill_parent"
-          android:text="B"
-          android:paddingLeft="5dip"
-          android:paddingRight="10dip"
-          android:gravity="center_vertical"
-          android:textAppearance="@style/TextViewStyleTipListItemCountDone" />
-              
-      </LinearLayout>
+    <TextView
+      android:id="@+id/tvFriendCountCompleted"
+      android:layout_width="wrap_content"
+      android:layout_height="fill_parent"
+      android:text="B"
+      android:paddingLeft="5dip"
+      android:paddingRight="10dip"
+      android:gravity="center_vertical"
+      android:maxLines="1"
+      android:singleLine="true"
+      android:textAppearance="@style/TextViewStyleTipListItemCountDone" />
       
   </LinearLayout>
+      
   
   <ImageView
     android:id="@+id/ivTipCorner"
@@ -110,8 +102,9 @@
     android:layout_width="22dip"
     android:layout_height="22dip"
     android:scaleType="fitXY"
-    android:gravity="right"
     android:padding="0dip"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentRight="true"
     />
-  
-</LinearLayout>
+    
+</RelativeLayout>

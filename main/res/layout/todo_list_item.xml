@@ -2,7 +2,7 @@
 
   <!-- Copyright 2010 Mark Wyszomierski -->
 
-<LinearLayout
+<RelativeLayout 
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"
@@ -11,8 +11,8 @@
   android:paddingRight="0dip"
   android:paddingBottom="5dip"
   android:background="@drawable/listview_item"
-  > 
-
+  >
+  
   <ImageView
     android:id="@+id/ivVenueCategory"
     android:layout_width="32dip"
@@ -21,56 +21,44 @@
     android:layout_alignParentLeft="true"
     android:src="@drawable/category_none"
     android:scaleType="fitCenter"  
-    android:gravity="center_horizontal"
-    android:layout_marginTop="4dip"
-    android:layout_marginLeft="5dip" />
-  <!--
-  <ImageView
-    android:id="@+id/ivAuthor"
-	android:layout_height="46dip"
-	android:layout_width="46dip"
-    android:background="@drawable/photo_background"
-    android:layout_alignParentTop="true"
-    android:layout_alignParentLeft="true"
-    android:padding="3dip"
-    android:src="@drawable/blank_boy"
-    android:scaleType="fitXY"
-    android:layout_marginTop="5dip" />
-    -->
-    
-  <LinearLayout
-    android:layout_width="0dip"
+    android:layout_marginTop="5dip"
+    android:layout_marginRight="8dip" />
+  
+  <TextView
+    android:id="@+id/tvTitle"
+    android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:layout_weight="1"
-    android:orientation="vertical"
-    android:paddingLeft="8dip"
-    android:layout_marginTop="5dip" > 
+    android:layout_marginTop="5dip"
+    android:layout_marginRight="12dip"
+    android:text="Title"
+    android:maxLines="1"
+    android:singleLine="true"
+    android:textAppearance="@style/TextViewStyleTipListItemTitle"
+    android:layout_toRightOf="@id/ivVenueCategory" />
         
-    <TextView
-      android:id="@+id/tvTitle"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:text="Title"
-      android:textAppearance="@style/TextViewStyleTipListItemTitle" />
-        
-    <TextView
-      android:id="@+id/tvBody"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:text="Body"
-      android:textAppearance="@style/TextViewStyleTipListItemBody" />
+  <TextView
+    android:id="@+id/tvBody"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="12dip"
+    android:text="Body"
+    android:textAppearance="@style/TextViewStyleTipListItemBody"
+    android:layout_toRightOf="@id/ivVenueCategory"
+    android:layout_below="@id/tvTitle" />
 
-    <TextView
-      android:id="@+id/tvDateAndAuthor"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:maxLines="1"
-      android:text="Date and Author"
-      android:paddingTop="1dip"
-      android:paddingBottom="1dip"
-      android:textAppearance="@style/TextViewStyleTipListItemDateAuthor" />
-
-  </LinearLayout>
+  <TextView
+    android:id="@+id/tvDateAndAuthor"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="12dip"
+    android:text="Date and Author"
+    android:paddingTop="1dip"
+    android:paddingBottom="1dip"
+    android:maxLines="1"
+    android:singleLine="true"
+    android:textAppearance="@style/TextViewStyleTipListItemDateAuthor"
+    android:layout_toRightOf="@id/ivVenueCategory"
+    android:layout_below="@id/tvBody" />
   
   <ImageView
     android:id="@+id/ivTipCorner"
@@ -78,8 +66,9 @@
     android:layout_width="22dip"
     android:layout_height="22dip"
     android:scaleType="fitXY"
-    android:gravity="right"
     android:padding="0dip"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentRight="true"
     />
-  
-</LinearLayout>
+    
+</RelativeLayout>
