@@ -97,8 +97,8 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
             holder.title = (TextView) convertView.findViewById(R.id.tvTitle);
             holder.body = (TextView) convertView.findViewById(R.id.tvBody);
             holder.dateAndAuthor = (TextView) convertView.findViewById(R.id.tvDateAndAuthor);
-            holder.friendCountTodoImg = (ImageView) convertView.findViewById(R.id.ivFriendCountAsTodo);
-            holder.friendCountTodo = (TextView) convertView.findViewById(R.id.tvFriendCountAsTodo);
+            //holder.friendCountTodoImg = (ImageView) convertView.findViewById(R.id.ivFriendCountAsTodo);
+            //holder.friendCountTodo = (TextView) convertView.findViewById(R.id.tvFriendCountAsTodo);
             holder.friendCountCompletedImg = (ImageView) convertView.findViewById(R.id.ivFriendCountCompleted);
             holder.friendCountCompleted = (TextView) convertView.findViewById(R.id.tvFriendCountCompleted);
             holder.corner = (ImageView) convertView.findViewById(R.id.ivTipCorner);
@@ -139,7 +139,7 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
                             R.string.tip_age_via, 
                             StringFormatters.getUserFullName(tip.getUser())));
         }
-        
+        /*
         if (tip.getStats().getTodoCount() > 0) {
             holder.friendCountTodoImg.setVisibility(View.VISIBLE);
             holder.friendCountTodo.setVisibility(View.VISIBLE);
@@ -148,7 +148,7 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
             holder.friendCountTodoImg.setVisibility(View.GONE);
             holder.friendCountTodo.setVisibility(View.GONE);
         }
-        
+        */
         if (tip.getStats().getDoneCount() > 0) {
             holder.friendCountCompletedImg.setVisibility(View.VISIBLE);
             holder.friendCountCompleted.setVisibility(View.VISIBLE);
@@ -228,8 +228,8 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
         TextView title;
         TextView body;
         TextView dateAndAuthor;
-        ImageView friendCountTodoImg;
-        TextView friendCountTodo;
+        //ImageView friendCountTodoImg;
+        //TextView friendCountTodo;
         ImageView friendCountCompletedImg;
         TextView friendCountCompleted;
         ImageView corner;
