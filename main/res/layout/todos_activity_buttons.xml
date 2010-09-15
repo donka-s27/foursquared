@@ -27,6 +27,8 @@
       foursquared:strokeColor="#326e90"
       foursquared:strokeWidth="1dip"
       foursquared:cornerRadius="4dip"
+      foursquared:btnPaddingTop="7dip"
+      foursquared:btnPaddingBottom="7dip"
       foursquared:textStyle="@style/TextViewStyleHeaderButtonBlue"
       /> 
         

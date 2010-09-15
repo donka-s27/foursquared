@@ -22,6 +22,8 @@
     <attr name="strokeWidth" format="dimension" />
     <attr name="cornerRadius" format="dimension" />
     <attr name="textStyle" format="reference" />
+    <attr name="btnPaddingTop" format="dimension" />
+    <attr name="btnPaddingBottom" format="dimension" />
   </declare-styleable>
       
 </resources>
