@@ -35,6 +35,7 @@
       android:layout_height="50dip"
       android:layout_alignParentTop="true"
       android:paddingTop="1dip"
+      android:paddingBottom="6dip"
       android:visibility="gone"
       style="@style/listItemStyle"
       android:background="@drawable/blue_fade">

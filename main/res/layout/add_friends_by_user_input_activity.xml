@@ -8,12 +8,13 @@
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
   android:paddingBottom="8dip"
+  android:background="@color/listview_item"
   >
   
   <TextView
     android:id="@+id/addFriendInstructionsTextView"
     style="@style/listSeparatorTextViewStyle" />
-      
+
   <LinearLayout
     android:orientation="vertical" 
     android:layout_width="fill_parent"
@@ -46,31 +47,21 @@
       
   </LinearLayout>
 
-  <!-- 
-  <TextView
-    android:id="@+id/addFriendResultsMatchesTitleTextView"
-    android:text="Matches"  
-    android:visibility="gone"
-    style="@style/listSeparatorTextViewStyle" />
-  
-    android:paddingTop=""
-   android:paddingLeft="8dip"
-    android:paddingRight="8dip"
-    -->
-     
   <LinearLayout
     android:orientation="vertical" 
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@color/listview_item"
     >
    
     <ListView
       android:id="@+id/addFriendResultsListView"
       android:layout_width="fill_parent"
       android:layout_height="fill_parent"
-      android:dividerHeight="1dip" 
       android:drawSelectorOnTop="false"
-      android:scrollbars="vertical" />
+      android:scrollbars="vertical" 
+      android:background="@color/listview_item"
+      />
     
   </LinearLayout>
   

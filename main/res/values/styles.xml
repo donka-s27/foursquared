@@ -2,48 +2,37 @@
   <!-- Copyright 2009 Joe LaPenna -->
 
 <resources>
-  <style
-    name="FoursquareTheme"
-    parent="@android:style/Theme.Light">
-    <item
-      name="android:listSeparatorTextViewStyle">@style/listSeparatorTextViewStyle</item>
-    <item
-      name="android:listViewStyle">@style/listViewStyle</item>
+
+  <style name="FoursquareTheme" parent="@android:style/Theme.Light">
+<!--
+    <item name="android:listSeparatorTextViewStyle">@style/listSeparatorTextViewStyle</item>
+    <item name="android:listViewStyle">@style/listViewStyle</item>
+-->
   </style>
   
-  <style
-    name="listSeparatorTextViewStyle"
-    parent="@android:attr/listSeparatorTextViewStyle">
-    <item
-      name="android:layout_height">wrap_content</item>
-    <item
-      name="android:layout_width">fill_parent</item>
-    <item
-      name="android:paddingTop">2dip</item>
-    <item
-      name="android:paddingBottom">3dip</item>
-    <item
-      name="android:paddingLeft">5dip</item>
-    <item
-      name="android:background">@drawable/foursquare_gradient</item>
-    <item
-      name="android:textAppearance">@android:style/TextAppearance.Small</item>
-    <item
-      name="android:shadowColor">#111111</item>
-    <item
-      name="android:shadowRadius">1</item>
-    <item
-      name="android:shadowDy">1</item>
-    <item
-      name="android:textStyle">bold</item>
-    <item
-      name="android:textColor">@android:color/white</item>
+  <!-- Header divider used with separated list adapter. -->
+  <style name="listSeparatorTextViewStyle">
+    <item name="android:layout_width">fill_parent</item>
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:paddingTop">3dip</item>
+    <item name="android:paddingBottom">4dip</item>
+    <item name="android:paddingLeft">9dip</item>
+    <item name="android:background">@drawable/listview_header_background</item>
+    <item name="android:textAppearance">@style/TextViewStyleHeaderDivider</item>
   </style>
-
-  <!--
+  
+  <!-- Style for listview items, grey embossed background drawable. -->
+  <style name="listItemStyle">
+    <item name="android:background">@drawable/listview_item</item>
+  </style>
+  
+  
+  
+  <!-- 
     These two styles, listViewStyle and tabHostStyle exist only to allow donut/cupcake to display a
     black-backgrounded TabWidget while preserving the light color background of the app's listviews.
   -->
+  <!--
   <style
     name="listViewStyle"
     parent="@android:attr/listViewStyle">
@@ -52,52 +41,34 @@
     <item
       name="android:divider">@drawable/divider</item>
   </style>
+-->
 
-  <style
-    name="tabHostStyle">
+  <style name="tabHostStyle">
+    <!--
     <item
       name="android:background">@android:color/black</item>
+      -->
   </style>
 
-
-  <!--  Manually specified -->
-
-  <style
-    name="listItemStyle">
-    <item
-      name="android:paddingBottom">6dip</item>
+  
+  <!-- This is used by the friends widget. -->
+  <style name="secondaryTextStyle">
+    <item name="android:paddingRight">4dip</item>
+    <item name="android:textAppearance">@android:style/TextAppearance.Small</item>
+    <item name="android:textColor">#74CBE7</item>
   </style>
 
-  <style
-    name="secondaryTextStyle">
-    <item
-      name="android:paddingRight">4dip</item>
-    <item
-      name="android:textAppearance">@android:style/TextAppearance.Small</item>
-    <item
-      name="android:textColor">#74CBE7</item>
-  </style>
-
-  <style
-    name="venueQuickCheckinStyle">
-    <item
-      name="android:background">@drawable/checkin_button</item>
-    <item
-      name="android:text">@string/venue_activity_checkin_button</item>
-    <item
-      name="android:textAppearance">@android:style/TextAppearance.Medium</item>
-    <item
-      name="android:shadowColor">#111111</item>
-    <item
-      name="android:shadowRadius">1</item>
-    <item
-      name="android:shadowDy">1</item>
-    <item
-      name="android:textColor">@android:color/white</item>
-    <item
-      name="android:padding">5dip</item>
-    <item
-      name="android:textStyle">bold</item>
+  <!-- This is the big green checkin button style. -->
+  <style name="checkinButton">
+    <item name="android:background">@drawable/checkin_button</item>
+    <item name="android:text">@string/venue_activity_checkin_button</item>
+    <item name="android:textAppearance">@android:style/TextAppearance.Medium</item>
+    <item name="android:shadowColor">#111111</item>
+    <item name="android:shadowRadius">1</item>
+    <item name="android:shadowDy">1</item>
+    <item name="android:textColor">@android:color/white</item>
+    <item name="android:padding">5dip</item>
+    <item name="android:textStyle">bold</item>
   </style>
   
   <style
@@ -130,50 +101,6 @@
       name="android:paddingBottom">6dip</item>
   </style>
 
-  <style
-    name="TextStyleWhite">
-    <item
-      name="android:shadowColor">#111111</item>
-    <item
-      name="android:shadowRadius">1</item>
-    <item 
-      name="android:padding">3dip</item>
-    <item
-      name="android:shadowDy">1</item>
-    <item
-      name="android:textColor">@color/white</item>
-  </style>
-  
-  <style
-    name="listSeparatorTextViewStylePurple"
-    parent="@android:attr/listSeparatorTextViewStyle">
-    <item
-      name="android:layout_height">wrap_content</item>
-    <item
-      name="android:layout_width">fill_parent</item>
-    <item
-      name="android:paddingTop">2dip</item>
-    <item
-      name="android:paddingBottom">3dip</item>
-    <item
-      name="android:paddingLeft">5dip</item>
-    <item
-      name="android:background">@drawable/purple_gradient</item>
-    <item
-      name="android:textAppearance">@android:style/TextAppearance.Small</item>
-    <item
-      name="android:shadowColor">#111111</item>
-    <item
-      name="android:shadowRadius">1</item>
-    <item
-      name="android:shadowDy">1</item>
-    <item
-      name="android:textStyle">bold</item>
-    <item
-      name="android:textColor">@android:color/white</item>
-  </style>
-  
-  
   <style name="TextViewStyleVenueNameListItem">
     <item name="android:textSize">15dip</item>
     <item name="android:textStyle">bold</item>

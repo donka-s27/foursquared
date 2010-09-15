@@ -52,7 +52,7 @@
           android:layout_height="wrap_content"
           android:enabled="false"
           android:visibility="gone" 
-          style="@style/venueQuickCheckinStyle" />
+          style="@style/checkinButton" />
           
       </LinearLayout>
       

@@ -4,11 +4,11 @@
 
 package com.joelapenna.foursquared.widget;
 
-import com.joelapenna.foursquare.types.FoursquareType;
-import com.joelapenna.foursquare.types.Group;
-
 import android.content.Context;
 import android.widget.BaseAdapter;
+
+import com.joelapenna.foursquare.types.FoursquareType;
+import com.joelapenna.foursquare.types.Group;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)

@@ -10,6 +10,7 @@
   android:paddingRight="8dip"
   android:paddingTop="8dip"
   android:paddingBottom="8dip"
+  android:background="@color/listview_item"
   >
   
   <EditText
