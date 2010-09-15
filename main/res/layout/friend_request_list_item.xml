@@ -12,6 +12,7 @@
   android:paddingRight="12dip"
   android:paddingTop="5dip"
   android:paddingBottom="5dip"
+  style="@style/listItemStyle"
   > 
   
   <LinearLayout

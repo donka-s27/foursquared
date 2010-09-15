@@ -10,7 +10,7 @@
   android:paddingLeft="7dip"
   android:paddingRight="0dip"
   android:paddingBottom="5dip"
-  android:background="@drawable/listview_item"
+  style="@style/listItemStyle"
   >
   
   <ImageView

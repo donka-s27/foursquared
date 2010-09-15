@@ -127,6 +127,7 @@ public class AddFriendsByUserInputActivity extends Activity {
         mListAdapter = new SeparatedListAdapter(this);
         mListView.setAdapter(mListAdapter);
         mListView.setItemsCanFocus(true);
+        mListView.setDividerHeight(0);
 
         mBtnSearch.setOnClickListener(new OnClickListener() {
             @Override

@@ -8,7 +8,7 @@
   android:layout_height="wrap_content"
   android:gravity="center_vertical"
   android:padding="5dip"
-  android:background="@drawable/listview_item"
+  style="@style/listItemStyle"
   > 
   
   <ImageView

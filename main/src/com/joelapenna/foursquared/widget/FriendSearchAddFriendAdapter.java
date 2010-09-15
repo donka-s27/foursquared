@@ -4,12 +4,9 @@
 
 package com.joelapenna.foursquared.widget;
 
-import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquared.FoursquaredSettings;
-import com.joelapenna.foursquared.R;
-import com.joelapenna.foursquared.util.RemoteResourceManager;
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -19,16 +16,19 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.User;
+import com.joelapenna.foursquared.FoursquaredSettings;
+import com.joelapenna.foursquared.R;
+import com.joelapenna.foursquared.util.RemoteResourceManager;
 
 /**
  * @date February 14, 2010

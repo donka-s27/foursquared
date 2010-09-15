@@ -6,12 +6,11 @@
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
   android:background="@color/listview_item">
-  <TabHost
+  <TabHost 
     android:id="@android:id/tabhost"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:layout_below="@id/venueHeader"
-    style="@style/tabHostStyle">
+    >
     <LinearLayout
       android:id="@+id/tabhostlayout"
       android:orientation="vertical"

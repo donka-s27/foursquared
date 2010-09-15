@@ -5,8 +5,8 @@
   android:layout_width="fill_parent"
   android:layout_height="?android:attr/listPreferredItemHeight"
   style="@style/listItemStyle"
-  android:background="@drawable/listview_item"
-  android:paddingRight="7dip">
+  android:paddingRight="7dip"
+  android:paddingBottom="6dip">
  
   <!-- 
     The category icons come down to us from foursquare at 32x32 pixel size.
