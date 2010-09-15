@@ -64,13 +64,14 @@ public class VenueTipsActivity extends LoadableListActivity {
                 startActivity(intent);
             }
         });
-        
+/*
         VenueActivity parent = (VenueActivity)getParent();
         if (parent.venueObservable.getVenue() != null) {
             mVenueObserver.update(parent.venueObservable, parent.venueObservable.getVenue());
         } else {
             parent.venueObservable.addObserver(mVenueObserver);
         }
+*/
     }
 
     @Override

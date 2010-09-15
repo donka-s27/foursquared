@@ -39,7 +39,7 @@ public class VenueCheckinsActivity extends LoadableListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+/*
         mListAdapter = new SeparatedListAdapter(this);
         getListView().setAdapter(mListAdapter);
         getListView().setOnItemClickListener(new OnItemClickListener() {
@@ -63,6 +63,7 @@ public class VenueCheckinsActivity extends LoadableListActivity {
         } else {
             ((VenueActivity)getParent()).venueObservable.addObserver(mParentDataObserver);
         }
+*/
     }
     
     @Override
@@ -111,6 +112,7 @@ public class VenueCheckinsActivity extends LoadableListActivity {
 
         @Override
         public void update(Observable observable, Object data) {
+        	/*
             if (DEBUG) Log.d(TAG, "Received update from: " + observable.toString());
             VenueActivity parent = (VenueActivity)getParent();
             Venue venue = parent.venueObservable.getVenue();
@@ -138,6 +140,7 @@ public class VenueCheckinsActivity extends LoadableListActivity {
                 if (DEBUG) Log.d(TAG, "No data. Setting empty");
                 setEmptyView();
             }
+            */
         }
     }
 }
