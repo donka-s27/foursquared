@@ -76,7 +76,7 @@
       android:id="@+id/ivFriendCountCompleted"
       android:layout_width="10dip"
 	  android:layout_height="10dip"
-      android:src="@drawable/tip_list_item_todo"
+      android:src="@drawable/tip_list_item_done"
       android:scaleType="fitXY"
       android:layout_marginTop="3dip"
       android:layout_marginBottom="2dip" />

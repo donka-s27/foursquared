@@ -9,7 +9,6 @@ import java.util.Observable;
 import java.util.Observer;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -40,8 +39,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Mayor;
 import com.joelapenna.foursquare.types.Stats;
+import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
@@ -68,15 +69,15 @@ public class VenueActivity extends Activity {
 
     private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
-    private static final int DIALOG_TIPADD = 1;
-
-    private static final int MENU_CHECKIN = 1;
-    private static final int MENU_TIPADD = 2;
+    private static final int MENU_TODO_ADD = 1;
+    private static final int MENU_TIP_ADD = 2;
     private static final int MENU_CALL = 3;
     private static final int MENU_EDIT_VENUE = 4;
     private static final int MENU_MYINFO = 5;
 
     private static final int RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE = 1;
+    private static final int RESULT_CODE_ACTIVITY_ADD_TIP = 2;
+    private static final int RESULT_CODE_ACTIVITY_ADD_TODO = 3;
     
 
     public static final String INTENT_EXTRA_VENUE_ID = Foursquared.PACKAGE_NAME
@@ -131,29 +132,14 @@ public class VenueActivity extends Activity {
     	    	return;
     	    }
         }
-        
-        ensureUi();
-        
+
         mRrm = ((Foursquared) getApplication()).getRemoteResourceManager();
         mResourcesObserver = new RemoteResourceManagerObserver();
         mRrm.addObserver(mResourcesObserver);
         
+        ensureUi();
+        
         /*
-        mVenueView = (VenueView) findViewById(R.id.venue);
-        mVenueView.setCheckinButtonOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // This is a quick checkin, so we can just execute the checkin directly.
-                // There's a setting in preferences which can block this behavior though.
-                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(
-                        VenueActivity.this);
-                if (settings.getBoolean(Preferences.PREFERENCE_IMMEDIATE_CHECKIN, false)) {
-                    startCheckinQuick();
-                } else {
-                    startCheckin();   
-                }
-            }
-        });
         mVenueView.setSpecialOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -194,11 +180,13 @@ public class VenueActivity extends Activity {
     	TextView tvMayorTitle = (TextView)findViewById(R.id.venueActivityMayorName);
     	TextView tvMayorText = (TextView)findViewById(R.id.venueActivityMayorText);
     	ImageView ivMayorPhoto = (ImageView)findViewById(R.id.venueActivityMayorPhoto);
+    	ImageView ivMayorChevron = (ImageView)findViewById(R.id.venueActivityMayorChevron);
     	RelativeLayout llPeople = (RelativeLayout)findViewById(R.id.venueActivityPeople);
     	TextView tvPeopleText = (TextView)findViewById(R.id.venueActivityPeopleText);
     	HorizontalViewStrip psPeoplePhotos = (HorizontalViewStrip)findViewById(R.id.venueActivityPeoplePhotos);
     	RelativeLayout rlTips = (RelativeLayout)findViewById(R.id.venueActivityTips);
     	TextView tvTipsText = (TextView)findViewById(R.id.venueActivityTipsText);
+    	ImageView ivTipsChevron = (ImageView)findViewById(R.id.venueActivityTipsChevron);
     	RelativeLayout rlMore = (RelativeLayout)findViewById(R.id.venueActivityMore);
     	
     	UiUtil.buildListViewItemSelectable(this, rlMayor);
@@ -208,6 +196,8 @@ public class VenueActivity extends Activity {
 
     	btnCheckin.setEnabled(false);
 		progress.setVisibility(View.VISIBLE);
+		ivMayorChevron.setVisibility(View.GONE);
+		ivTipsChevron.setVisibility(View.GONE);
 		
 		
     	Venue venue = mStateHolder.getVenue();
@@ -260,9 +250,12 @@ public class VenueActivity extends Activity {
 					        startActivity(intent);
 						}
 		    		});
+
+		    		ivMayorChevron.setVisibility(View.VISIBLE);
 		    	} else {
 		    		tvMayorTitle.setText(getResources().getString(R.string.venue_activity_mayor_name_none));
 		    		tvMayorText.setText(getResources().getString(R.string.venue_activity_mayor_text_none));
+		    		rlMayor.setFocusable(false);
 		    	}
 		    	
 		    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
@@ -301,7 +294,19 @@ public class VenueActivity extends Activity {
 		    			tvTipsText.setText(getResources().getString(
 		    					R.string.venue_activity_tip_count_plural, venue.getTips().size()));
 		    		}
-		    		tvTipsText.setText(venue.getTips().size() + " tips here.");
+		    		
+		    		rlTips.setOnClickListener(new OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
+					        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+					        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_TIPS, mStateHolder.getVenue());
+					        startActivity(intent);
+						}
+		    		});
+
+		    		ivTipsChevron.setVisibility(View.VISIBLE);
+		    		
 		    	} else {
 	    			tvTipsText.setText(getResources().getString(R.string.venue_activity_tip_count_none));
 		    	}
@@ -310,21 +315,56 @@ public class VenueActivity extends Activity {
 	    		svDetails.setVisibility(View.VISIBLE);
 	    	}
     	}
-    	
-    	//if (mStateHolder.getIsRunningTaskVenue()) {
-    	//	startProgressBar();
-    	//}
     }
     
+    private void ensureUiCheckinButton() {
+    	Button btnCheckin = (Button)findViewById(R.id.venueActivityButtonCheckin);
+    	if (mStateHolder.getCheckedInHere()) {
+    		btnCheckin.setEnabled(false);
+    	} else {
+    		if (mStateHolder.getLoadType() == StateHolder.LOAD_TYPE_VENUE_ID) {
+        		btnCheckin.setEnabled(false);
+    		} else {
+        		btnCheckin.setEnabled(true);
+    		}
+    	}
+    }
+    
+    private void ensureUiTipAdded() {
+    	Venue venue = mStateHolder.getVenue();
+    	TextView tvTipsText = (TextView)findViewById(R.id.venueActivityTipsText);
+    	ImageView ivTipsChevron = (ImageView)findViewById(R.id.venueActivityTipsChevron);
+    	RelativeLayout rlTips = (RelativeLayout)findViewById(R.id.venueActivityTips);
+    	
+    	if (venue.getTips().size() == 1) {
+			tvTipsText.setText(getResources().getString(
+					R.string.venue_activity_tip_count_single, venue.getTips().size()));
+		} else {
+			tvTipsText.setText(getResources().getString(
+					R.string.venue_activity_tip_count_plural, venue.getTips().size()));
+		}
+		
+		rlTips.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
+		        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+		        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_TIPS, mStateHolder.getVenue());
+		        startActivity(intent);
+			}
+		});
 
+		ivTipsChevron.setVisibility(View.VISIBLE);
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        menu.add(Menu.NONE, MENU_CHECKIN, 1, R.string.checkin_action_label) //
+        menu.add(Menu.NONE, MENU_TODO_ADD, 1, R.string.venue_activity_menu_add_todo) //
                 .setIcon(R.drawable.ic_menu_checkin);
 
-        menu.add(Menu.NONE, MENU_TIPADD, 2, R.string.add_a_tip).setIcon(
+        menu.add(Menu.NONE, MENU_TIP_ADD, 2, R.string.venue_activity_menu_add_tip).setIcon(
                 android.R.drawable.ic_menu_set_as);
 
         menu.add(Menu.NONE, MENU_CALL, 3, R.string.call).setIcon(android.R.drawable.ic_menu_call);
@@ -347,9 +387,6 @@ public class VenueActivity extends Activity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        boolean checkinEnabled = (mStateHolder.getVenue() != null) && !mStateHolder.getCheckedInHere();
-        menu.findItem(MENU_CHECKIN).setEnabled(checkinEnabled);
-
         boolean callEnabled = mStateHolder.getVenue() != null
                 && !TextUtils.isEmpty(mStateHolder.getVenue().getPhone());
         menu.findItem(MENU_CALL).setEnabled(callEnabled);
@@ -360,11 +397,15 @@ public class VenueActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case MENU_CHECKIN:   
-                startCheckin();
+            case MENU_TODO_ADD:   
+            	Intent intentTodo = new Intent(VenueActivity.this, AddTodoActivity.class);
+            	intentTodo.putExtra(AddTodoActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+                startActivityForResult(intentTodo, RESULT_CODE_ACTIVITY_ADD_TODO);
                 return true;
-            case MENU_TIPADD:
-                showDialog(DIALOG_TIPADD);
+            case MENU_TIP_ADD:
+            	Intent intentTip = new Intent(VenueActivity.this, AddTipActivity.class);
+            	intentTip.putExtra(AddTipActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+                startActivityForResult(intentTip, RESULT_CODE_ACTIVITY_ADD_TIP);
                 return true;
             case MENU_CALL:
                 try {
@@ -393,63 +434,7 @@ public class VenueActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-    @Override
-    public Dialog onCreateDialog(int id) {
-    	/*
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-        View layout;
-
-        switch (id) {
-            case DIALOG_TIPADD:
-                layout = inflater.inflate(R.layout.tip_add_dialog,
-                        (ViewGroup) findViewById(R.id.layout_root));
-
-                final EditText editText = (EditText) layout.findViewById(R.id.editText);
-                final Spinner spinner = (Spinner) layout.findViewById(R.id.spinner);
-
-                return new AlertDialog.Builder(this) //
-                        .setView(layout) //
-                        .setIcon(android.R.drawable.ic_dialog_alert) // icon
-                        .setTitle("Add a Tip") // title
-                        .setPositiveButton("Add", new Dialog.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String tip = editText.getText().toString();
-                                String type = ((String) spinner.getSelectedItem()).toLowerCase();
-                                editText.setText("");
-                                spinner.setSelection(0);
-                                new TipAddTask().execute(tip, type);
-                            }
-                        }) //
-                        .setNegativeButton("Cancel", new Dialog.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                editText.setText("");
-                                spinner.setSelection(0);
-                                dismissDialog(DIALOG_TIPADD);
-                            }
-                        }).create();
-        }
-        return null;
-        */
-    	
-    	return null;
-    }
-
-    @Override
-    public void onPrepareDialog(int id, Dialog dialog) {
-        // If the tip add was a success we must have set mStateHolder.tip. If
-        // that is the case, then
-        // we clear the dialog because clearly they're looking to add a new tip
-        // and not post the
-        // same one again.
-//        if (id == DIALOG_TIPADD && mStateHolder.tip != null) {
-//            ((EditText) dialog.findViewById(R.id.editText)).setText("");
-//            mStateHolder.tip = null;
-//        }
-    }
-
+    
     @Override
     public Object onRetainNonConfigurationInstance() {
         mStateHolder.setActivityForTasks(null);
@@ -465,22 +450,25 @@ public class VenueActivity extends Activity {
                     ensureUiCheckinButton();
                 }
                 break;
+            case RESULT_CODE_ACTIVITY_ADD_TIP:
+            	if (resultCode == Activity.RESULT_OK) {
+            		Tip tip = data.getParcelableExtra(AddTipActivity.EXTRA_TIP_PARCEL_RETURNED);
+            		if (mStateHolder.getVenue().getTips() == null) {
+            			mStateHolder.getVenue().setTips(new Group<Tip>());
+            		}
+            		mStateHolder.getVenue().getTips().add(tip);
+            		ensureUiTipAdded();
+            		Toast.makeText(this, getResources().getString(R.string.venue_activity_tip_added_ok), 
+            				Toast.LENGTH_SHORT).show();
+            	}
+            	break;
+            case RESULT_CODE_ACTIVITY_ADD_TODO:
+            	Toast.makeText(this, getResources().getString(R.string.venue_activity_todo_added_ok), 
+        				Toast.LENGTH_SHORT).show();
+            	break;
         }
     }
     
-    private void ensureUiCheckinButton() {
-    	Button btnCheckin = (Button)findViewById(R.id.venueActivityButtonCheckin);
-    	if (mStateHolder.getCheckedInHere()) {
-    		btnCheckin.setEnabled(false);
-    	} else {
-    		if (mStateHolder.getLoadType() == StateHolder.LOAD_TYPE_VENUE_ID) {
-        		btnCheckin.setEnabled(false);
-    		} else {
-        		btnCheckin.setEnabled(true);
-    		}
-    	}
-    }
-
     private void startProgressBar() {
         if (mDlgProgress == null) {
             mDlgProgress = ProgressDialog.show(
@@ -499,22 +487,6 @@ public class VenueActivity extends Activity {
         setProgressBarIndeterminateVisibility(false);
     }
     
-    /*
-    private void onVenueSet() {
-        Venue venue = mStateHolder.venue;
-        if (DEBUG) Log.d(TAG, "onVenueSet:" + venue.getName());
-        setTitle(venue.getName() + " - Foursquare");
-        mVenueView.setVenue(venue);
-        mVenueView.setCheckinButtonEnabled(mStateHolder.venueId != null);
-    }
-
-    private void setVenue(Venue venue) {
-        mStateHolder.venue = venue;
-        mStateHolder.venueId = venue.getId();
-        venueObservable.notifyObservers(venue);
-        onVenueSet();
-    }
-    */
     private void startCheckin() {
         Intent intent = new Intent(this, CheckinOrShoutGatherInfoActivity.class);
         intent.putExtra(CheckinOrShoutGatherInfoActivity.INTENT_EXTRA_IS_CHECKIN, true);
@@ -580,16 +552,17 @@ public class VenueActivity extends Activity {
 
         @Override
         protected void onPostExecute(Venue venue) {
-        	//mActivity.stopProgressBar();
-        	mActivity.mStateHolder.setIsRunningTaskVenue(false);
-        	if (venue != null) {
-        		mActivity.mStateHolder.setLoadType(StateHolder.LOAD_TYPE_VENUE_FULL);
-        		mActivity.mStateHolder.setVenue(venue);
-        		mActivity.ensureUi();
-        		
-        	} else {
-        		NotificationsUtil.ToastReasonForFailure(mActivity, mReason);
-        		mActivity.finish();
+        	if (mActivity != null) {
+	        	mActivity.mStateHolder.setIsRunningTaskVenue(false);
+	        	if (venue != null) {
+	        		mActivity.mStateHolder.setLoadType(StateHolder.LOAD_TYPE_VENUE_FULL);
+	        		mActivity.mStateHolder.setVenue(venue);
+	        		mActivity.ensureUi();
+	        		
+	        	} else {
+	        		NotificationsUtil.ToastReasonForFailure(mActivity, mReason);
+	        		mActivity.finish();
+	        	}
         	}
         }
 

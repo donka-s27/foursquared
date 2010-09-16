@@ -103,6 +103,12 @@ public class Foursquare {
         return mFoursquareV1.addtip(vid, text, type, location.geolat, location.geolong,
                 location.geohacc, location.geovacc, location.geoalt);
     }
+    
+    @V1
+    public Tip tipDetail(String tid) 
+            throws FoursquareException, FoursquareError, IOException {
+    	return mFoursquareV1.tipDetail(tid);
+    }
 
     @V1
     @LocationRequired

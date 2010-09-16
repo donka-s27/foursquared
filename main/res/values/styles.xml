@@ -63,13 +63,15 @@
     <item name="android:background">@drawable/checkin_button</item>
     <item name="android:text">@string/venue_activity_checkin_button</item>
     <item name="android:textAppearance">@android:style/TextAppearance.Medium</item>
-    <item name="android:shadowColor">#111111</item>
-    <item name="android:shadowRadius">1</item>
-    <item name="android:shadowDy">1</item>
     <item name="android:textColor">@android:color/white</item>
     <item name="android:padding">5dip</item>
     <item name="android:textStyle">bold</item>
   </style>
+  <!--
+    <item name="android:shadowColor">#111111</item>
+    <item name="android:shadowRadius">1</item>
+    <item name="android:shadowDy">1</item>
+  -->
   
   <style
     name="sendInviteStyle">
@@ -338,6 +340,18 @@
    
    <style name="TextViewStyleVenueActivityNormal">
     <item name="android:textSize">14dip</item>
+   </style> 
+   
+   
+   <style name="TextViewStyleAddTipTodoActivityBold">
+    <item name="android:textSize">16dip</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:textColor">@color/white</item>
+   </style> 
+   
+   <style name="TextViewStyleAddTipTodoActivityNormal">
+    <item name="android:textSize">14dip</item>
+    <item name="android:textColor">@color/white</item>
    </style> 
  
 </resources>

@@ -60,7 +60,7 @@ public class VenueCheckinsActivity extends LoadableListActivity {
             if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
             	mStateHolder.setVenue((Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_VENUE));
             } else {
-                Log.e(TAG, "VenueCheckinsActivity requires a userid in its intent extras.");
+                Log.e(TAG, "VenueCheckinsActivity requires a venue parcel its intent extras.");
                 finish();
                 return;
             }

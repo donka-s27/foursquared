@@ -4,139 +4,146 @@
 
 package com.joelapenna.foursquared;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
+
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.app.LoadableListActivity;
-import com.joelapenna.foursquared.util.Comparators;
 import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 import com.joelapenna.foursquared.widget.TipsListAdapter;
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-
-import java.util.Collections;
-import java.util.Observable;
-import java.util.Observer;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
  * @author Mark Wyszomierski (markww@gmail.com)
  *   -modified to start TipActivity on tip click (2010-03-25)
  *   -added photos for tips (2010-03-25)
+ *   -refactored for new VenueActivity design (2010-09-16)
  */
 public class VenueTipsActivity extends LoadableListActivity {
-    public static final String TAG = "VenueTipsActivity";
+    
+	public static final String TAG = "VenueTipsActivity";
     public static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
-    private static final String STATE_CLICKED_TIP = "com.joelapenna.foursquared.VenueTipsActivity.CLICKED_TIP";
-    private static final String STATE_CLICKED_TIP_AUTHOR = "com.joelapenna.foursquared.VenueTipsActivity.CLICKED_TIP_AUTHOR";
+    public static final String INTENT_EXTRA_TIPS = Foursquared.PACKAGE_NAME
+            + ".VenueTipsActivity.INTENT_EXTRA_TIPS";
+    public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
+            + ".VenueTipsActivity.INTENT_EXTRA_VENUE";
 
-    private Observer mVenueObserver = new VenueObserver();
-    private String mClickedTip = null;
-    private String mClickedTipAuthor = null;
     private SeparatedListAdapter mListAdapter;
+    private StateHolder mStateHolder;
 
-    
+        
+    private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (DEBUG) Log.d(TAG, "onReceive: " + intent);
+            finish();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
 
-        if (savedInstanceState != null) {
-            mClickedTip = savedInstanceState.getString(STATE_CLICKED_TIP);
-            mClickedTipAuthor = savedInstanceState.getString(STATE_CLICKED_TIP_AUTHOR);
-        }
-
-        setListAdapter(new SeparatedListAdapter(this));
-        getListView().setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-                //VenueActivity parent = (VenueActivity)getParent();
-                Tip tip = (Tip)adapter.getItemAtPosition(position);
-                Intent intent = new Intent(VenueTipsActivity.this, TipActivity.class);
-                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
-                //if (parent.venueObservable.getVenue() != null) {
-                //    intent.putExtra(TipActivity.EXTRA_VENUE_NAME, parent.venueObservable.getVenue().getName());
-                //}
-                startActivity(intent);
-            }
-        });
-/*
-        VenueActivity parent = (VenueActivity)getParent();
-        if (parent.venueObservable.getVenue() != null) {
-            mVenueObserver.update(parent.venueObservable, parent.venueObservable.getVenue());
+        Object retained = getLastNonConfigurationInstance();
+        if (retained != null && retained instanceof StateHolder) {
+            mStateHolder = (StateHolder) retained;
         } else {
-            parent.venueObservable.addObserver(mVenueObserver);
+            mStateHolder = new StateHolder();
+            if (getIntent().hasExtra(INTENT_EXTRA_VENUE) && getIntent().hasExtra(INTENT_EXTRA_TIPS)) {
+            	mStateHolder.setTips((Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_TIPS));
+            	mStateHolder.setVenue((Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_VENUE));
+            } else {
+                Log.e(TAG, "VenueTipsActivity requires a venue parcel its intent extras.");
+                finish();
+                return;
+            }
         }
-*/
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(STATE_CLICKED_TIP, mClickedTip);
-        outState.putString(STATE_CLICKED_TIP_AUTHOR, mClickedTipAuthor);
+        
+        ensureUi();
     }
     
     @Override
     public void onPause() {
         super.onPause();
         
-        if (isFinishing() && mListAdapter != null) {
+        if (isFinishing()) {
             mListAdapter.removeObserver();
+            unregisterReceiver(mLoggedOutReceiver);
         }
     }
-
+    
     @Override
-    public int getNoSearchResultsStringId() {
-        return R.string.no_tips_be_the_first;
+    public Object onRetainNonConfigurationInstance() {
+        return mStateHolder;
     }
 
-    private Group<Group<Tip>> getVenueTipsAndTodos(Venue venue) {
-        Group<Group<Tip>> tipsAndTodos = new Group<Group<Tip>>();
+    private void ensureUi() {
+    	
+    	Group<Tip> tips = mStateHolder.getVenue().getTips();
 
-        Group<Tip> tips = venue.getTips();
-        if (tips != null && tips.size() > 0) {
-            Collections.sort(tips, Comparators.getTipRecencyComparator());
-            tips.setType("Tips");
-            tipsAndTodos.add(tips);
-        }
-
-        tips = venue.getTodos();
-        if (tips != null && tips.size() > 0) {
-            Collections.sort(tips, Comparators.getTipRecencyComparator());
-            tips.setType("Todos");
-            tipsAndTodos.add(tips);
-        }
-        return tipsAndTodos;
+    	TipsListAdapter groupAdapter = new TipsListAdapter(this,
+                ((Foursquared) getApplication()).getRemoteResourceManager());
+        groupAdapter.setGroup(tips);
+        
+        String title = getResources().getString(R.string.venue_tips_activity_title, tips.size());
+        
+    	mListAdapter = new SeparatedListAdapter(this);
+        mListAdapter.addSection(title, groupAdapter);
+        
+        ListView listView = getListView();
+        listView.setAdapter(mListAdapter);
+        listView.setSmoothScrollbarEnabled(true);
+        listView.setDividerHeight(0);
+        listView.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            	// The tip object doesn't have its venue member set, since it came down from
+            	// the /venue api call. TipActivity expects the venue member to be set, so we
+            	// need to create a new copy of the venue for the tip.
+            	Tip tip = (Tip)parent.getAdapter().getItem(position);
+            	tip.setVenue(mStateHolder.getTips());
+                
+                Intent intent = new Intent(VenueTipsActivity.this, TipActivity.class);
+                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
+                startActivity(intent);
+            }
+        });
     }
-
-    private void putGroupsInAdapter(Group<Group<Tip>> groups) {
-        mListAdapter = (SeparatedListAdapter)getListAdapter();
-        mListAdapter.removeObserver();
-        mListAdapter.clear();
-        setEmptyView();
-
-        int groupCount = groups.size();
-        for (int groupsIndex = 0; groupsIndex < groupCount; groupsIndex++) {
-            Group<Tip> group = groups.get(groupsIndex);
-            TipsListAdapter groupAdapter = new TipsListAdapter(
-                this, ((Foursquared)getApplication()).getRemoteResourceManager());
-            groupAdapter.setGroup(group);
-            groupAdapter.setDisplayTipVenueTitles(false);
-            mListAdapter.addSection(group.getType(), groupAdapter);
+    
+    private static class StateHolder {
+        
+        private Venue mVenue;
+        private Venue mTips;
+        
+        public StateHolder() {
         }
-        mListAdapter.notifyDataSetInvalidated();
-        getListView().setAdapter(mListAdapter);
-    }
-
-    private final class VenueObserver implements Observer {
-        @Override
-        public void update(Observable observable, Object data) {
-            putGroupsInAdapter(getVenueTipsAndTodos((Venue)data));
+ 
+        public Venue getVenue() {
+            return mVenue;
+        }
+        
+        public void setVenue(Venue venue) {
+        	mVenue = venue;
+        }
+        
+        public Venue getTips() {
+            return mTips;
+        }
+        
+        public void setTips(Venue tips) {
+        	mTips = tips;
         }
     }
 }

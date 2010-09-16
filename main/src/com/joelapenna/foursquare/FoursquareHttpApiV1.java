@@ -105,7 +105,7 @@ class FoursquareHttpApiV1 {
     private static final String URL_API_MARK_DONE = "/mark/done";
     private static final String URL_API_UNMARK_TODO = "/unmark/todo";
     private static final String URL_API_UNMARK_DONE = "/unmark/done";
-    private static final String URL_API_ADD_TIP = "/addtip";
+    private static final String URL_API_TIP_DETAIL = "/tip/detail";
     
     private final DefaultHttpClient mHttpClient = AbstractHttpApi.createHttpClient();
     private HttpApi mHttpApi;
@@ -546,18 +546,15 @@ class FoursquareHttpApiV1 {
                     new BasicNameValuePair("tid", tid));
         return (Tip) mHttpApi.doHttpRequest(httpPost, new TipParser());
     }
-    
+
     /**
-     * This is only used when marking a venue as a to-do.
-     * /addtip
+     * /tip/detail?tid=1234
      */
-    public Todo addTip(String vid, String text) throws FoursquareException,
+    public Tip tipDetail(String tid) throws FoursquareException,
         FoursquareCredentialsException, FoursquareError, IOException {
-        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_ADD_TIP), //
-                    new BasicNameValuePair("vid", vid),
-                    new BasicNameValuePair("text", text),
-                    new BasicNameValuePair("type", "todo"));
-        return (Todo) mHttpApi.doHttpRequest(httpPost, new TodoParser());
+        HttpGet httpGet = mHttpApi.createHttpGet(fullUrl(URL_API_TIP_DETAIL), //
+                new BasicNameValuePair("tid", tid));
+        return (Tip) mHttpApi.doHttpRequest(httpGet, new TipParser());
     }
 
     /**
