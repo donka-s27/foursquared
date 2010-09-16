@@ -128,7 +128,7 @@
           android:id="@+id/venueActivityMayorName"
           android:layout_width="wrap_content" 
           android:layout_height="wrap_content"
-          android:text="This place has no mayor"
+          android:text="@string/venue_activity_mayor_name_none"
           android:textAppearance="@style/TextViewStyleVenueActivityBold"
           android:layout_toRightOf="@id/crown"
           android:layout_alignParentTop="true" />
@@ -140,7 +140,7 @@
           android:layout_below="@id/crown"
           android:layout_toRightOf="@id/venueActivityMayorPhoto"
           android:paddingTop="4dip"
-          android:text="Check in here and it could be you"
+          android:text="@string/venue_activity_mayor_text_none"
           android:textAppearance="@style/TextViewStyleVenueActivityNormal" />
         
         <ImageView
@@ -249,7 +249,7 @@
           android:id="@+id/venueActivityMoreTitle"
           android:layout_width="wrap_content" 
           android:layout_height="wrap_content"
-          android:text="More info"
+          android:text="@string/venue_activity_more_info_title"
           android:textAppearance="@style/TextViewStyleVenueActivityBold"
           android:layout_alignParentLeft="true"
           android:layout_alignParentTop="true" />
@@ -258,7 +258,7 @@
           android:id="@+id/venueActivityMoreText"
           android:layout_width="wrap_content" 
           android:layout_height="wrap_content"
-          android:text="Map, contact and more"
+          android:text="@string/venue_activity_more_info_text"
           android:textAppearance="@style/TextViewStyleVenueActivityNormal"
           android:layout_below="@id/venueActivityMoreTitle" />
         

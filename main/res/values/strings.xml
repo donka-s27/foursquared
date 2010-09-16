@@ -332,4 +332,14 @@
   <string name="tab_main_nav_tips">Tips</string>
   <string name="tab_main_nav_todos">To-Do</string>
   <string name="tab_main_nav_me">Me</string>
+  <string name="venue_activity_mayor_name_none">This place has no mayor</string>
+  <string name="venue_activity_mayor_text">is the mayor</string>
+  <string name="venue_activity_mayor_text_none">Check in here and it could be you</string>
+  <string name="venue_activity_people_count_single">%d person is here</string>
+  <string name="venue_activity_people_count_plural">%d people are here</string>
+  <string name="venue_activity_tip_count_single">%d tip here</string>
+  <string name="venue_activity_tip_count_plural">%d tips here</string>
+  <string name="venue_activity_tip_count_none">No tips here</string>
+  <string name="venue_activity_more_info_title">More info</string>
+  <string name="venue_activity_more_info_text">Map, contact and more</string>
 </resources>

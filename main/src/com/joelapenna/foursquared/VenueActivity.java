@@ -234,7 +234,7 @@ public class VenueActivity extends Activity {
 		    	
 		    	if (mayor != null) {
 		    		tvMayorTitle.setText(StringFormatters.getUserFullName(mayor.getUser()));
-		    		tvMayorText.setText("is the mayor");
+		    		tvMayorText.setText(getResources().getString(R.string.venue_activity_mayor_text));
 		    		
 		    		String photoUrl = mayor.getUser().getPhoto();
 		        	Uri uriPhoto = Uri.parse(photoUrl);
@@ -261,26 +261,49 @@ public class VenueActivity extends Activity {
 						}
 		    		});
 		    	} else {
-		    		tvMayorTitle.setText("This place has no mayor.");
-		    		tvMayorText.setText("Check in here and it could be you");
+		    		tvMayorTitle.setText(getResources().getString(R.string.venue_activity_mayor_name_none));
+		    		tvMayorText.setText(getResources().getString(R.string.venue_activity_mayor_text_none));
 		    	}
 		    	
 		    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
 		    		llPeople.setVisibility(View.VISIBLE);
-		    		tvPeopleText.setText(venue.getCheckins().size() + " people are here.");
+		    		if (venue.getCheckins().size() == 1) {
+		    		    tvPeopleText.setText(getResources().getString(
+		    		    		R.string.venue_activity_people_count_single, venue.getCheckins().size()));
+		    		} else {
+		    		    tvPeopleText.setText(getResources().getString(
+		    		    		R.string.venue_activity_people_count_plural, venue.getCheckins().size()));
+		    		}
 		    		
 		    		if (mPhotoAdapter == null) {
 		    			mPhotoAdapter = new ImageAdapter();
 		    			psPeoplePhotos.setAdapter(mPhotoAdapter);
 		    		}
+		    		
+		    		llPeople.setOnClickListener(new OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent(VenueActivity.this, VenueCheckinsActivity.class);
+					        intent.putExtra(VenueCheckinsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+					        startActivity(intent);
+						}
+		    		});
+		    		
 		    	} else {
 		    		llPeople.setVisibility(View.GONE);
 		    	}
 		    	
 		    	if (venue.getTips() != null && venue.getTips().size() > 0) {
+		    		if (venue.getTips().size() == 1) {
+		    			tvTipsText.setText(getResources().getString(
+		    					R.string.venue_activity_tip_count_single, venue.getTips().size()));
+		    		} else {
+		    			tvTipsText.setText(getResources().getString(
+		    					R.string.venue_activity_tip_count_plural, venue.getTips().size()));
+		    		}
 		    		tvTipsText.setText(venue.getTips().size() + " tips here.");
 		    	} else {
-		    		tvTipsText.setText("No tips here.");
+	    			tvTipsText.setText(getResources().getString(R.string.venue_activity_tip_count_none));
 		    	}
 		    	
 	    		progress.setVisibility(View.GONE);
