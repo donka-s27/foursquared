@@ -124,4 +124,13 @@ public class UserUtils {
         
         return false;
     }
+    
+    public static int getDrawableByGenderForUserThumbnail(User user) {
+    	String gender = user.getGender();
+    	if (gender != null && gender.equals("female")) {
+            return R.drawable.blank_girl;
+        } else {
+            return R.drawable.blank_boy;
+        }
+    }
 }

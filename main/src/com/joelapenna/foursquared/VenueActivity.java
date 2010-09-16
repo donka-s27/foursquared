@@ -4,6 +4,10 @@
 
 package com.joelapenna.foursquared;
 
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -12,6 +16,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -27,7 +33,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -42,9 +47,11 @@ import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
 import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.widget.HorizontalViewStrip;
 
 /**
  * We may be given a pre-fetched venue ready to display, or we might also get just
@@ -54,6 +61,7 @@ import com.joelapenna.foursquared.util.UserUtils;
  * @author Joe LaPenna (joe@joelapenna.com)
  * @author Mark Wyszomierski (markww@gmail.com)
  *         -Replaced shout activity with CheckinGatherInfoActivity (3/10/2010).
+ *         -Redesign to remove tabbed layout (9/15/2010).
  */
 public class VenueActivity extends Activity {
     private static final String TAG = "VenueActivity";
@@ -81,6 +89,9 @@ public class VenueActivity extends Activity {
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
     private ImageAdapter mPhotoAdapter;
+
+    private RemoteResourceManager mRrm;
+    private RemoteResourceManagerObserver mResourcesObserver;
     
 
     private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
@@ -123,6 +134,10 @@ public class VenueActivity extends Activity {
         
         ensureUi();
         
+        mRrm = ((Foursquared) getApplication()).getRemoteResourceManager();
+        mResourcesObserver = new RemoteResourceManagerObserver();
+        mRrm.addObserver(mResourcesObserver);
+        
         /*
         mVenueView = (VenueView) findViewById(R.id.venue);
         mVenueView.setCheckinButtonOnClickListener(new OnClickListener() {
@@ -151,13 +166,22 @@ public class VenueActivity extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(mLoggedOutReceiver);
     }
     
     @Override 
     public void onResume() {
         super.onResume();
         ensureUiCheckinButton();
+    }
+    
+    @Override
+    public void onPause() {
+    	super.onPause();
+    	
+    	if (isFinishing()) {
+            unregisterReceiver(mLoggedOutReceiver);
+            mRrm.deleteObserver(mResourcesObserver);
+        }
     }
     
     private void ensureUi() {
@@ -170,9 +194,9 @@ public class VenueActivity extends Activity {
     	TextView tvMayorTitle = (TextView)findViewById(R.id.venueActivityMayorName);
     	TextView tvMayorText = (TextView)findViewById(R.id.venueActivityMayorText);
     	ImageView ivMayorPhoto = (ImageView)findViewById(R.id.venueActivityMayorPhoto);
-    	LinearLayout llPeople = (LinearLayout)findViewById(R.id.venueActivityPeople);
+    	RelativeLayout llPeople = (RelativeLayout)findViewById(R.id.venueActivityPeople);
     	TextView tvPeopleText = (TextView)findViewById(R.id.venueActivityPeopleText);
-    	GridView gvPeoplePhotos = (GridView)findViewById(R.id.venueActivityPeoplePhotos);
+    	HorizontalViewStrip psPeoplePhotos = (HorizontalViewStrip)findViewById(R.id.venueActivityPeoplePhotos);
     	RelativeLayout rlTips = (RelativeLayout)findViewById(R.id.venueActivityTips);
     	TextView tvTipsText = (TextView)findViewById(R.id.venueActivityTipsText);
     	RelativeLayout rlMore = (RelativeLayout)findViewById(R.id.venueActivityMore);
@@ -211,7 +235,20 @@ public class VenueActivity extends Activity {
 		    	if (mayor != null) {
 		    		tvMayorTitle.setText(StringFormatters.getUserFullName(mayor.getUser()));
 		    		tvMayorText.setText("is the mayor");
-		    		// mayor photo...
+		    		
+		    		String photoUrl = mayor.getUser().getPhoto();
+		        	Uri uriPhoto = Uri.parse(photoUrl);
+		            if (mRrm.exists(uriPhoto)) {
+		                try {
+		                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(photoUrl)));
+		                    ivMayorPhoto.setImageBitmap(bitmap);
+		                } catch (IOException e) {
+		                }
+		            } else {
+		            	ivMayorPhoto.setImageResource(UserUtils.getDrawableByGenderForUserThumbnail(mayor.getUser()));
+		            	ivMayorPhoto.setTag(photoUrl);
+		            	mRrm.request(uriPhoto);
+		            }
 		    		
 		    		rlMayor.setOnClickListener(new OnClickListener() {
 						@Override
@@ -231,11 +268,10 @@ public class VenueActivity extends Activity {
 		    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
 		    		llPeople.setVisibility(View.VISIBLE);
 		    		tvPeopleText.setText(venue.getCheckins().size() + " people are here.");
-		    		// people photos...
 		    		
 		    		if (mPhotoAdapter == null) {
 		    			mPhotoAdapter = new ImageAdapter();
-		    			gvPeoplePhotos.setAdapter(mPhotoAdapter);
+		    			psPeoplePhotos.setAdapter(mPhotoAdapter);
 		    		}
 		    	} else {
 		    		llPeople.setVisibility(View.GONE);
@@ -639,21 +675,59 @@ public class VenueActivity extends Activity {
         public long getItemId(int position) {
             return 0;
         }
-
-        // create a new ImageView for each item referenced by the Adapter
+ 
         public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView imageView;
-            if (convertView == null) {  // if it's not recycled, initialize some attributes
-                imageView = new ImageView(VenueActivity.this);
-                imageView.setLayoutParams(new GridView.LayoutParams(44, 44));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setPadding(0, 0, 0, 0);
+        	
+        	ImageView iv = null;
+        	if (convertView == null) {
+        	    iv = (ImageView)VenueActivity.this.getLayoutInflater().inflate(
+            		R.layout.user_photo, null);
+                iv.setImageResource(R.drawable.blank_boy);
+                iv.setLayoutParams(new LinearLayout.LayoutParams(44, 44));
+        	} else {
+        		iv = (ImageView)convertView;
+        	}
+        	
+            String photoUrl = mStateHolder.getVenue().getCheckins().get(position).getUser().getPhoto();
+        	Uri uriPhoto = Uri.parse(photoUrl);
+            if (mRrm.exists(uriPhoto)) {
+                try {
+                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(photoUrl)));
+                    iv.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                }
             } else {
-                imageView = (ImageView) convertView;
+                mRrm.request(uriPhoto);
             }
-
-            imageView.setImageResource(R.drawable.blank_boy);
-            return imageView;
+        	
+        	return iv;
+        }
+    }
+    
+    private class RemoteResourceManagerObserver implements Observer {
+        @Override
+        public void update(Observable observable, Object data) {
+        	HorizontalViewStrip psv = (HorizontalViewStrip)VenueActivity.this.findViewById(R.id.venueActivityPeoplePhotos);
+            psv.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                	if (mPhotoAdapter != null) {
+                		mPhotoAdapter.notifyDataSetInvalidated();
+                	}
+                	
+                	ImageView ivMayorPhoto = (ImageView)findViewById(R.id.venueActivityMayorPhoto);
+                	if (ivMayorPhoto.getTag() != null) {
+                		String mayorPhotoUrl = (String)ivMayorPhoto.getTag();
+                		try {
+                            Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(mayorPhotoUrl)));
+                            ivMayorPhoto.setImageBitmap(bitmap);
+                            ivMayorPhoto.setTag(null);
+                            ivMayorPhoto.invalidate();
+                        } catch (IOException e) {
+                        }
+                	}
+                }
+            });
         }
     }
 }
