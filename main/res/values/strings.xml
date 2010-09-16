@@ -241,7 +241,7 @@
   <string name="changelog_activity_title">Foursquare Changelog</string>
   <string name="sign_up_gender">Gender</string> 
   <string name="sign_up_progress_bar_message_send_request">Joining Foursquare...</string>
-  <string name="venue_activity_checkin_button">CHECK-IN HERE</string>
+  <string name="venue_activity_checkin_button">CHECK IN HERE</string>
   <string name="venue_activity_checkin_button_quick">QUICK CHECK-IN HERE</string>
   <string name="venue_activity_tip_add_result">Added Tip #%s %s</string>
   <string name="venue_checkins_activity_label_recent_checkins">Recent Checkins</string>
@@ -342,4 +342,14 @@
   <string name="venue_activity_tip_count_none">No tips here</string>
   <string name="venue_activity_more_info_title">More info</string>
   <string name="venue_activity_more_info_text">Map, contact and more</string>
+  <string name="venue_activity_menu_add_tip">Add a Tip</string>
+  <string name="venue_activity_menu_add_todo">Add a To-Do</string>
+  <string name="venue_activity_tip_added_ok">Tip added!</string>
+  <string name="venue_activity_todo_added_ok">To-Do added!</string>
+  <string name="venue_tips_activity_title">Tips left here (%d)</string>
+  <string name="add_tip_activity_text_hint">For example: Try the sea salt vanilla ice cream. Best dessert downtown!</string>
+  <string name="add_tip_activity_text_button">Leave Tip</string>
+  <string name="add_tip_todo_activity_progress_message">Adding...</string>
+  <string name="add_todo_activity_text_hint">Add a note (optional)</string>
+  <string name="add_todo_activity_text_button">Add to my to-do list</string>
 </resources>

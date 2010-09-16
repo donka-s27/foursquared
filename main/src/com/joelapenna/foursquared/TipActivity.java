@@ -126,6 +126,7 @@ public class TipActivity extends Activity {
 
     private void ensureUi() {
         Tip tip = mStateHolder.getTip();
+        Venue venue = tip.getVenue();
         
         LinearLayout llHeader = (LinearLayout)findViewById(R.id.tipActivityHeaderView);
         llHeader.setOnClickListener(new OnClickListener() {
@@ -134,18 +135,23 @@ public class TipActivity extends Activity {
                 showVenueDetailsActivity(mStateHolder.getTip().getVenue());
             }
         });
-        
+
         TextView tvTitle = (TextView)findViewById(R.id.tipActivityName);
-        //tvTitle.setText(
-        //    getResources().getString(R.string.tip_activity_by) + " " +
-        //    StringFormatters.getUserFullName(mStateHolder.getTip().getUser()));
-        tvTitle.setText(tip.getVenue().getName());
-        
         TextView tvAddress = (TextView)findViewById(R.id.tipActivityAddress);
-        tvAddress.setText(
-            tip.getVenue().getAddress() + 
-            (TextUtils.isEmpty(tip.getVenue().getCrossstreet()) ? 
-                    "" : " (" + tip.getVenue().getCrossstreet() + ")"));
+        if (venue != null) {
+	        //tvTitle.setText(
+	        //    getResources().getString(R.string.tip_activity_by) + " " +
+	        //    StringFormatters.getUserFullName(mStateHolder.getTip().getUser()));
+	        tvTitle.setText(tip.getVenue().getName());
+	        
+	        tvAddress.setText(
+	            tip.getVenue().getAddress() + 
+	            (TextUtils.isEmpty(tip.getVenue().getCrossstreet()) ? 
+	                    "" : " (" + tip.getVenue().getCrossstreet() + ")"));
+        } else {
+        	tvTitle.setText("");
+        	tvAddress.setText("");
+        }
         
         TextView tvBody = (TextView)findViewById(R.id.tipActivityBody);
         tvBody.setText(tip.getText());
@@ -248,18 +254,14 @@ public class TipActivity extends Activity {
     private void showVenueDetailsActivity(Venue venue) {
         Intent intent = new Intent(this, VenueActivity.class);
         intent.setAction(Intent.ACTION_VIEW);
-        intent.putExtra(Foursquared.EXTRA_VENUE_ID, venue.getId());
+        intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
         startActivity(intent);
     }
     
     private void startProgressBar() {
         if (mDlgProgress == null) {
-            mDlgProgress = ProgressDialog.show(
-                this, 
-                mStateHolder.getTodoId() != null ?
-                getResources().getString(R.string.tip_activity_progress_title_todo) :
-                getResources().getString(R.string.tip_activity_progress_title_tip),
-                getResources().getString(R.string.tip_activity_progress_message));
+            mDlgProgress = ProgressDialog.show(this, "",
+                    getResources().getString(R.string.tip_activity_progress_message));
         }
         mDlgProgress.show();
     }

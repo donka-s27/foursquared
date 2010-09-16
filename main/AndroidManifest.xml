@@ -420,6 +420,14 @@
       android:name=".TodosActivity" >
     </activity> 
     
+    <activity
+      android:name=".AddTipActivity" >
+    </activity> 
+    
+    <activity
+      android:name=".AddTodoActivity" >
+    </activity> 
+    
     <receiver
       android:name=".appwidget.FriendsAppWidgetProvider"
       android:label="@string/friends_appwidget_3x3_label">
