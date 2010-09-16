@@ -4,66 +4,69 @@
 
 package com.joelapenna.foursquared;
 
-import com.joelapenna.foursquare.types.Checkin;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Mayor;
-import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.app.LoadableListActivity;
-import com.joelapenna.foursquared.util.Comparators;
-import com.joelapenna.foursquared.widget.CheckinListAdapter;
-import com.joelapenna.foursquared.widget.MayorListAdapter;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
-
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
-import java.util.Collections;
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.types.Checkin;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.app.LoadableListActivity;
+import com.joelapenna.foursquared.widget.CheckinListAdapter;
+import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
+ * @author Mark Wyszomierski (markww@gmail.com)
+ *   -refactored for display of straight checkins list (September 16, 2010).
+ *   
  */
 public class VenueCheckinsActivity extends LoadableListActivity {
     public static final String TAG = "VenueCheckinsActivity";
     public static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
-    private Observer mParentDataObserver = new ParentDataObserver();
+    public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
+            + ".VenueCheckinsActivity.INTENT_EXTRA_VENUE";
+
     private SeparatedListAdapter mListAdapter;
+    private StateHolder mStateHolder;
+
+        
+    private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (DEBUG) Log.d(TAG, "onReceive: " + intent);
+            finish();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-/*
-        mListAdapter = new SeparatedListAdapter(this);
-        getListView().setAdapter(mListAdapter);
-        getListView().setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Object item = parent.getAdapter().getItem(position);
-                if (item instanceof Checkin) {
-                    Checkin checkin = (Checkin)item;
-                    startItemActivity(checkin.getUser());
-                } else if (item instanceof Mayor) {
-                    Mayor mayor = (Mayor)item;
-                    startItemActivity(mayor.getUser());
-                }
-            }
-        });
+        registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
 
-        VenueActivity parent = (VenueActivity)getParent();
-
-        if (parent.venueObservable.getVenue() != null) {
-            mParentDataObserver.update(parent.venueObservable, parent.venueObservable.getVenue());
+        Object retained = getLastNonConfigurationInstance();
+        if (retained != null && retained instanceof StateHolder) {
+            mStateHolder = (StateHolder) retained;
         } else {
-            ((VenueActivity)getParent()).venueObservable.addObserver(mParentDataObserver);
+            mStateHolder = new StateHolder();
+            if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
+            	mStateHolder.setVenue((Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_VENUE));
+            } else {
+                Log.e(TAG, "VenueCheckinsActivity requires a userid in its intent extras.");
+                finish();
+                return;
+            }
         }
-*/
+        
+        ensureUi();
     }
     
     @Override
@@ -72,75 +75,62 @@ public class VenueCheckinsActivity extends LoadableListActivity {
         
         if (isFinishing()) {
             mListAdapter.removeObserver();
+            unregisterReceiver(mLoggedOutReceiver);
         }
     }
-
+    
     @Override
-    public int getNoSearchResultsStringId() {
-        return R.string.no_checkins_be_the_first;
+    public Object onRetainNonConfigurationInstance() {
+        return mStateHolder;
     }
 
-    private void putCheckinsInAdapter(Group<Checkin> checkins) {
-        if (DEBUG) Log.d(TAG, "Setting checkins.");
-        CheckinListAdapter adapter = new CheckinListAdapter(this, //
-                ((Foursquared)getApplication()).getRemoteResourceManager());
-        adapter.setGroup(checkins);
-        mListAdapter.addSection(getResources().getString(
-                R.string.venue_checkins_activity_label_recent_checkins), adapter);
-    }
+    private void ensureUi() {
+    	
+    	Group<Checkin> checkins = mStateHolder.getVenue().getCheckins();
 
-    private void putMayorInAdapter(final Mayor mayor) {
-        if (DEBUG) Log.d(TAG, "Setting mayor.");
-        Group<Mayor> mayors = new Group<Mayor>();
-        mayors.add(mayor);
-        MayorListAdapter adapter = new MayorListAdapter(this, //
-                ((Foursquared)getApplication()).getRemoteResourceManager());
-        adapter.setGroup(mayors);
-        mListAdapter.addSection(getResources().getString(
-                R.string.venue_checkins_activity_label_mayor), adapter);
-    }
-
-    private void startItemActivity(User user) {
-        if (DEBUG) Log.d(TAG, "firing venue activity for venue");
-        Intent intent = new Intent(VenueCheckinsActivity.this, UserDetailsActivity.class);
-        intent.putExtra(UserDetailsActivity.EXTRA_USER_PARCEL, user);
-        intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
-        startActivity(intent);
-    }
-
-    private final class ParentDataObserver implements Observer {
-
-        @Override
-        public void update(Observable observable, Object data) {
-        	/*
-            if (DEBUG) Log.d(TAG, "Received update from: " + observable.toString());
-            VenueActivity parent = (VenueActivity)getParent();
-            Venue venue = parent.venueObservable.getVenue();
-
-            mListAdapter.removeObserver();
-            mListAdapter = new SeparatedListAdapter(VenueCheckinsActivity.this);
-
-            boolean hasMayor = venue.getStats() != null && venue.getStats().getMayor() != null;
-            if (hasMayor) {
-                if (DEBUG) Log.d(TAG, "Found mayor, pushing to adapter.");
-                putMayorInAdapter(venue.getStats().getMayor());
+    	CheckinListAdapter groupAdapter = new CheckinListAdapter(this,
+                ((Foursquared) getApplication()).getRemoteResourceManager());
+        groupAdapter.setGroup(checkins);
+        
+        String title = "";
+        if (checkins.size() == 1) {
+		    title = getResources().getString(R.string.venue_activity_people_count_single, checkins.size());
+		} else {
+		    title = getResources().getString(R.string.venue_activity_people_count_plural, checkins.size());
+		}
+        
+    	mListAdapter = new SeparatedListAdapter(this);
+        mListAdapter.addSection(title, groupAdapter);
+        
+        ListView listView = getListView();
+        listView.setAdapter(mListAdapter);
+        listView.setSmoothScrollbarEnabled(true);
+        listView.setDividerHeight(0);
+        listView.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Checkin checkin = (Checkin) parent.getAdapter().getItem(position);
+                Intent intent = new Intent(VenueCheckinsActivity.this, UserDetailsActivity.class);
+                intent.putExtra(UserDetailsActivity.EXTRA_USER_PARCEL, checkin.getUser());
+                intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
+                startActivity(intent);
             }
-
-            Group<Checkin> checkins = venue.getCheckins();
-            boolean hasCheckins = venue.getCheckins() != null && venue.getCheckins().size() > 0;
-            if (hasCheckins) {
-                if (DEBUG) Log.d(TAG, "Found checkins, pushing to adapter.");
-                Collections.sort(checkins, Comparators.getCheckinRecencyComparator());
-                putCheckinsInAdapter(checkins);
-            }
-            
-            getListView().setAdapter(mListAdapter);
-
-            if (!hasMayor && !hasCheckins) {
-                if (DEBUG) Log.d(TAG, "No data. Setting empty");
-                setEmptyView();
-            }
-            */
+        });
+    }
+    
+    private static class StateHolder {
+        
+        private Venue mVenue;
+        
+        public StateHolder() {
+        }
+ 
+        public Venue getVenue() {
+            return mVenue;
+        }
+        
+        public void setVenue(Venue venue) {
+        	mVenue = venue;
         }
     }
 }
