@@ -42,7 +42,12 @@ public class LoadableListActivity extends ListActivity {
 
     public void setLoadingView() {
         mEmptyProgress.setVisibility(ViewGroup.VISIBLE);
-       // mEmptyText.setText(R.string.loading);
+        mEmptyText.setText(R.string.loading);
+    }
+    
+    public void setLoadingView(String loadingText) {
+    	setLoadingView();
+        mEmptyText.setText(loadingText);
     }
 
     public int getNoSearchResultsStringId() {

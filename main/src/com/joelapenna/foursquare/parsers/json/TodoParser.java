@@ -28,9 +28,6 @@ public class TodoParser extends AbstractParser<Todo> {
         if (json.has("todoid")) {
             obj.setId(json.getString("todoid"));
         }
-        if (json.has("venue")) {
-            obj.setVenue(new VenueParser().parse(json.getJSONObject("venue")));
-        }
         
         return obj;
     }

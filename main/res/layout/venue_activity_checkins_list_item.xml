@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:foursquared="http://schemas.android.com/apk/res/com.joelapenna.foursquared"
+  android:id="@+id/venueActivityPeople"
+  android:layout_width="fill_parent" 
+  android:layout_height="wrap_content"
+  android:padding="7dip"
+  android:background="@drawable/listview_item" >
+  
+  <TextView 
+    android:id="@+id/venueActivityPeopleText"
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+    android:text="N people are here."
+    android:textAppearance="@style/TextViewStyleVenueActivityBold"
+    android:layout_alignParentTop="true"
+    android:layout_marginBottom="3dip" />
+    
+  <com.joelapenna.foursquared.widget.PhotoStrip
+    android:id="@+id/venueActivityPeoplePhotos"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/venueActivityPeopleText"
+    android:layout_alignParentLeft="true"
+    foursquared:photoSize="44dip"
+    foursquared:photoSpacing="10dip"
+    foursquared:photoBorder="2dip"
+    foursquared:photoBorderStroke="1dip"
+    foursquared:photoBorderColor="#FFFFFFFF"
+    foursquared:photoBorderStrokeColor="#FFD0D0D0"
+    /> 
+    
+  <ImageView
+    android:id="@+id/venueActivityPeopleChevron"
+    android:layout_width="9dip"
+    android:layout_height="13dip"
+    android:src="@drawable/arrow_grey"
+    android:scaleType="fitCenter"  
+    android:layout_marginLeft="3dip"
+    android:layout_marginRight="3dip"
+    android:layout_centerVertical="true"
+    android:layout_alignParentRight="true"  />
+    
+</RelativeLayout>

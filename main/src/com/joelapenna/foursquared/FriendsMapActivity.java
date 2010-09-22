@@ -73,7 +73,7 @@ public class FriendsMapActivity extends MapActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(FriendsMapActivity.this, VenueActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
-                intent.putExtra(Foursquared.EXTRA_VENUE_ID, mTappedVenueId);
+                intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_ID, mTappedVenueId);
                 startActivity(intent);
             }
         });

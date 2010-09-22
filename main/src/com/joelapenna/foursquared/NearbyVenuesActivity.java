@@ -4,19 +4,12 @@
 
 package com.joelapenna.foursquared;
 
-import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.error.FoursquareException;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.app.LoadableListActivity;
-import com.joelapenna.foursquared.location.BestLocationListener;
-import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.preferences.Preferences;
-import com.joelapenna.foursquared.util.MenuUtils;
-import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.util.UserUtils;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
-import com.joelapenna.foursquared.widget.VenueListAdapter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.SearchManager;
@@ -40,15 +33,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemClickListener;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.error.FoursquareException;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.app.LoadableListActivity;
+import com.joelapenna.foursquared.location.BestLocationListener;
+import com.joelapenna.foursquared.location.LocationUtils;
+import com.joelapenna.foursquared.preferences.Preferences;
+import com.joelapenna.foursquared.util.MenuUtils;
+import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.widget.SeparatedListAdapter;
+import com.joelapenna.foursquared.widget.VenueListAdapter;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -67,6 +69,8 @@ public class NearbyVenuesActivity extends LoadableListActivity {
     private static final int MENU_SEARCH = 2;
     private static final int MENU_MYINFO = 3;
     private static final int MENU_MAP = 4;
+    
+    private static final int RESULT_CODE_ACTIVITY_VENUE = 1;
 
     private StateHolder mStateHolder = new StateHolder();
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
@@ -228,7 +232,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
             case MENU_MAP:
                 startActivity(new Intent(NearbyVenuesActivity.this, NearbyVenuesMapActivity.class));
                 return true;
-                
         }
         return super.onOptionsItemSelected(item);
     }
@@ -264,9 +267,12 @@ public class NearbyVenuesActivity extends LoadableListActivity {
 
     private void startItemActivity(Venue venue) {
         Intent intent = new Intent(NearbyVenuesActivity.this, VenueActivity.class);
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
-        startActivity(intent);
+        if (mStateHolder.isFullyLoadedVenue(venue.getId())) {
+        	intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE, venue);
+        } else {
+        	intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
+        }
+        startActivityForResult(intent, RESULT_CODE_ACTIVITY_VENUE);
     }
 
     private void ensureTitle(boolean finished) {
@@ -280,6 +286,19 @@ public class NearbyVenuesActivity extends LoadableListActivity {
     private void populateFooter(String reverseGeoLoc) {
         mFooterView.setVisibility(View.VISIBLE);
         mTextViewFooter.setText(reverseGeoLoc);
+    }
+    
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case RESULT_CODE_ACTIVITY_VENUE:
+                if (resultCode == Activity.RESULT_OK && data.hasExtra(VenueActivity.EXTRA_VENUE_RETURNED)) {
+                	Venue venue = (Venue)data.getParcelableExtra(VenueActivity.EXTRA_VENUE_RETURNED);
+                	mStateHolder.updateVenue(venue);
+                	mListAdapter.notifyDataSetInvalidated();
+                }
+                break;
+        }
     }
     
     private long getClearGeolocationOnSearch() {
@@ -343,7 +362,7 @@ public class NearbyVenuesActivity extends LoadableListActivity {
             setProgressBarIndeterminateVisibility(true);
             ensureTitle(false);
             if (mStateHolder.getResults().size() == 0) {
-                setLoadingView();
+            	setLoadingView("");
             }
             mStateHolder.startTask(this, mStateHolder.getQuery(), geoLocDelayTimeInMs);
         }
@@ -479,10 +498,12 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         private String mQuery;
         private String mReverseGeoLoc;
         private SearchTask mSearchTask;
+        private Set<String> mFullyLoadedVenueIds;
         
         public StateHolder() {
             mResults = new Group<Group<Venue>>();
             mSearchTask = null;
+            mFullyLoadedVenueIds = new HashSet<String>();
         }
         
         public String getQuery() {
@@ -529,6 +550,21 @@ public class NearbyVenuesActivity extends LoadableListActivity {
             if (mSearchTask != null) {
                 mSearchTask.setActivity(activity);
             }
+        }
+        
+        public void updateVenue(Venue venue) {
+        	for (Group<Venue> it : mResults) {
+        		for (int j = 0; j < it.size(); j++) {
+        			if (it.get(j).getId().equals(venue.getId())) {
+        				it.set(j, venue);
+        				mFullyLoadedVenueIds.add(venue.getId());
+        			}
+        		}
+        	}
+        }
+        
+        public boolean isFullyLoadedVenue(String vid) {
+        	return mFullyLoadedVenueIds.contains(vid);
         }
     }
 }

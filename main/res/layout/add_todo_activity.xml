@@ -38,6 +38,7 @@
       android:hint="@string/add_todo_activity_text_hint"
       android:gravity="top"
       android:maxLength="200"
+      android:lines="4"
       android:layout_marginBottom="10dip" />
 
     <Button

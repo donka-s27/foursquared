@@ -355,7 +355,7 @@ public class CheckinResultDialog extends Dialog
                     if (venue != null) {
                         Intent intent = new Intent(getContext(), VenueActivity.class);
                         intent.setAction(Intent.ACTION_VIEW);
-                        intent.putExtra(Foursquared.EXTRA_VENUE_ID, venue.getId());
+                        intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
                         getContext().startActivity(intent);
                     }
                 }

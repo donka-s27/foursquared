@@ -4,9 +4,11 @@
 
 package com.joelapenna.foursquared.util;
 
-import com.joelapenna.foursquare.types.Tip;
-
 import android.text.TextUtils;
+
+import com.joelapenna.foursquare.types.FoursquareType;
+import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
 
 /**
  * @date September 2, 2010.
@@ -35,5 +37,44 @@ public class TipUtils {
         }
         
         return false;
+    }
+    
+    public static boolean areEqual(FoursquareType tipOrTodo1, FoursquareType tipOrTodo2) {
+    	if (tipOrTodo1 instanceof Tip) {
+    		if (tipOrTodo2 instanceof Todo) {
+    			return false;
+    		}
+    		
+    		Tip tip1 = (Tip)tipOrTodo1;
+    		Tip tip2 = (Tip)tipOrTodo2;
+    		if (!tip1.getId().equals(tip2.getId())) {
+    			return false;
+    		}
+    		
+    		if (!TextUtils.isEmpty(tip1.getStatus()) && !TextUtils.isEmpty(tip2.getStatus())) {
+    		    return tip1.getStatus().equals(tip2.getStatus());
+    		} else if (TextUtils.isEmpty(tip1.getStatus()) && TextUtils.isEmpty(tip2.getStatus())) {
+    			return true;
+    	    } else {
+    			return false;
+    		}
+    		
+    	} else if (tipOrTodo1 instanceof Todo) {
+    		if (tipOrTodo2 instanceof Tip) {
+    			return false;
+    		}
+
+    		Todo todo1 = (Todo)tipOrTodo1;
+    		Todo todo2 = (Todo)tipOrTodo2;
+    		if (!todo1.getId().equals(todo2.getId())) {
+    			return false;
+    		}
+    		
+    		if (todo1.getTip().getId().equals(todo2.getId())) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
     }
 }

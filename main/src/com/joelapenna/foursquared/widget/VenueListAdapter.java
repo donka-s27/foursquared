@@ -85,6 +85,7 @@ public class VenueListAdapter extends BaseVenueAdapter implements ObservableAdap
             holder.venueDistance = (TextView) convertView.findViewById(R.id.venueDistance);
             holder.iconTrending = (ImageView) convertView.findViewById(R.id.iconTrending);
             holder.venueCheckinCount = (TextView) convertView.findViewById(R.id.venueCheckinCount);
+            holder.todoHere = (ImageView) convertView.findViewById(R.id.venueTodoCorner);
             convertView.setTag(holder);
         } else {
             // Get the ViewHolder back to get fast access to the TextView
@@ -116,14 +117,7 @@ public class VenueListAdapter extends BaseVenueAdapter implements ObservableAdap
 
         // Venue street address (cross streets | city, state zip).
         if (!TextUtils.isEmpty(venue.getAddress())) { 
-            StringBuilder sb = new StringBuilder(128);
-            sb.append(venue.getAddress());
-            String crossStreets = StringFormatters.getVenueLocationCrossStreetOrCity(venue);
-            if (crossStreets != null) {
-                sb.append(" ");
-                sb.append(crossStreets);
-            }
-            holder.locationLine1.setText(sb.toString());
+            holder.locationLine1.setText(StringFormatters.getVenueLocationFull(venue));
         } else {
             holder.locationLine1.setText("");
         }
@@ -154,6 +148,13 @@ public class VenueListAdapter extends BaseVenueAdapter implements ObservableAdap
         } else {
             holder.iconTrending.setVisibility(View.GONE);
             holder.venueCheckinCount.setVisibility(View.GONE);
+        }
+        
+        // If we have a todo here, show the corner folded over.
+        if (venue.getHasTodo()) {
+        	holder.todoHere.setVisibility(View.VISIBLE);
+        } else {
+        	holder.todoHere.setVisibility(View.INVISIBLE);
         }
         
         return convertView;
@@ -212,5 +213,6 @@ public class VenueListAdapter extends BaseVenueAdapter implements ObservableAdap
         TextView venueDistance;
         ImageView iconTrending;
         TextView venueCheckinCount;
+        ImageView todoHere;
     }
 }

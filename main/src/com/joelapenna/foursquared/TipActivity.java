@@ -4,14 +4,6 @@
 
 package com.joelapenna.foursquared;
 
-import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.types.Tip;
-import com.joelapenna.foursquare.types.Todo;
-import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.util.StringFormatters;
-import com.joelapenna.foursquared.util.TipUtils;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -25,17 +17,32 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.types.FoursquareType;
+import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
+import com.joelapenna.foursquare.types.User;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.util.StringFormatters;
+import com.joelapenna.foursquared.util.TipUtils;
+
 /**
- * Shows actions a user can perform as a tip, which includes marking a tip
- * as a to-do, marking a tip as done, un-marking a tip. You can pass in a
- * to-do parent id, which will be echoed back in the returned activity
- * intent. If the to-do parent id is supplied, then some of the displayed
- * ui elements will change to make it clear that the user is looking at
- * one of their to-dos vs a tip.
+ * Shows actions a user can perform on a tip, which includes marking a tip
+ * as a to-do, marking a tip as done, un-marking a tip. Marking a tip as
+ * a to-do will generate a to-do, which has the tip as a child object.
+ * 
+ * The intent will return a Tip object and a Todo object (if the final state
+ * of the tip was marked as a Todo). In the case where a Todo is returned,
+ * the Tip will be the representation as found within the Todo object.
+ * 
+ * If the user does not modify the tip, no intent data is returned. If the
+ * final state of the tip was not marked as a to-do, the Todo object is
+ * not returned.
  * 
  * @date September 2, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
@@ -47,12 +54,24 @@ public class TipActivity extends Activity {
 
     public static final String EXTRA_TIP_PARCEL = Foursquared.PACKAGE_NAME
         + ".TipActivity.EXTRA_TIP_PARCEL";
-    public static final String EXTRA_TIP_TODO_PARENT_ID = Foursquared.PACKAGE_NAME
-        + ".TipActivity.EXTRA_TIP_TODO_PARENT_ID";
-    public static final String EXTRA_TIP_PARCEL_RETURNED = Foursquared.PACKAGE_NAME
-        + ".TipActivity.EXTRA_TIP_PARCEL_RETURNED";
-    public static final String EXTRA_TIP_TODO_PARENT_ID_RETURNED = Foursquared.PACKAGE_NAME
-        + ".TipActivity.EXTRA_TIP_TODO_PARENT_ID_RETURNED";
+    public static final String EXTRA_VENUE_CLICKABLE = Foursquared.PACKAGE_NAME
+        + ".TipActivity.EXTRA_VENUE_CLICKABLE";
+    
+    /** 
+     * Always returned if the user modifies the tip in any way. Captures the 
+     * new <status> attribute of the tip. It may not have been changed by the 
+     * user.
+     */
+    public static final String EXTRA_TIP_RETURNED = Foursquared.PACKAGE_NAME
+        + ".TipActivity.EXTRA_TIP_RETURNED";
+    
+    /** 
+     * If the user marks the tip as to-do as the final state, then a to-do object
+     * will also be returned here. The to-do object has the same tip object as 
+     * returned in EXTRA_TIP_PARCEL_RETURNED as a child member.
+     */
+    public static final String EXTRA_TODO_RETURNED = Foursquared.PACKAGE_NAME
+        + ".TipActivity.EXTRA_TODO_RETURNED";
     
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
@@ -78,14 +97,19 @@ public class TipActivity extends Activity {
             mStateHolder.setActivityForTipTask(this);
         } else {
             mStateHolder = new StateHolder();
-            if (getIntent().getExtras() != null && 
-                getIntent().getExtras().containsKey(EXTRA_TIP_PARCEL)) {
-                
-                Tip tip = getIntent().getExtras().getParcelable(EXTRA_TIP_PARCEL);
-                mStateHolder.setTip(tip);
-                
-                if (getIntent().hasExtra(EXTRA_TIP_TODO_PARENT_ID)) {
-                    mStateHolder.setTodoId(getIntent().getStringExtra(EXTRA_TIP_TODO_PARENT_ID));
+            if (getIntent().getExtras() != null) {
+            	if (getIntent().hasExtra(EXTRA_TIP_PARCEL)) {
+            		Tip tip = getIntent().getExtras().getParcelable(EXTRA_TIP_PARCEL);
+            		mStateHolder.setTip(tip);
+            	} else {
+                    Log.e(TAG, "TipActivity requires a tip pareclable in its intent extras.");
+                    finish();
+                    return;
+            	}
+            	
+                if (getIntent().hasExtra(EXTRA_VENUE_CLICKABLE)) {
+                	mStateHolder.setVenueClickable(
+                			getIntent().getBooleanExtra(EXTRA_VENUE_CLICKABLE, true));
                 }
             } else {
                 Log.e(TAG, "TipActivity requires a tip pareclable in its intent extras.");
@@ -94,7 +118,7 @@ public class TipActivity extends Activity {
             }
         }
         
-        setResult(Activity.RESULT_OK, buildTipResultIntent());
+//        prepareResultIntent(mStateHolder.getTip(), null);
         
         ensureUi();
     }
@@ -129,19 +153,25 @@ public class TipActivity extends Activity {
         Venue venue = tip.getVenue();
         
         LinearLayout llHeader = (LinearLayout)findViewById(R.id.tipActivityHeaderView);
-        llHeader.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showVenueDetailsActivity(mStateHolder.getTip().getVenue());
-            }
-        });
+        if (mStateHolder.getVenueClickable()) {
+	        llHeader.setOnClickListener(new OnClickListener() {
+	            @Override
+	            public void onClick(View v) {
+	                showVenueDetailsActivity(mStateHolder.getTip().getVenue());
+	            }
+	        });
+        }
+        
+        ImageView ivVenueChevron = (ImageView)findViewById(R.id.tipActivityVenueChevron);
+        if (mStateHolder.getVenueClickable()) {
+        	ivVenueChevron.setVisibility(View.VISIBLE);
+        } else {
+        	ivVenueChevron.setVisibility(View.INVISIBLE);
+        }
 
         TextView tvTitle = (TextView)findViewById(R.id.tipActivityName);
         TextView tvAddress = (TextView)findViewById(R.id.tipActivityAddress);
         if (venue != null) {
-	        //tvTitle.setText(
-	        //    getResources().getString(R.string.tip_activity_by) + " " +
-	        //    StringFormatters.getUserFullName(mStateHolder.getTip().getUser()));
 	        tvTitle.setText(tip.getVenue().getName());
 	        
 	        tvAddress.setText(
@@ -273,35 +303,43 @@ public class TipActivity extends Activity {
         }
     }
     
-    private Intent buildTipResultIntent() {
+    private void prepareResultIntent(Tip tip, Todo todo) {
         Intent intent = new Intent();
-        intent.putExtra(EXTRA_TIP_PARCEL_RETURNED, mStateHolder.getTip());
-        if (!TextUtils.isEmpty(mStateHolder.getTodoId())) {
-            intent.putExtra(EXTRA_TIP_TODO_PARENT_ID_RETURNED, mStateHolder.getTodoId());
+        intent.putExtra(EXTRA_TIP_RETURNED, tip);
+        if (todo != null) {
+        	intent.putExtra(EXTRA_TODO_RETURNED, todo); // tip is also a part of the to-do.
         }
-        return intent;
+        setResult(Activity.RESULT_OK, intent);
     }
     
-    private void onTipTaskComplete(Tip tip, int type, Exception ex) {
+    private void onTipTaskComplete(FoursquareType tipOrTodo, int type, Exception ex) {
         stopProgressBar();
         mStateHolder.setIsRunningTipTask(false);
-        if (tip != null) {
-            // Update tip in stateholder.
-            mStateHolder.getTip().setStatus(tip.getStatus());
-            
-            // Update tip for return to caller if they're interested.
-            setResult(Activity.RESULT_OK, buildTipResultIntent());
+        if (tipOrTodo != null) {
+        	// When the tip and todo are serialized into the intent result, the
+        	// link between them will be lost, they'll appear as two separate
+        	// tip object instances (ids etc will all be the same though).
+        	if (tipOrTodo instanceof Tip) {
+        		Tip tip = (Tip)tipOrTodo;
+        		mStateHolder.setTip(tip);
+            	prepareResultIntent(tip, null);
+        	} else {
+        		Todo todo = (Todo)tipOrTodo;
+        		Tip tip = todo.getTip();
+        		mStateHolder.setTip(tip);
+            	prepareResultIntent(tip, todo);
+        	}
             
         } else if (ex != null) {
             Toast.makeText(this, ex.toString(), Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Tip was unavailable!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Error updating tip!", Toast.LENGTH_LONG).show();
         }
         
         ensureUi();
     }
     
-    private static class TipTask extends AsyncTask<String, Void, Tip> {
+    private static class TipTask extends AsyncTask<String, Void, FoursquareType> {
         private TipActivity mActivity;
         private String mTipId;
         private int mTask;
@@ -328,41 +366,35 @@ public class TipActivity extends Activity {
         }
         
         @Override
-        protected Tip doInBackground(String... params) {
+        protected FoursquareType doInBackground(String... params) {
             try {
                 Foursquared foursquared = (Foursquared) mActivity.getApplication();
                 Foursquare foursquare = foursquared.getFoursquare();
-
-                Tip tip = null;
                 switch (mTask) {
                     case ACTION_TODO:
-                        Todo todo = foursquare.markTodo(mTipId);
-                        tip = todo.getTip();
-                        break;
+                        return foursquare.markTodo(mTipId);   // returns a todo.
                     case ACTION_DONE:
-                        tip = foursquare.markDone(mTipId);
-                        break;
+                        return foursquare.markDone(mTipId);   // returns a tip.
                     case ACTION_UNMARK_TODO:
-                        tip = foursquare.unmarkTodo(mTipId);
-                        break;
+                    	return foursquare.unmarkTodo(mTipId); // returns a tip
                     case ACTION_UNMARK_DONE:
-                        tip = foursquare.unmarkDone(mTipId);
-                        break;
+                    	return foursquare.unmarkDone(mTipId); // returns a tip
+                	default:
+                		return null;
                 }
-                return tip;
-                
             } catch (Exception e) {
                 if (DEBUG) Log.d(TAG, "TipTask: Exception performing tip task.", e);
                 mReason = e;
             }
+            
             return null;
         }
 
         @Override
-        protected void onPostExecute(Tip tip) {
+        protected void onPostExecute(FoursquareType tipOrTodo) {
             if (DEBUG) Log.d(TAG, "TipTask: onPostExecute()");
             if (mActivity != null) {
-                mActivity.onTipTaskComplete(tip, mTask, mReason);
+                mActivity.onTipTaskComplete(tipOrTodo, mTask, mReason);
             }
         }
 
@@ -378,19 +410,21 @@ public class TipActivity extends Activity {
         private Tip mTip;
         private TipTask mTipTask;
         private boolean mIsRunningTipTask;
-        private String mTodoId;
+        private boolean mVenueClickable;
         
         
         public StateHolder() {
+        	mTip = null;
             mIsRunningTipTask = false;
-        }
-        
-        public void setTip(Tip tip) { 
-            mTip = tip;
+            mVenueClickable = true;
         }
         
         public Tip getTip() {
-            return mTip;
+        	return mTip;
+        }
+        
+        public void setTip(Tip tip) {
+        	mTip = tip;
         }
         
         public void startTipTask(TipActivity activity, String tipId, int task) {
@@ -413,12 +447,12 @@ public class TipActivity extends Activity {
             return mIsRunningTipTask;
         }
         
-        public String getTodoId() {
-            return mTodoId;
+        public boolean getVenueClickable() {
+        	return mVenueClickable;
         }
         
-        public void setTodoId(String todoId) {
-            mTodoId = todoId;
+        public void setVenueClickable(boolean venueClickable) {
+        	mVenueClickable = venueClickable;
         }
     }
 }

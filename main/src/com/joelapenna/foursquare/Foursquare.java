@@ -250,6 +250,12 @@ public class Foursquare {
         throws FoursquareException, FoursquareError, IOException {
         return mFoursquareV1.markTodo(tid);
     }
+    
+    @V1 
+    public Todo markTodoVenue(String vid) 
+        throws FoursquareException, FoursquareError, IOException {
+        return mFoursquareV1.markTodoVenue(vid);
+    }
 
     @V1
     public Tip markIgnore(String tid) 

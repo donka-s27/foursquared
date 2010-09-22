@@ -39,8 +39,8 @@ public class AddTipActivity extends Activity {
     public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
             + ".AddTipActivity.INTENT_EXTRA_VENUE";
     
-    public static final String EXTRA_TIP_PARCEL_RETURNED = Foursquared.PACKAGE_NAME
-        + ".AddTipActivity.EXTRA_TIP_PARCEL_RETURNED";
+    public static final String EXTRA_TIP_RETURNED = Foursquared.PACKAGE_NAME
+        + ".AddTipActivity.EXTRA_TIP_RETURNED";
 
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
@@ -174,7 +174,7 @@ public class AddTipActivity extends Activity {
         	mActivity.mStateHolder.setIsRunningTaskAddTip(false);
         	if (tip != null) {
         		Intent intent = new Intent();
-        		intent.putExtra(EXTRA_TIP_PARCEL_RETURNED, tip);
+        		intent.putExtra(EXTRA_TIP_RETURNED, tip);
         		mActivity.setResult(Activity.RESULT_OK, intent);
         		mActivity.finish();
         	} else {

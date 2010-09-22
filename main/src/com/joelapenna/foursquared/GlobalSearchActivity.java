@@ -44,7 +44,7 @@ public class GlobalSearchActivity extends Activity {
                 }
                 Intent i = new Intent(this, VenueActivity.class);
                 i.setAction(Intent.ACTION_VIEW);
-                i.putExtra(Foursquared.EXTRA_VENUE_ID, uri.getLastPathSegment());
+                i.putExtra(VenueActivity.INTENT_EXTRA_VENUE_ID, uri.getLastPathSegment());
                 startActivity(i);
                 finish();
             } else if (directory.equals(GlobalSearchProvider.FRIEND_DIRECTORY)) {

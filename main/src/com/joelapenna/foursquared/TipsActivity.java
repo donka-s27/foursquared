@@ -4,18 +4,10 @@
 
 package com.joelapenna.foursquared;
 
-import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.error.FoursquareException;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Tip;
-import com.joelapenna.foursquared.app.LoadableListActivityWithView;
-import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.util.MenuUtils;
-import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.widget.SegmentedButton;
-import com.joelapenna.foursquared.widget.TipsListAdapter;
-import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
+import java.util.Observable;
+import java.util.Observer;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,13 +21,22 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
-import android.widget.AdapterView.OnItemClickListener;
 
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.error.FoursquareException;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquared.app.LoadableListActivityWithView;
+import com.joelapenna.foursquared.location.LocationUtils;
+import com.joelapenna.foursquared.util.MenuUtils;
+import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.widget.SegmentedButton;
+import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
+import com.joelapenna.foursquared.widget.TipsListAdapter;
 
 /**
  * Shows a list of nearby tips. User can sort tips by friends-only.
@@ -66,7 +67,7 @@ public class TipsActivity extends LoadableListActivityWithView {
             finish();
         }
     };
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,7 +82,7 @@ public class TipsActivity extends LoadableListActivityWithView {
         }
 
         ensureUi();
-        
+
         // Friend tips is shown first by default so auto-fetch it if necessary.
         if (!mStateHolder.getRanOnceTipsFriends()) {
             mStateHolder.startTaskTips(this, true);
@@ -231,14 +232,22 @@ public class TipsActivity extends LoadableListActivityWithView {
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == ACTIVITY_TIP) {
-            updateTip((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_PARCEL_RETURNED));
+    	// We don't care about the returned to-do (if any) since we're not bound
+    	// to a venue in this activity for update. We just update the status member
+    	// of the target tip.
+        if (requestCode == ACTIVITY_TIP && resultCode == Activity.RESULT_OK) {
+        	if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
+        		Log.d(TAG, "onActivityResult(), return tip intent extra found, processing.");
+        		updateTip((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED));
+        	} else {
+        		Log.d(TAG, "onActivityResult(), no return tip intent extra found.");
+        	}
         }
     }
     
     private void updateTip(Tip tip) {
         mStateHolder.updateTip(tip);
-        getListView().invalidateViews();
+        mListAdapter.notifyDataSetInvalidated();
     }
     
     private void onStartTaskTips() {
@@ -516,7 +525,7 @@ public class TipsActivity extends LoadableListActivityWithView {
         private void updateTipFromArray(Tip tip, Group<Tip> target) {
             for (Tip it : target) {
                 if (it.getId().equals(tip.getId())) {
-                    it.setStatus(tip.getStatus());
+                	it.setStatus(tip.getStatus());
                     break;
                 }
             }

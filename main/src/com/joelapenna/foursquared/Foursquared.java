@@ -60,7 +60,6 @@ public class Foursquared extends Application {
 
     public static final String INTENT_ACTION_LOGGED_OUT = "com.joelapenna.foursquared.intent.action.LOGGED_OUT";
     public static final String INTENT_ACTION_LOGGED_IN = "com.joelapenna.foursquared.intent.action.LOGGED_IN";
-    public static final String EXTRA_VENUE_ID = "com.joelapenna.foursquared.VENUE_ID";
 
     private String mVersion = null;
 

@@ -508,6 +508,17 @@ class FoursquareHttpApiV1 {
     }
     
     /**
+     * This is a hacky special case, hopefully the api will be updated in v2 for this.
+     * /mark/todo
+     */
+    public Todo markTodoVenue(String vid) throws FoursquareException,
+        FoursquareCredentialsException, FoursquareError, IOException {
+        HttpPost httpPost = mHttpApi.createHttpPost(fullUrl(URL_API_MARK_TODO), //
+                new BasicNameValuePair("vid", vid));
+        return (Todo) mHttpApi.doHttpRequest(httpPost, new TodoParser());
+    }
+    
+    /**
      * /mark/ignore
      */
     public Tip markIgnore(String tid) throws FoursquareException,

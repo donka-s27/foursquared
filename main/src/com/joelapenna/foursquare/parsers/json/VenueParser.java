@@ -46,18 +46,21 @@ public class VenueParser extends AbstractParser<Venue> {
         if (json.has("cityid")) {
             obj.setCityid(json.getString("cityid"));
         } 
-        if (json.has("setCrossstreet")) {
-            obj.setCrossstreet(json.getString("setCrossstreet"));
+        if (json.has("crossstreet")) {
+            obj.setCrossstreet(json.getString("crossstreet"));
         } 
         if (json.has("distance")) {
             obj.setDistance(json.getString("distance"));
         } 
         if (json.has("geolat")) {
             obj.setGeolat(json.getString("geolat"));
-        } 
+        }
         if (json.has("geolong")) {
             obj.setGeolong(json.getString("geolong"));
         } 
+        if (json.has("hasTodo")) {
+        	obj.setHasTodo(json.getBoolean("hasTodo"));
+        }
         if (json.has("id")) {
             obj.setId(json.getString("id"));
         } 
@@ -93,7 +96,7 @@ public class VenueParser extends AbstractParser<Venue> {
         if (json.has("todos")) {
             obj.setTodos(
                 new GroupParser(
-                    new TipParser()).parse(json.getJSONArray("todos")));
+                    new TodoParser()).parse(json.getJSONArray("todos")));
         } 
         if (json.has("twitter")) {
             obj.setTwitter(json.getString("twitter"));

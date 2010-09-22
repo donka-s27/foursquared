@@ -5,6 +5,8 @@
 package com.joelapenna.foursquared;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -14,28 +16,29 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.BaseAdapter;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +46,7 @@ import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Mayor;
 import com.joelapenna.foursquare.types.Stats;
 import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
@@ -50,14 +54,23 @@ import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
-import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.util.UserUtils;
-import com.joelapenna.foursquared.widget.HorizontalViewStrip;
+import com.joelapenna.foursquared.util.VenueUtils;
+import com.joelapenna.foursquared.widget.PhotoStrip;
+import com.joelapenna.foursquared.widget.SackOfViewsAdapter;
 
 /**
  * We may be given a pre-fetched venue ready to display, or we might also get just
  * a venue ID. If we only get a venue ID, then we need to fetch it immediately from
  * the API.
+ * 
+ * The activity will set an intent result in EXTRA_VENUE_RETURNED if the venue status
+ * changes as a result of a user modifying todos at the venue. Parent activities can
+ * check the returned venue to see if this status has changed to update their UI.
+ * For example, the NearbyVenues activity wants to show the todo corner png if the
+ * venue has a todo. The result will also be set if the venue is fully fetched if
+ * originally given only a venue id or partial venue object. This way the parent can
+ * also cache the full venue object for next time.
  * 
  * @author Joe LaPenna (joe@joelapenna.com)
  * @author Mark Wyszomierski (markww@gmail.com)
@@ -69,15 +82,24 @@ public class VenueActivity extends Activity {
 
     private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
-    private static final int MENU_TODO_ADD = 1;
-    private static final int MENU_TIP_ADD = 2;
-    private static final int MENU_CALL = 3;
+    private static final int MENU_TODO_ADD   = 1;
+    private static final int MENU_TIP_ADD    = 2;
+    private static final int MENU_CALL       = 3;
     private static final int MENU_EDIT_VENUE = 4;
-    private static final int MENU_MYINFO = 5;
+    private static final int MENU_MYINFO     = 5;
 
     private static final int RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE = 1;
-    private static final int RESULT_CODE_ACTIVITY_ADD_TIP = 2;
-    private static final int RESULT_CODE_ACTIVITY_ADD_TODO = 3;
+    private static final int RESULT_CODE_ACTIVITY_ADD_TIP         = 2;
+    private static final int RESULT_CODE_ACTIVITY_ADD_TODO        = 3;
+    private static final int RESULT_CODE_ACTIVITY_TIP             = 4;
+    private static final int RESULT_CODE_ACTIVITY_TIPS            = 5;
+    private static final int RESULT_CODE_ACTIVITY_TODO            = 6;
+    private static final int RESULT_CODE_ACTIVITY_TODOS           = 7;
+    
+    private static final int ROW_TAG_MAYOR    = 0;
+    private static final int ROW_TAG_CHECKINS = 1;
+    private static final int ROW_TAG_TIPS     = 2;
+    private static final int ROW_TAG_MORE     = 3;
     
 
     public static final String INTENT_EXTRA_VENUE_ID = Foursquared.PACKAGE_NAME
@@ -87,9 +109,12 @@ public class VenueActivity extends Activity {
     public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
             + ".VenueActivity.INTENT_EXTRA_VENUE";
     
+    public static final String EXTRA_VENUE_RETURNED = Foursquared.PACKAGE_NAME
+            + ".VenueActivity.EXTRA_VENUE_RETURNED";
+    
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
-    private ImageAdapter mPhotoAdapter;
+    private Handler mHandler;
 
     private RemoteResourceManager mRrm;
     private RemoteResourceManagerObserver mResourcesObserver;
@@ -133,25 +158,18 @@ public class VenueActivity extends Activity {
     	    }
         }
 
+        mHandler = new Handler();
         mRrm = ((Foursquared) getApplication()).getRemoteResourceManager();
         mResourcesObserver = new RemoteResourceManagerObserver();
         mRrm.addObserver(mResourcesObserver);
         
         ensureUi();
-        
-        /*
-        mVenueView.setSpecialOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showWebViewForSpecial();
-            }
-        });
-        */
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(mLoggedOutReceiver);
     }
     
     @Override 
@@ -163,59 +181,53 @@ public class VenueActivity extends Activity {
     @Override
     public void onPause() {
     	super.onPause();
-    	
+
     	if (isFinishing()) {
-            unregisterReceiver(mLoggedOutReceiver);
             mRrm.deleteObserver(mResourcesObserver);
         }
     }
     
     private void ensureUi() {
+
+    	List<View> views = new ArrayList<View>();
+    	LayoutInflater inflater = getLayoutInflater();
+    	
+    	View viewMayor = inflater.inflate(R.layout.venue_activity_mayor_list_item, null);
+    	viewMayor.setTag(new Integer(ROW_TAG_MAYOR));
+    	
+    	View viewCheckins = inflater.inflate(R.layout.venue_activity_checkins_list_item, null);
+    	viewCheckins.setTag(new Integer(ROW_TAG_CHECKINS));
+    	
+    	View viewTips = inflater.inflate(R.layout.venue_activity_tips_list_item, null);
+    	viewTips.setTag(new Integer(ROW_TAG_TIPS));
+    	
+    	View viewMoreInfo = inflater.inflate(R.layout.venue_activity_more_info_list_item, null);
+    	viewMoreInfo.setTag(new Integer(ROW_TAG_MORE));
+    	
     	TextView tvVenueTitle = (TextView)findViewById(R.id.venueActivityName);
     	TextView tvVenueAddress = (TextView)findViewById(R.id.venueActivityAddress);
-    	Button btnCheckin = (Button)findViewById(R.id.venueActivityButtonCheckin);
     	LinearLayout progress = (LinearLayout)findViewById(R.id.venueActivityDetailsProgress);
-    	ScrollView svDetails = (ScrollView)findViewById(R.id.venueActivityDetails);
-    	RelativeLayout rlMayor = (RelativeLayout)findViewById(R.id.venueActivityMayor);
-    	TextView tvMayorTitle = (TextView)findViewById(R.id.venueActivityMayorName);
-    	TextView tvMayorText = (TextView)findViewById(R.id.venueActivityMayorText);
-    	ImageView ivMayorPhoto = (ImageView)findViewById(R.id.venueActivityMayorPhoto);
-    	ImageView ivMayorChevron = (ImageView)findViewById(R.id.venueActivityMayorChevron);
-    	RelativeLayout llPeople = (RelativeLayout)findViewById(R.id.venueActivityPeople);
-    	TextView tvPeopleText = (TextView)findViewById(R.id.venueActivityPeopleText);
-    	HorizontalViewStrip psPeoplePhotos = (HorizontalViewStrip)findViewById(R.id.venueActivityPeoplePhotos);
-    	RelativeLayout rlTips = (RelativeLayout)findViewById(R.id.venueActivityTips);
-    	TextView tvTipsText = (TextView)findViewById(R.id.venueActivityTipsText);
-    	ImageView ivTipsChevron = (ImageView)findViewById(R.id.venueActivityTipsChevron);
-    	RelativeLayout rlMore = (RelativeLayout)findViewById(R.id.venueActivityMore);
-    	
-    	UiUtil.buildListViewItemSelectable(this, rlMayor);
-    	UiUtil.buildListViewItemSelectable(this, llPeople);
-    	UiUtil.buildListViewItemSelectable(this, rlTips);
-    	UiUtil.buildListViewItemSelectable(this, rlMore);
 
-    	btnCheckin.setEnabled(false);
-		progress.setVisibility(View.VISIBLE);
-		ivMayorChevron.setVisibility(View.GONE);
-		ivTipsChevron.setVisibility(View.GONE);
-		
-		
+    	TextView tvMayorTitle = (TextView)viewMayor.findViewById(R.id.venueActivityMayorName);
+    	TextView tvMayorText = (TextView)viewMayor.findViewById(R.id.venueActivityMayorText);
+    	ImageView ivMayorPhoto = (ImageView)viewMayor.findViewById(R.id.venueActivityMayorPhoto);
+    	ImageView ivMayorChevron = (ImageView)viewMayor.findViewById(R.id.venueActivityMayorChevron);
+    	
+    	TextView tvPeopleText = (TextView)viewCheckins.findViewById(R.id.venueActivityPeopleText);
+    	PhotoStrip psPeoplePhotos = (PhotoStrip)viewCheckins.findViewById(R.id.venueActivityPeoplePhotos);
+    	
+    	TextView tvTipsText = (TextView)viewTips.findViewById(R.id.venueActivityTipsText);
+    	ImageView ivTipsChevron = (ImageView)viewTips.findViewById(R.id.venueActivityTipsChevron);
+    	
+    	
     	Venue venue = mStateHolder.getVenue();
     	if (mStateHolder.getLoadType() == StateHolder.LOAD_TYPE_VENUE_FULL || 
     		mStateHolder.getLoadType() == StateHolder.LOAD_TYPE_VENUE_PARTIAL) {
 	    	
 	    	tvVenueTitle.setText(venue.getName());
-	    	tvVenueAddress.setText(StringFormatters.getVenueLocationCrossStreetOrCity(venue));
+	    	tvVenueAddress.setText(StringFormatters.getVenueLocationFull(venue));
 	    	
-	    	if (!mStateHolder.getCheckedInHere()) {
-	    		btnCheckin.setEnabled(true);
-	    		btnCheckin.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startCheckin();
-					}
-	    		});
-	    	}
+	    	ensureUiCheckinButton();
 
 	    	if (mStateHolder.getLoadType() == StateHolder.LOAD_TYPE_VENUE_FULL) {
 	    	
@@ -239,27 +251,15 @@ public class VenueActivity extends Activity {
 		            	ivMayorPhoto.setTag(photoUrl);
 		            	mRrm.request(uriPhoto);
 		            }
-		    		
-		    		rlMayor.setOnClickListener(new OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							Intent intent = new Intent(VenueActivity.this, UserDetailsActivity.class);
-					        intent.putExtra(UserDetailsActivity.EXTRA_USER_PARCEL, 
-					        		mStateHolder.getVenue().getStats().getMayor().getUser());
-					        intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
-					        startActivity(intent);
-						}
-		    		});
-
 		    		ivMayorChevron.setVisibility(View.VISIBLE);
 		    	} else {
 		    		tvMayorTitle.setText(getResources().getString(R.string.venue_activity_mayor_name_none));
 		    		tvMayorText.setText(getResources().getString(R.string.venue_activity_mayor_text_none));
-		    		rlMayor.setFocusable(false);
+		    		viewMayor.setTag(null);
 		    	}
+		    	views.add(viewMayor);
 		    	
 		    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
-		    		llPeople.setVisibility(View.VISIBLE);
 		    		if (venue.getCheckins().size() == 1) {
 		    		    tvPeopleText.setText(getResources().getString(
 		    		    		R.string.venue_activity_people_count_single, venue.getCheckins().size()));
@@ -268,22 +268,8 @@ public class VenueActivity extends Activity {
 		    		    		R.string.venue_activity_people_count_plural, venue.getCheckins().size()));
 		    		}
 		    		
-		    		if (mPhotoAdapter == null) {
-		    			mPhotoAdapter = new ImageAdapter();
-		    			psPeoplePhotos.setAdapter(mPhotoAdapter);
-		    		}
-		    		
-		    		llPeople.setOnClickListener(new OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							Intent intent = new Intent(VenueActivity.this, VenueCheckinsActivity.class);
-					        intent.putExtra(VenueCheckinsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
-					        startActivity(intent);
-						}
-		    		});
-		    		
-		    	} else {
-		    		llPeople.setVisibility(View.GONE);
+		    		psPeoplePhotos.setUsersAndRemoteResourcesManager(venue.getCheckins(), mRrm);
+			    	views.add(viewCheckins);
 		    	}
 		    	
 		    	if (venue.getTips() != null && venue.getTips().size() > 0) {
@@ -295,25 +281,86 @@ public class VenueActivity extends Activity {
 		    					R.string.venue_activity_tip_count_plural, venue.getTips().size()));
 		    		}
 		    		
-		    		rlTips.setOnClickListener(new OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							Intent intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
-					        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
-					        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_TIPS, mStateHolder.getVenue());
-					        startActivity(intent);
-						}
-		    		});
-
 		    		ivTipsChevron.setVisibility(View.VISIBLE);
 		    		
 		    	} else {
 	    			tvTipsText.setText(getResources().getString(R.string.venue_activity_tip_count_none));
+		    		ivTipsChevron.setVisibility(View.INVISIBLE);
+	    			viewTips.setTag(null);
 		    	}
+		    	views.add(viewTips);
 		    	
 	    		progress.setVisibility(View.GONE);
-	    		svDetails.setVisibility(View.VISIBLE);
+
+		    	views.add(viewMoreInfo);
 	    	}
+    	}
+
+    	ListView lv = (ListView)findViewById(R.id.venueActivityListView);
+    	lv.setDividerHeight(0);
+    	if (views.size() > 0) {
+    		VenueInfoAdapter adapter = new VenueInfoAdapter(views);
+        	lv.setAdapter(adapter);
+        	
+        	lv.setOnItemClickListener(new OnItemClickListener() {
+    			@Override
+    			public void onItemClick(AdapterView<?> adapter, View view, int position, long arg3) {
+    				if (view.getTag() != null) {
+    					Integer tag = (Integer)view.getTag();
+    					Intent intent;
+    					switch (tag.intValue()) {
+    						case ROW_TAG_MAYOR:
+    							intent = new Intent(VenueActivity.this, UserDetailsActivity.class);
+    					        intent.putExtra(UserDetailsActivity.EXTRA_USER_PARCEL, 
+    					        		mStateHolder.getVenue().getStats().getMayor().getUser());
+    					        intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
+    					        startActivity(intent);
+    							break;
+    						case ROW_TAG_CHECKINS:
+    							intent = new Intent(VenueActivity.this, VenueCheckinsActivity.class);
+    					        intent.putExtra(VenueCheckinsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+    					        startActivity(intent);
+    							break;
+    						case ROW_TAG_TIPS:
+    							if (mStateHolder.getVenue().getTips().size() == 1) {
+    								intent = new Intent(VenueActivity.this, TipActivity.class);
+    				                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, mStateHolder.getVenue().getTips().get(0));
+    				                intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
+    								startActivityForResult(intent, RESULT_CODE_ACTIVITY_TIP);
+    							} else {
+    								intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
+    								intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+    								startActivityForResult(intent, RESULT_CODE_ACTIVITY_TIPS);
+    							}
+    					        break;
+    						case ROW_TAG_MORE:
+    							intent = new Intent(VenueActivity.this, VenueMapActivity.class);
+    					        intent.putExtra(VenueMapActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+    					        startActivity(intent);
+    							break;
+    					}
+    				}
+    			}
+        	});
+        	
+        	lv.setVisibility(View.VISIBLE);
+    	}
+    	
+    	ensureUiTodosHere();
+    	
+    	ImageView ivSpecialHere = (ImageView)findViewById(R.id.venueActivitySpecialHere);
+		ivSpecialHere.setVisibility(View.GONE);
+    	if (venue != null && venue.getSpecials() != null && venue.getSpecials().size() > 0) {
+    		Venue specialVenue = venue.getSpecials().get(0).getVenue();
+            if (specialVenue == null || specialVenue.getId().equals(venue.getId())) {
+            	ivSpecialHere.setVisibility(View.VISIBLE);
+            	ivSpecialHere.setOnClickListener(new OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						showWebViewForSpecial();
+					}
+            	});
+            }
     	}
     }
     
@@ -326,15 +373,33 @@ public class VenueActivity extends Activity {
         		btnCheckin.setEnabled(false);
     		} else {
         		btnCheckin.setEnabled(true);
+        		btnCheckin.setOnClickListener(new OnClickListener() {
+    				@Override
+    				public void onClick(View v) {
+    					startCheckin();
+    				}
+        		});
     		}
     	}
     }
     
     private void ensureUiTipAdded() {
     	Venue venue = mStateHolder.getVenue();
-    	TextView tvTipsText = (TextView)findViewById(R.id.venueActivityTipsText);
-    	ImageView ivTipsChevron = (ImageView)findViewById(R.id.venueActivityTipsChevron);
-    	RelativeLayout rlTips = (RelativeLayout)findViewById(R.id.venueActivityTips);
+    	
+    	ListView lv = (ListView)findViewById(R.id.venueActivityListView);
+    	VenueInfoAdapter adapter = (VenueInfoAdapter)lv.getAdapter();
+    	
+    	View viewTips = null;
+    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
+    		viewTips = adapter.getView(2, null, null);
+    	} else {
+    		viewTips = adapter.getView(1, null, null);
+    	}
+    	
+    	viewTips.setTag(new Integer(ROW_TAG_TIPS));
+    	
+    	TextView tvTipsText = (TextView)viewTips.findViewById(R.id.venueActivityTipsText);
+    	ImageView ivTipsChevron = (ImageView)viewTips.findViewById(R.id.venueActivityTipsChevron);
     	
     	if (venue.getTips().size() == 1) {
 			tvTipsText.setText(getResources().getString(
@@ -343,18 +408,34 @@ public class VenueActivity extends Activity {
 			tvTipsText.setText(getResources().getString(
 					R.string.venue_activity_tip_count_plural, venue.getTips().size()));
 		}
-		
-		rlTips.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
-		        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
-		        intent.putExtra(VenueTipsActivity.INTENT_EXTRA_TIPS, mStateHolder.getVenue());
-		        startActivity(intent);
-			}
-		});
-
+    	
 		ivTipsChevron.setVisibility(View.VISIBLE);
+    }
+    
+    private void ensureUiTodosHere() {
+    	Venue venue = mStateHolder.getVenue();
+    	RelativeLayout rlTodoHere = (RelativeLayout)findViewById(R.id.venueActivityTodoHere);
+    	if (venue != null && venue.getHasTodo()) {
+    		rlTodoHere.setVisibility(View.VISIBLE);
+    		rlTodoHere.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					showTodoHereActivity();
+				}
+    		});
+    	} else {
+    		rlTodoHere.setVisibility(View.GONE);
+    	}
+    }
+    
+    private void prepareResultIntent() {
+    	Venue venue = mStateHolder.getVenue();
+    	
+    	Intent intent = new Intent();
+        if (venue != null) {
+        	intent.putExtra(EXTRA_VENUE_RETURNED, venue);
+        }
+        setResult(Activity.RESULT_OK, intent);
     }
     
     @Override
@@ -390,7 +471,7 @@ public class VenueActivity extends Activity {
         boolean callEnabled = mStateHolder.getVenue() != null
                 && !TextUtils.isEmpty(mStateHolder.getVenue().getPhone());
         menu.findItem(MENU_CALL).setEnabled(callEnabled);
-
+ 
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -451,20 +532,59 @@ public class VenueActivity extends Activity {
                 }
                 break;
             case RESULT_CODE_ACTIVITY_ADD_TIP:
+            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_ADD_TIP...");
             	if (resultCode == Activity.RESULT_OK) {
-            		Tip tip = data.getParcelableExtra(AddTipActivity.EXTRA_TIP_PARCEL_RETURNED);
-            		if (mStateHolder.getVenue().getTips() == null) {
-            			mStateHolder.getVenue().setTips(new Group<Tip>());
-            		}
-            		mStateHolder.getVenue().getTips().add(tip);
+            		Tip tip = data.getParcelableExtra(AddTipActivity.EXTRA_TIP_RETURNED);
+            		VenueUtils.addTip(mStateHolder.getVenue(), tip);
             		ensureUiTipAdded();
+            		prepareResultIntent();
             		Toast.makeText(this, getResources().getString(R.string.venue_activity_tip_added_ok), 
             				Toast.LENGTH_SHORT).show();
             	}
             	break;
             case RESULT_CODE_ACTIVITY_ADD_TODO:
+            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_ADD_TODO...");
+            	if (resultCode == Activity.RESULT_OK) {
+            		Todo todo = data.getParcelableExtra(AddTodoActivity.EXTRA_TODO_RETURNED);
+            		VenueUtils.addTodo(mStateHolder.getVenue(), todo.getTip(), todo);
+            		ensureUiTodosHere();
+            		prepareResultIntent();
+            		Toast.makeText(this, getResources().getString(R.string.venue_activity_todo_added_ok), 
+            				Toast.LENGTH_SHORT).show();
+            	}
+            	
             	Toast.makeText(this, getResources().getString(R.string.venue_activity_todo_added_ok), 
         				Toast.LENGTH_SHORT).show();
+            	break;
+            case RESULT_CODE_ACTIVITY_TIP:
+            case RESULT_CODE_ACTIVITY_TODO:
+            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_TIP or RESULT_CODE_ACTIVITY_TODO...");
+            	if (resultCode == Activity.RESULT_OK && data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
+    	    		Tip tip = (Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED);
+    	    		Todo todo = data.hasExtra(TipActivity.EXTRA_TODO_RETURNED) ? 
+    	    				(Todo)data.getParcelableExtra(TipActivity.EXTRA_TODO_RETURNED) : null;
+    	    		VenueUtils.handleTipChange(mStateHolder.getVenue(), tip, todo);
+            		ensureUiTodosHere();
+            		prepareResultIntent();
+                }
+            	break;
+            case RESULT_CODE_ACTIVITY_TIPS:
+            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_TIPS...");
+            	if (resultCode == Activity.RESULT_OK && data.hasExtra(VenueTipsActivity.INTENT_EXTRA_RETURN_VENUE)) {
+            		Venue venue = (Venue)data.getParcelableExtra(VenueTipsActivity.INTENT_EXTRA_RETURN_VENUE);
+        			VenueUtils.replaceTipsAndTodos(mStateHolder.getVenue(), venue);
+            		ensureUiTodosHere();
+            		prepareResultIntent();
+            	}
+            	break;
+            
+            case RESULT_CODE_ACTIVITY_TODOS:
+            	if (resultCode == Activity.RESULT_OK && data.hasExtra(VenueTodosActivity.INTENT_EXTRA_RETURN_VENUE)) {
+        			Venue venue = (Venue)data.getParcelableExtra(VenueTodosActivity.INTENT_EXTRA_RETURN_VENUE);
+        			VenueUtils.replaceTipsAndTodos(mStateHolder.getVenue(), venue);
+            		ensureUiTodosHere();
+            		prepareResultIntent();
+            	}
             	break;
         }
     }
@@ -495,23 +615,7 @@ public class VenueActivity extends Activity {
         startActivityForResult(intent, RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE);
     }
     
-    private void startCheckinQuick() {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean tellFriends = settings.getBoolean(Preferences.PREFERENCE_SHARE_CHECKIN, true);
-        boolean tellTwitter = settings.getBoolean(Preferences.PREFERENCE_TWITTER_CHECKIN, false);
-        boolean tellFacebook = settings.getBoolean(Preferences.PREFERENCE_FACEBOOK_CHECKIN, false);
-        
-        Intent intent = new Intent(VenueActivity.this, CheckinExecuteActivity.class);
-        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_VENUE_ID, mStateHolder.getVenue().getId());
-        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_SHOUT, "");
-        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_TELL_FRIENDS, tellFriends);
-        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_TELL_TWITTER, tellTwitter);
-        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_TELL_FACEBOOK, tellFacebook);
-        startActivityForResult(intent, RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE);
-    }
-    
     private void showWebViewForSpecial() {
-        
         Intent intent = new Intent(this, SpecialWebViewActivity.class);
         intent.putExtra(SpecialWebViewActivity.EXTRA_CREDENTIALS_USERNAME, 
                 PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.PREFERENCE_LOGIN, ""));
@@ -521,6 +625,32 @@ public class VenueActivity extends Activity {
                 mStateHolder.getVenue().getSpecials().get(0).getId());
         startActivity(intent);
     }
+    
+    private void showTodoHereActivity() {
+		Venue venue = new Venue();
+		venue.setName(mStateHolder.getVenue().getName());
+		venue.setAddress(mStateHolder.getVenue().getAddress());
+		venue.setCrossstreet(mStateHolder.getVenue().getCrossstreet());
+		
+    	Group<Todo> todos = mStateHolder.getVenue().getTodos();
+    	for (Todo it : todos) {
+    		it.getTip().setVenue(venue);
+    	}
+    	
+    	if (todos.size() == 1) {
+        	Todo todo = (Todo) todos.get(0);
+        	
+        	Intent intent = new Intent(VenueActivity.this, TipActivity.class);
+            intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
+            intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
+            startActivityForResult(intent, RESULT_CODE_ACTIVITY_TODO);
+    	} else if (todos.size() > 1) {
+    		Intent intent = new Intent(VenueActivity.this, VenueTodosActivity.class);
+	        intent.putExtra(VenueTodosActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+	        startActivityForResult(intent, RESULT_CODE_ACTIVITY_TODOS);
+    	}
+    }
+	
 
     private static class TaskVenue extends AsyncTask<String, Void, Venue> {
 
@@ -557,6 +687,7 @@ public class VenueActivity extends Activity {
 	        	if (venue != null) {
 	        		mActivity.mStateHolder.setLoadType(StateHolder.LOAD_TYPE_VENUE_FULL);
 	        		mActivity.mStateHolder.setVenue(venue);
+	        		mActivity.prepareResultIntent();
 	        		mActivity.ensureUi();
 	        		
 	        	} else {
@@ -582,7 +713,6 @@ public class VenueActivity extends Activity {
         private String mVenueId;
         private boolean mCheckedInHere;
         
-        private VenueActivity mActivity;
         private TaskVenue mTaskVenue;
         private boolean mIsRunningTaskVenue;
         
@@ -650,68 +780,19 @@ public class VenueActivity extends Activity {
         }
     }
     
-    
-    
-    private class ImageAdapter extends BaseAdapter {
-        public ImageAdapter() {
-        }
-
-        public int getCount() {
-        	if (mStateHolder.getVenue() != null && mStateHolder.getVenue().getCheckins() != null) {
-        	    return mStateHolder.getVenue().getCheckins().size();	
-        	} else {
-        		return 0;
-        	}
-        }
-
-        public Object getItem(int position) {
-            return null;
-        }
-
-        public long getItemId(int position) {
-            return 0;
-        }
- 
-        public View getView(int position, View convertView, ViewGroup parent) {
-        	
-        	ImageView iv = null;
-        	if (convertView == null) {
-        	    iv = (ImageView)VenueActivity.this.getLayoutInflater().inflate(
-            		R.layout.user_photo, null);
-                iv.setImageResource(R.drawable.blank_boy);
-                iv.setLayoutParams(new LinearLayout.LayoutParams(44, 44));
-        	} else {
-        		iv = (ImageView)convertView;
-        	}
-        	
-            String photoUrl = mStateHolder.getVenue().getCheckins().get(position).getUser().getPhoto();
-        	Uri uriPhoto = Uri.parse(photoUrl);
-            if (mRrm.exists(uriPhoto)) {
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(photoUrl)));
-                    iv.setImageBitmap(bitmap);
-                } catch (IOException e) {
-                }
-            } else {
-                mRrm.request(uriPhoto);
-            }
-        	
-        	return iv;
-        }
-    }
-    
+    /**
+     * Handles population of the mayor photo. The strip of checkin photos has its own
+     * internal observer.
+     */
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-        	HorizontalViewStrip psv = (HorizontalViewStrip)VenueActivity.this.findViewById(R.id.venueActivityPeoplePhotos);
-            psv.getHandler().post(new Runnable() {
+            mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                	if (mPhotoAdapter != null) {
-                		mPhotoAdapter.notifyDataSetInvalidated();
-                	}
-                	
-                	ImageView ivMayorPhoto = (ImageView)findViewById(R.id.venueActivityMayorPhoto);
+                	ListView lv = (ListView)findViewById(R.id.venueActivityListView);
+                	View viewMayor = lv.getAdapter().getView(0, null, null);
+                	ImageView ivMayorPhoto = (ImageView)viewMayor.findViewById(R.id.venueActivityMayorPhoto);
                 	if (ivMayorPhoto.getTag() != null) {
                 		String mayorPhotoUrl = (String)ivMayorPhoto.getTag();
                 		try {
@@ -725,5 +806,29 @@ public class VenueActivity extends Activity {
                 }
             });
         }
+    }
+    
+    /**
+     * Lets us place each of the row views into a listview so we can use the
+     * scrolling and click-hilighting. This would be more convenient as a 
+     * plain linear layout but click-hilighting is not well supported for
+     * linear layout elements.
+     *
+     */
+    private static class VenueInfoAdapter extends SackOfViewsAdapter {
+
+		public VenueInfoAdapter(List<View> views) {
+			super(views);
+		}
+		
+		/**
+		 * The rows are clickable only if its tag is set. The tag should be 
+		 * set with its row type, such as ROW_TAG_MAYOR.
+		 */
+		@Override
+		public boolean isEnabled(int position) {
+			View view = getView(position, null, null);
+			return view.getTag() != null;
+		}
     }
 }

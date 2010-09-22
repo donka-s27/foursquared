@@ -59,7 +59,7 @@ public class SearchVenuesMapActivity extends MapActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(SearchVenuesMapActivity.this, VenueActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
-                intent.putExtra(Foursquared.EXTRA_VENUE_ID, mTappedVenueId);
+                intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_ID, mTappedVenueId);
                 startActivity(intent);
             }
         });

@@ -28,9 +28,13 @@
     <attr name="btnPaddingBottom" format="dimension" />
   </declare-styleable>
   
-  <declare-styleable name="HorizontalViewStrip">
-    <attr name="columnWidth" format="dimension" />
-    <attr name="columnSpacing" format="dimension" />
+  <declare-styleable name="PhotoStrip">
+    <attr name="photoSize" format="dimension" />
+    <attr name="photoSpacing" format="dimension" />
+    <attr name="photoBorder" format="dimension" />
+    <attr name="photoBorderStroke" format="dimension" />
+    <attr name="photoBorderStrokeColor" format="color" />
+    <attr name="photoBorderColor" format="color" />
   </declare-styleable>
       
 </resources>

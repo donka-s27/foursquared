@@ -18,6 +18,7 @@ import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.TodosListAdapter;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -84,9 +85,11 @@ public class TodosActivity extends LoadableListActivityWithView {
 
         ensureUi();
         
-        // Recent todos is shown first by default so auto-fetch it if necessary.
-        if (!mStateHolder.getRanOnceTodosRecent()) {
-            mStateHolder.startTaskTodos(this, true);
+        // Nearby todos is shown first by default so auto-fetch it if necessary.
+        // Nearby is the right button, not the left one, which is a bit strange
+        // but this was a design req.
+        if (!mStateHolder.getRanOnceTodosNearby()) {
+            mStateHolder.startTaskTodos(this, false);
         }
     }
     
@@ -198,7 +201,6 @@ public class TodosActivity extends LoadableListActivityWithView {
                 Todo todo = (Todo) parent.getAdapter().getItem(position);
                 Intent intent = new Intent(TodosActivity.this, TipActivity.class);
                 intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
-                intent.putExtra(TipActivity.EXTRA_TIP_TODO_PARENT_ID, todo.getId());
                 startActivityForResult(intent, ACTIVITY_TIP);
             }
         });
@@ -235,16 +237,28 @@ public class TodosActivity extends LoadableListActivityWithView {
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == ACTIVITY_TIP) {
-            Tip tip = (Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_PARCEL_RETURNED);
-            String todoId = data.getStringExtra(TipActivity.EXTRA_TIP_TODO_PARENT_ID_RETURNED);
-            updateTodo(todoId, tip);
-        }
+    	// We ignore the returned to-do (if any). We search for any to-dos in our
+    	// state holder by the linked tip ID for update.
+    	if (requestCode == ACTIVITY_TIP && resultCode == Activity.RESULT_OK) {
+        	if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
+        		Log.d(TAG, "onActivityResult(), return tip intent extra found, processing.");
+        		updateTodo((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED));
+        	} else {
+        		Log.d(TAG, "onActivityResult(), no return tip intent extra found.");
+        	}
+    	}
     }
     
-    private void updateTodo(String todoId, Tip tip) {
-        mStateHolder.updateTodo(todoId, tip);
-        getListView().invalidateViews();
+    private void updateTodo(Tip tip) {
+    	// If the tip status is no longer 'todo', we just remove it.
+    	// If it's still a todo, we can ignore, however it's possible
+    	// that the user un-marked then re-marked as a to-do, which 
+    	// would generate a new to-do ID. We can overwrite the to-do
+    	// ID and creation date if we want.
+    	if (!TipUtils.isTodo(tip)) {
+    		mStateHolder.updateTodo(tip.getId());
+    		mListAdapter.notifyDataSetInvalidated();
+    	}
     }
     
     private void onStartTaskTodos() {
@@ -409,7 +423,7 @@ public class TodosActivity extends LoadableListActivityWithView {
             mRanOnceTodosNearby = false;
             mTodosRecent = new Group<Todo>();
             mTodosNearby = new Group<Todo>();
-            mRecentOnly = true;
+            mRecentOnly = false;
         }
         
         public Group<Todo> getTodosRecent() {
@@ -508,18 +522,16 @@ public class TodosActivity extends LoadableListActivityWithView {
             mRanOnceTodosNearby = ranOnce;
         }
         
-        public void updateTodo(String todoId, Tip tip) {
-            updateTodoFromArray(todoId, tip, mTodosRecent);
-            updateTodoFromArray(todoId, tip, mTodosNearby);
+        public void updateTodo(String tipId) {
+            updateTodoFromArray(tipId, mTodosRecent);
+            updateTodoFromArray(tipId, mTodosNearby);
         }
         
-        private void updateTodoFromArray(String todoId, Tip tip, Group<Todo> target) {
+        private void updateTodoFromArray(String tipId, Group<Todo> target) {
             for (int i = 0, m = target.size(); i < m; i++) {
                 Todo todo = target.get(i);
-                if (todo.getId().equals(todoId)) {
-                    if (TipUtils.isDone(tip) || !TipUtils.isTodo(tip)) {
-                        target.remove(i);       
-                    }
+                if (todo.getTip().getId().equals(tipId)) {
+                    target.remove(todo);
                     break;
                 }
             }

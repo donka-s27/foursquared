@@ -166,8 +166,8 @@ public class UserActionsActivity extends LoadableListActivity {
                     case ActionsAdapter.ACTION_ID_LAST_SEEN_AT:
                         Intent intent = new Intent(UserActionsActivity.this, VenueActivity.class);
                         intent.setAction(Intent.ACTION_VIEW);
-                        intent.putExtra(Foursquared.EXTRA_VENUE_ID, 
-                            mStateHolder.getUser().getCheckin().getVenue().getId());
+                        intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, 
+                            mStateHolder.getUser().getCheckin().getVenue());
                         startActivity(intent);
                         break;
                     case ActionsAdapter.ACTION_ID_SEND_FRIEND_REQUEST:
