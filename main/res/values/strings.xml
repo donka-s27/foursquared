@@ -22,7 +22,6 @@
   <string name="address">Address</string> 
   <string name="app_name">Foursquare</string>
   <string name="badges_header">Badges</string>
-  <string name="call">Call</string>
   <string name="checkin_action_label">Check-in!</string>
   <string name="checkin_badges">You\'ve just unlocked</string>
   <string name="checkin_points">Points</string>
@@ -277,7 +276,6 @@
   <string name="edit_venue_options_btn_flag_as_closed">Flag venue as closed</string>
   <string name="edit_venue_options_thankyou">Thank you for submitting this venue update.</string>
   <string name="edit_venue_options_error">There was an error submitting the venue update, please try again.</string>
-  <string name="edit_venue">Edit Venue</string> 
   <string name="send_log_message_subject">Foursquare for Android Feedback</string>
   <string name="send_log_message_device_our_version">"Foursquare version: "</string>
   <string name="send_log_message_device_user_id">"User: "</string>
@@ -342,8 +340,11 @@
   <string name="venue_activity_tip_count_none">No tips here</string>
   <string name="venue_activity_more_info_title">More info</string>
   <string name="venue_activity_more_info_text">Map, contact and more</string>
-  <string name="venue_activity_menu_add_tip">Add a Tip</string>
-  <string name="venue_activity_menu_add_todo">Add a To-Do</string>
+  <string name="venue_activity_menu_add_tip">Leave Tip</string>
+  <string name="venue_activity_menu_add_todo">Add To-Do</string>
+  <string name="venue_activity_menu_flag">Flag</string>
+  <string name="venue_activity_menu_call">Call</string>
+  <string name="venue_activity_menu_share">Share</string>
   <string name="venue_activity_tip_added_ok">Tip added!</string>
   <string name="venue_activity_todo_added_ok">To-Do added!</string>
   <string name="venue_activity_todo_here">You have a To-Do here!</string>
