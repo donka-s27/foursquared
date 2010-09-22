@@ -84,11 +84,11 @@ public class VenueActivity extends Activity {
 
     private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
-    private static final int MENU_TODO_ADD   = 1;
-    private static final int MENU_TIP_ADD    = 2;
-    private static final int MENU_CALL       = 3;
-    private static final int MENU_EDIT_VENUE = 4;
-    private static final int MENU_MYINFO     = 5;
+    private static final int MENU_TIP_ADD    = 1;
+    private static final int MENU_TODO_ADD   = 2;
+    private static final int MENU_EDIT_VENUE = 3;
+    private static final int MENU_CALL       = 4;
+    private static final int MENU_SHARE      = 5;
 
     private static final int RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE = 1;
     private static final int RESULT_CODE_ACTIVITY_ADD_TIP         = 2;
@@ -434,26 +434,20 @@ public class VenueActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        menu.add(Menu.NONE, MENU_TODO_ADD, 1, R.string.venue_activity_menu_add_todo) //
-                .setIcon(R.drawable.ic_menu_checkin);
+        menu.add(Menu.NONE, MENU_TIP_ADD, 1, R.string.venue_activity_menu_add_tip).setIcon(
+                R.drawable.ic_menu_venue_leave_tip);
 
-        menu.add(Menu.NONE, MENU_TIP_ADD, 2, R.string.venue_activity_menu_add_tip).setIcon(
-                android.R.drawable.ic_menu_set_as);
+        menu.add(Menu.NONE, MENU_TODO_ADD, 2, R.string.venue_activity_menu_add_todo).setIcon(
+        		R.drawable.ic_menu_venue_add_todo);
 
-        menu.add(Menu.NONE, MENU_CALL, 3, R.string.call).setIcon(android.R.drawable.ic_menu_call);
-
-        menu.add(Menu.NONE, MENU_EDIT_VENUE, 4, R.string.edit_venue).setIcon(
-                android.R.drawable.ic_menu_edit);
+        menu.add(Menu.NONE, MENU_EDIT_VENUE, 3, R.string.venue_activity_menu_flag).setIcon(
+        		R.drawable.ic_menu_venue_flag);
         
-        int sdk = new Integer(Build.VERSION.SDK).intValue();
-        if (sdk < 4) {
-            int menuIcon = UserUtils.getDrawableForMeMenuItemByGender(
-                ((Foursquared) getApplication()).getUserGender());
-            menu.add(Menu.NONE, MENU_MYINFO, Menu.NONE, R.string.myinfo_label) //
-                    .setIcon(menuIcon);
-        }
+        menu.add(Menu.NONE, MENU_CALL, 4, R.string.venue_activity_menu_call).setIcon(
+        		R.drawable.ic_menu_venue_contact);
         
-        MenuUtils.addPreferencesToMenu(this, menu);
+        menu.add(Menu.NONE, MENU_SHARE, 5, R.string.venue_activity_menu_share).setIcon(
+        		R.drawable.ic_menu_venue_share);
 
         return true;
     }
@@ -470,15 +464,21 @@ public class VenueActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+	        case MENU_TIP_ADD:
+	        	Intent intentTip = new Intent(VenueActivity.this, AddTipActivity.class);
+	        	intentTip.putExtra(AddTipActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+	            startActivityForResult(intentTip, RESULT_CODE_ACTIVITY_ADD_TIP);
+	            return true;
             case MENU_TODO_ADD:   
             	Intent intentTodo = new Intent(VenueActivity.this, AddTodoActivity.class);
             	intentTodo.putExtra(AddTodoActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
                 startActivityForResult(intentTodo, RESULT_CODE_ACTIVITY_ADD_TODO);
                 return true;
-            case MENU_TIP_ADD:
-            	Intent intentTip = new Intent(VenueActivity.this, AddTipActivity.class);
-            	intentTip.putExtra(AddTipActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
-                startActivityForResult(intentTip, RESULT_CODE_ACTIVITY_ADD_TIP);
+            case MENU_EDIT_VENUE:
+                Intent intentEditVenue = new Intent(this, EditVenueOptionsActivity.class);
+                intentEditVenue.putExtra(
+                        EditVenueOptionsActivity.EXTRA_VENUE_PARCELABLE, mStateHolder.getVenue());
+                startActivity(intentEditVenue);
                 return true;
             case MENU_CALL:
                 try {
@@ -492,17 +492,8 @@ public class VenueActivity extends Activity {
                             Toast.LENGTH_SHORT).show();
                 }
                 return true;
-            case MENU_EDIT_VENUE:
-                Intent intentEditVenue = new Intent(this, EditVenueOptionsActivity.class);
-                intentEditVenue.putExtra(
-                        EditVenueOptionsActivity.EXTRA_VENUE_PARCELABLE, mStateHolder.getVenue());
-                startActivity(intentEditVenue);
-                return true;
-            case MENU_MYINFO:
-                Intent intentUser = new Intent(VenueActivity.this, UserDetailsActivity.class);
-                intentUser.putExtra(UserDetailsActivity.EXTRA_USER_ID,
-                        ((Foursquared) getApplication()).getUserId());
-                startActivity(intentUser);
+            case MENU_SHARE:
+                Toast.makeText(this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -544,9 +535,6 @@ public class VenueActivity extends Activity {
             		Toast.makeText(this, getResources().getString(R.string.venue_activity_todo_added_ok), 
             				Toast.LENGTH_SHORT).show();
             	}
-            	
-            	Toast.makeText(this, getResources().getString(R.string.venue_activity_todo_added_ok), 
-        				Toast.LENGTH_SHORT).show();
             	break;
             case RESULT_CODE_ACTIVITY_TIP:
             case RESULT_CODE_ACTIVITY_TODO:
@@ -569,7 +557,6 @@ public class VenueActivity extends Activity {
             		prepareResultIntent();
             	}
             	break;
-            
             case RESULT_CODE_ACTIVITY_TODOS:
             	if (resultCode == Activity.RESULT_OK && data.hasExtra(VenueTodosActivity.INTENT_EXTRA_RETURN_VENUE)) {
         			Venue venue = (Venue)data.getParcelableExtra(VenueTodosActivity.INTENT_EXTRA_RETURN_VENUE);
