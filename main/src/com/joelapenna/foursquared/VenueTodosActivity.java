@@ -60,6 +60,7 @@ public class VenueTodosActivity extends LoadableListActivity {
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
+            setPreparedResultIntent();
         } else {
             mStateHolder = new StateHolder();
             if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
@@ -151,15 +152,23 @@ public class VenueTodosActivity extends LoadableListActivity {
     private void prepareResultIntent() {
     	Intent intent = new Intent();
     	intent.putExtra(INTENT_EXTRA_RETURN_VENUE, mStateHolder.getVenue());
-    	setResult(Activity.RESULT_OK, intent);
+    	mStateHolder.setPreparedResult(intent);
+    	setPreparedResultIntent();
     }
     
+    private void setPreparedResultIntent() {
+    	if (mStateHolder.getPreparedResult() != null) {
+    		setResult(Activity.RESULT_OK, mStateHolder.getPreparedResult());
+    	}
+    }
     
     private static class StateHolder {
         
         private Venue mVenue;
+        private Intent mPreparedResult;
         
         public StateHolder() {
+        	mPreparedResult = null;
         }
  
         public Venue getVenue() {
@@ -168,6 +177,14 @@ public class VenueTodosActivity extends LoadableListActivity {
         
         public void setVenue(Venue venue) {
         	mVenue = venue;
+        }
+        
+        public Intent getPreparedResult() {
+        	return mPreparedResult;
+        }
+        
+        public void setPreparedResult(Intent intent) {
+        	mPreparedResult = intent;
         }
     }
 }

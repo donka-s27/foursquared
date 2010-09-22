@@ -49,6 +49,7 @@ import com.joelapenna.foursquared.preferences.Preferences;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.util.VenueUtils;
 import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 import com.joelapenna.foursquared.widget.VenueListAdapter;
 
@@ -553,11 +554,17 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         }
         
         public void updateVenue(Venue venue) {
-        	for (Group<Venue> it : mResults) {
+        	for (Group<Venue> it : mResults) { 
         		for (int j = 0; j < it.size(); j++) {
         			if (it.get(j).getId().equals(venue.getId())) {
-        				it.set(j, venue);
-        				mFullyLoadedVenueIds.add(venue.getId());
+        				// The /venue api call does not supply the venue's distance value,
+        				// so replace it manually here.
+        				Venue replaced = it.get(j);
+        				Venue replacer = VenueUtils.cloneVenue(venue);
+        				replacer.setDistance(replaced.getDistance());
+        				
+        				it.set(j, replacer);
+        				mFullyLoadedVenueIds.add(replacer.getId());
         			}
         		}
         	}

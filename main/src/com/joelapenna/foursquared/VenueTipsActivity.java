@@ -65,6 +65,7 @@ public class VenueTipsActivity extends LoadableListActivity {
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
+            setPreparedResultIntent();
         } else {
             mStateHolder = new StateHolder();
             if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
@@ -159,15 +160,24 @@ public class VenueTipsActivity extends LoadableListActivity {
     private void prepareResultIntent() {
     	Intent intent = new Intent();
     	intent.putExtra(INTENT_EXTRA_RETURN_VENUE, mStateHolder.getVenue());
-    	setResult(Activity.RESULT_OK, intent);
+    	mStateHolder.setPreparedResult(intent);
+    	setPreparedResultIntent();
+    }
+    
+    private void setPreparedResultIntent() {
+    	if (mStateHolder.getPreparedResult() != null) {
+    		setResult(Activity.RESULT_OK, mStateHolder.getPreparedResult());
+    	}
     }
     
     
     private static class StateHolder {
         
         private Venue mVenue;
+        private Intent mPreparedResult;
         
         public StateHolder() {
+        	mPreparedResult = null;
         }
  
         public Venue getVenue() {
@@ -177,56 +187,13 @@ public class VenueTipsActivity extends LoadableListActivity {
         public void setVenue(Venue venue) {
         	mVenue = venue;
         }
-        /*
-        public void updateTip(Tip tip) {
-            for (Tip it : mVenue.getTips()) {
-                if (it.getId().equals(tip.getId())) {
-                    it.setStatus(tip.getStatus());
-                    break;
-                }
-            }
+        
+        public Intent getPreparedResult() {
+        	return mPreparedResult;
         }
         
-        public void addTodo(Tip tip, Todo todo) {
-        	Log.e(TAG, "addTodo: " + tip.getId() + ":" + todo.getId());
-        	
-        	mVenue.setHasTodo(true);
-        	
-        	// If found a todo linked to the tip ID, then overwrite to-do attributes
-        	// with newer todo object.
-        	for (Todo it : mVenue.getTodos()) {
-        		if (it.getTip().getId().equals(tip.getId())) {
-                	Log.e(TAG, "   add todo, already found!: " + tip.getId() + ":" + it.getId());
-        			it.setId(todo.getId());
-        			it.setCreated(todo.getCreated());
-        			return;
-        		}
-        	}
-        	
-        	Log.e(TAG, "  add todo, not found, adding: " + tip.getId() + ":" + todo.getId());
-        	
-        	mVenue.getTodos().add(todo);
+        public void setPreparedResult(Intent intent) {
+        	mPreparedResult = intent;
         }
-        
-        public void removeTodo(Tip tip) {
-        	Log.e(TAG, "removeTodo: " + tip.getId() + ":(to-do id never expected for removing to-do).");
-        	
-        	for (Todo it : mVenue.getTodos()) {
-        		if (it.getTip().getId().equals(tip.getId())) {
-                	Log.e(TAG, "  remove todo, found, removing!: " + tip.getId());
-        			mVenue.getTodos().remove(it);
-        			break;
-        		}
-        	}
-
-        	//Log.e(TAG, "  remove todo, not found at all, nothign to do: " + tip.getId() + ":" + todoId);
-        	
-        	if (mVenue.getTodos().size() > 0) {
-        		mVenue.setHasTodo(true);
-        	} else {
-        		mVenue.setHasTodo(false);
-        	}
-        }
-        */
     }
 }
