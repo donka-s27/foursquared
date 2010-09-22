@@ -393,7 +393,7 @@ public class AddVenueActivity extends Activity {
                 // If they added the venue ok, then send them to an activity displaying it
                 // so they can play around with it.
                 Intent intent = new Intent(AddVenueActivity.this, VenueActivity.class);
-                intent.putExtra(Foursquared.EXTRA_VENUE_ID, venue.getId());
+                intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
                 startActivity(intent);
                 finish();
             } else {

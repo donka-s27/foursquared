@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Joe LaPenna
+ * Copyright 2010 Mark Wyszomierski
  */
 
 package com.joelapenna.foursquared;
@@ -22,30 +22,25 @@ import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.app.LoadableListActivity;
 import com.joelapenna.foursquared.util.VenueUtils;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
-import com.joelapenna.foursquared.widget.TipsListAdapter;
+import com.joelapenna.foursquared.widget.TodosListAdapter;
 
 /**
- * @author Joe LaPenna (joe@joelapenna.com)
  * @author Mark Wyszomierski (markww@gmail.com)
- *   -modified to start TipActivity on tip click (2010-03-25)
- *   -added photos for tips (2010-03-25)
- *   -refactored for new VenueActivity design (2010-09-16)
  */
-public class VenueTipsActivity extends LoadableListActivity {
+public class VenueTodosActivity extends LoadableListActivity {
     
-	public static final String TAG = "VenueTipsActivity";
+	public static final String TAG = "VenueTodosActivity";
     public static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
     public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
-            + ".VenueTipsActivity.INTENT_EXTRA_VENUE";
-    public static final String INTENT_EXTRA_RETURN_VENUE = Foursquared.PACKAGE_NAME 
-	        + ".VenueTipsActivity.INTENT_EXTRA_RETURN_VENUE";
-    
+            + ".VenueTodosActivity.INTENT_EXTRA_VENUE";
+
+    public static final String INTENT_EXTRA_RETURN_VENUE = Foursquared.PACKAGE_NAME
+            + ".VenueTodosActivity.INTENT_EXTRA_RETURN_VENUE";
 
     private static final int ACTIVITY_TIP = 500;
     
-    private SeparatedListAdapter mListAdapter;
+    private TodosListAdapter mListAdapter;
     private StateHolder mStateHolder;
 
         
@@ -70,7 +65,7 @@ public class VenueTipsActivity extends LoadableListActivity {
             if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
             	mStateHolder.setVenue((Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_VENUE));
             } else {
-                Log.e(TAG, "VenueTipsActivity requires a venue parcel its intent extras.");
+                Log.e(TAG, "VenueTodosActivity requires a venue parcel its intent extras.");
                 finish();
                 return;
             }
@@ -96,17 +91,11 @@ public class VenueTipsActivity extends LoadableListActivity {
 
     private void ensureUi() {
     	
-    	Group<Tip> tips = mStateHolder.getVenue().getTips();
-
-    	TipsListAdapter groupAdapter = new TipsListAdapter(this,
-                ((Foursquared) getApplication()).getRemoteResourceManager());
-    	groupAdapter.setDisplayTipVenueTitles(false);
-        groupAdapter.setGroup(tips);
+    	Group<Todo> todos = mStateHolder.getVenue().getTodos();
         
-        String title = getResources().getString(R.string.venue_tips_activity_title, tips.size());
-        
-    	mListAdapter = new SeparatedListAdapter(this);
-        mListAdapter.addSection(title, groupAdapter);
+    	mListAdapter = new TodosListAdapter(this, ((Foursquared) getApplication()).getRemoteResourceManager());
+        mListAdapter.setGroup(todos);
+        mListAdapter.setDisplayTodoVenueTitles(false);
         
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
@@ -124,11 +113,11 @@ public class VenueTipsActivity extends LoadableListActivity {
             	venue.setAddress(mStateHolder.getVenue().getAddress());
             	venue.setCrossstreet(mStateHolder.getVenue().getCrossstreet());
             	
-            	Tip tip = (Tip)parent.getAdapter().getItem(position);
-            	tip.setVenue(venue);
+            	Todo todo = (Todo) parent.getAdapter().getItem(position);
+            	todo.getTip().setVenue(venue);
             	
-                Intent intent = new Intent(VenueTipsActivity.this, TipActivity.class);
-                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
+                Intent intent = new Intent(VenueTodosActivity.this, TipActivity.class);
+                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
                 intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
                 startActivityForResult(intent, ACTIVITY_TIP);
             }
@@ -138,12 +127,10 @@ public class VenueTipsActivity extends LoadableListActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if (requestCode == ACTIVITY_TIP && resultCode == Activity.RESULT_OK) {
-    		if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
-	    		Tip tip = (Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED);
-	    		Todo todo = data.hasExtra(TipActivity.EXTRA_TODO_RETURNED) ? 
-	    				(Todo)data.getParcelableExtra(TipActivity.EXTRA_TODO_RETURNED) : null;
-	    		updateTip(tip, todo);
-    		}
+    		Tip tip = (Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED);
+    		Todo todo = data.hasExtra(TipActivity.EXTRA_TODO_RETURNED) ? 
+    				(Todo)data.getParcelableExtra(TipActivity.EXTRA_TODO_RETURNED) : null;
+			updateTip(tip, todo);
         }
     }
     
@@ -152,8 +139,13 @@ public class VenueTipsActivity extends LoadableListActivity {
     	// the venue, update it now.
     	VenueUtils.handleTipChange(mStateHolder.getVenue(), tip, todo);
     	
-    	mListAdapter.notifyDataSetInvalidated();
+    	// If there are no more todos, there's nothing left to.. do.
     	prepareResultIntent();
+    	if (mStateHolder.getVenue().getHasTodo()) {
+        	mListAdapter.notifyDataSetInvalidated();
+    	} else {
+    		finish();
+    	}
     }
     
     private void prepareResultIntent() {
@@ -177,56 +169,5 @@ public class VenueTipsActivity extends LoadableListActivity {
         public void setVenue(Venue venue) {
         	mVenue = venue;
         }
-        /*
-        public void updateTip(Tip tip) {
-            for (Tip it : mVenue.getTips()) {
-                if (it.getId().equals(tip.getId())) {
-                    it.setStatus(tip.getStatus());
-                    break;
-                }
-            }
-        }
-        
-        public void addTodo(Tip tip, Todo todo) {
-        	Log.e(TAG, "addTodo: " + tip.getId() + ":" + todo.getId());
-        	
-        	mVenue.setHasTodo(true);
-        	
-        	// If found a todo linked to the tip ID, then overwrite to-do attributes
-        	// with newer todo object.
-        	for (Todo it : mVenue.getTodos()) {
-        		if (it.getTip().getId().equals(tip.getId())) {
-                	Log.e(TAG, "   add todo, already found!: " + tip.getId() + ":" + it.getId());
-        			it.setId(todo.getId());
-        			it.setCreated(todo.getCreated());
-        			return;
-        		}
-        	}
-        	
-        	Log.e(TAG, "  add todo, not found, adding: " + tip.getId() + ":" + todo.getId());
-        	
-        	mVenue.getTodos().add(todo);
-        }
-        
-        public void removeTodo(Tip tip) {
-        	Log.e(TAG, "removeTodo: " + tip.getId() + ":(to-do id never expected for removing to-do).");
-        	
-        	for (Todo it : mVenue.getTodos()) {
-        		if (it.getTip().getId().equals(tip.getId())) {
-                	Log.e(TAG, "  remove todo, found, removing!: " + tip.getId());
-        			mVenue.getTodos().remove(it);
-        			break;
-        		}
-        	}
-
-        	//Log.e(TAG, "  remove todo, not found at all, nothign to do: " + tip.getId() + ":" + todoId);
-        	
-        	if (mVenue.getTodos().size() > 0) {
-        		mVenue.setHasTodo(true);
-        	} else {
-        		mVenue.setHasTodo(false);
-        	}
-        }
-        */
     }
 }

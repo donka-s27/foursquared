@@ -52,6 +52,7 @@
       >
       
       <ImageView
+        android:id="@+id/tipActivityVenueChevron"
         android:layout_width="9dip"
         android:layout_height="13dip"
         android:src="@drawable/arrow_white"

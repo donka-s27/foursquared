@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/venueActivityTips"
+  android:layout_width="fill_parent" 
+  android:layout_height="wrap_content"
+  android:padding="7dip"
+  android:background="@drawable/listview_item" >
+        
+  <TextView 
+    android:id="@+id/venueActivityTipsText"
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+    android:text="No tips here."
+    android:textAppearance="@style/TextViewStyleVenueActivityBold"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentTop="true" />
+  
+  <TextView 
+    android:id="@+id/venueActivityTipsExtra"
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+    android:text=""
+    android:textAppearance="@style/TextViewStyleVenueActivityNormal"
+    android:layout_below="@id/venueActivityTipsText" />
+    
+  <ImageView
+    android:id="@+id/venueActivityTipsChevron"
+    android:layout_width="9dip"
+    android:layout_height="13dip"
+    android:src="@drawable/arrow_grey"
+    android:scaleType="fitCenter"  
+    android:layout_marginLeft="3dip"
+    android:layout_marginRight="3dip"
+    android:layout_centerVertical="true"
+    android:layout_alignParentRight="true"  />
+
+</RelativeLayout>

@@ -25,6 +25,7 @@ public class Venue implements FoursquareType, Parcelable {
     private String mDistance;
     private String mGeolat;
     private String mGeolong;
+    private boolean mHasTodo;
     private String mId;
     private String mName;
     private String mPhone;
@@ -33,7 +34,7 @@ public class Venue implements FoursquareType, Parcelable {
     private Stats mStats;
     private Tags mTags;
     private Group<Tip> mTips;
-    private Group<Tip> mTodos;
+    private Group<Todo> mTodos;
     private String mTwitter;
     private String mZip;
     private Category mCategory;
@@ -49,6 +50,7 @@ public class Venue implements FoursquareType, Parcelable {
         mDistance = ParcelUtils.readStringFromParcel(in);
         mGeolat = ParcelUtils.readStringFromParcel(in);
         mGeolong = ParcelUtils.readStringFromParcel(in);
+        mHasTodo = in.readInt() == 1;
         mId = ParcelUtils.readStringFromParcel(in);
         mName = ParcelUtils.readStringFromParcel(in);
         mPhone = ParcelUtils.readStringFromParcel(in);
@@ -90,10 +92,10 @@ public class Venue implements FoursquareType, Parcelable {
             mTips.add(tip);
         }
 
-        mTodos = new Group<Tip>();
+        mTodos = new Group<Todo>();
         int numTodos = in.readInt();
         for (int i = 0; i < numTodos; i++) {
-            Tip todo = in.readParcelable(Tip.class.getClassLoader());
+            Todo todo = in.readParcelable(Todo.class.getClassLoader());
             mTodos.add(todo);
         }
 
@@ -177,6 +179,14 @@ public class Venue implements FoursquareType, Parcelable {
         mGeolong = geolong;
     }
 
+    public boolean getHasTodo() {
+    	return mHasTodo;
+    }
+    
+    public void setHasTodo(boolean hasTodo) {
+    	mHasTodo = hasTodo;
+    }
+    
     public String getId() {
         return mId;
     }
@@ -241,11 +251,11 @@ public class Venue implements FoursquareType, Parcelable {
         mTips = tips;
     }
 
-    public Group<Tip> getTodos() {
+    public Group<Todo> getTodos() {
         return mTodos;
     }
 
-    public void setTodos(Group<Tip> todos) {
+    public void setTodos(Group<Todo> todos) {
         mTodos = todos;
     }
 
@@ -283,6 +293,7 @@ public class Venue implements FoursquareType, Parcelable {
         ParcelUtils.writeStringToParcel(out, mDistance);
         ParcelUtils.writeStringToParcel(out, mGeolat);
         ParcelUtils.writeStringToParcel(out, mGeolong);
+        out.writeInt(mHasTodo ? 1 : 0);
         ParcelUtils.writeStringToParcel(out, mId);
         ParcelUtils.writeStringToParcel(out, mName);
         ParcelUtils.writeStringToParcel(out, mPhone);
@@ -336,7 +347,7 @@ public class Venue implements FoursquareType, Parcelable {
         if (mTodos != null) {
             out.writeInt(mTodos.size());
             for (int i = 0; i < mTodos.size(); i++) {
-                out.writeParcelable((Tip)mTodos.get(i), flags);
+                out.writeParcelable((Todo)mTodos.get(i), flags);
             }
         } else {
             out.writeInt(0);

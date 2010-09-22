@@ -18,9 +18,9 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
@@ -39,8 +39,8 @@ public class AddTodoActivity extends Activity {
     public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
             + ".AddTodoActivity.INTENT_EXTRA_VENUE";
     
-    public static final String EXTRA_TODO_PARCEL_RETURNED = Foursquared.PACKAGE_NAME
-        + ".AddTodoActivity.EXTRA_TODO_PARCEL_RETURNED";
+    public static final String EXTRA_TODO_RETURNED = Foursquared.PACKAGE_NAME
+        + ".AddTodoActivity.EXTRA_TODO_RETURNED";
 
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
@@ -89,11 +89,7 @@ public class AddTodoActivity extends Activity {
             public void onClick(View v) {
             	EditText et = (EditText)findViewById(R.id.addTodoActivityText);
             	String text = et.getText().toString();
-            	if (!TextUtils.isEmpty(text)) {
-            		mStateHolder.startTaskAddTip(AddTodoActivity.this, mStateHolder.getVenue().getId(), text);
-            	} else {
-            		Toast.makeText(AddTodoActivity.this, text, Toast.LENGTH_SHORT).show();
-            	}
+            	mStateHolder.startTaskAddTodo(AddTodoActivity.this, mStateHolder.getVenue().getId(), text);
             }
         });
         
@@ -110,7 +106,7 @@ public class AddTodoActivity extends Activity {
             mDlgProgress.setOnCancelListener(new OnCancelListener() {
     			@Override
     			public void onCancel(DialogInterface dialog) {
-    				Log.e(TAG, "User cancelled add tip.");
+    				Log.e(TAG, "User cancelled add todo.");
     				mStateHolder.cancelTasks();
     			}
             });
@@ -127,14 +123,14 @@ public class AddTodoActivity extends Activity {
         setProgressBarIndeterminateVisibility(false);
     }
     
-    private static class TaskAddTip extends AsyncTask<Void, Void, Tip> {
+    private static class TaskAddTodo extends AsyncTask<Void, Void, Todo> {
 
         private AddTodoActivity mActivity;
         private String mVenueId;
         private String mTipText;
         private Exception mReason;
 
-        public TaskAddTip(AddTodoActivity activity, String venueId, String tipText) {
+        public TaskAddTodo(AddTodoActivity activity, String venueId, String tipText) {
         	mActivity = activity;
         	mVenueId = venueId;
         	mTipText = tipText;
@@ -146,20 +142,40 @@ public class AddTodoActivity extends Activity {
         }
 
         @Override
-        protected Tip doInBackground(Void... params) {
+        protected Todo doInBackground(Void... params) {
             try {
-            	// The returned tip won't have the user object or venue attached to it
-            	// as part of the response. The venue is the parent venue and the user
-            	// is the logged-in user.
+            	// If the user entered optional text, we need to use one endpoint,
+            	// if not, we need to use mark/todo.
             	Foursquared foursquared = (Foursquared)mActivity.getApplication();
-                Tip tip = foursquared.getFoursquare().addTip(
-                		mVenueId, mTipText, "todo", 
-                		LocationUtils.createFoursquareLocation(foursquared.getLastKnownLocation()));
+            	Todo todo = null;
+            	if (!TextUtils.isEmpty(mTipText)) {
+            		// The returned tip won't have the user object or venue attached to it
+                	// as part of the response. The venue is the parent venue and the user
+                	// is the logged-in user.
+	                Tip tip = foursquared.getFoursquare().addTip(
+	                		mVenueId, mTipText, "todo", 
+	                		LocationUtils.createFoursquareLocation(foursquared.getLastKnownLocation()));
+	                
+	                // So fetch the full tip for convenience.
+	                Tip tipFull = foursquared.getFoursquare().tipDetail(tip.getId());
+	                
+	                // The addtip API returns a tip instead of a todo, unlike the mark/todo endpoint,
+	                // so we create a dummy todo object for now to wrap the tip.
+	                String now = StringFormatters.createServerDateFormatV1();
+	                todo = new Todo();
+	                todo.setId("id_" + now);
+	                todo.setCreated(now);
+	                todo.setTip(tipFull);
+	                
+	                Log.i(TAG, "Added todo with wrapper ID: " + todo.getId());
+            	} else {
+            		// No text, so in this case we need to mark the venue itself as a todo.
+            		todo = foursquared.getFoursquare().markTodoVenue(mVenueId);
+            		
+	                Log.i(TAG, "Added todo with ID: " + todo.getId());
+            	}
                 
-                // So fetch the full tip for convenience.
-                Tip tipFull = foursquared.getFoursquare().tipDetail(tip.getId());
-                
-                return tipFull;
+                return todo;
                 
             } catch (Exception e) {
                 Log.e(TAG, "Error adding tip.", e);
@@ -169,12 +185,12 @@ public class AddTodoActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(Tip tip) {
+        protected void onPostExecute(Todo todo) {
         	mActivity.stopProgressBar();
         	mActivity.mStateHolder.setIsRunningTaskAddTip(false);
-        	if (tip != null) {
+        	if (todo != null) {
         		Intent intent = new Intent();
-        		intent.putExtra(EXTRA_TODO_PARCEL_RETURNED, tip);
+        		intent.putExtra(EXTRA_TODO_RETURNED, todo);
         		mActivity.setResult(Activity.RESULT_OK, intent);
         		mActivity.finish();
         	} else {
@@ -199,7 +215,7 @@ public class AddTodoActivity extends Activity {
     private static final class StateHolder {
         private Venue mVenue;
         
-        private TaskAddTip mTaskAddTodo;
+        private TaskAddTodo mTaskAddTodo;
         private boolean mIsRunningTaskAddTip;
         
         
@@ -219,9 +235,9 @@ public class AddTodoActivity extends Activity {
         	mIsRunningTaskAddTip = isRunningTaskAddTip;
         }
         
-        public void startTaskAddTip(AddTodoActivity activity, String venueId, String text) {
+        public void startTaskAddTodo(AddTodoActivity activity, String venueId, String text) {
         	mIsRunningTaskAddTip = true;
-        	mTaskAddTodo = new TaskAddTip(activity, venueId, text);
+        	mTaskAddTodo = new TaskAddTodo(activity, venueId, text);
         	mTaskAddTodo.execute(); 
         }
 

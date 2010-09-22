@@ -5,7 +5,7 @@
   android:layout_width="fill_parent"
   android:layout_height="?android:attr/listPreferredItemHeight"
   style="@style/listItemStyle"
-  android:paddingRight="7dip"
+  android:paddingRight="0dip"
   android:paddingBottom="6dip">
  
   <!-- 
@@ -34,6 +34,7 @@
     android:layout_alignParentTop="true"
     android:layout_alignWithParentIfMissing="true"
     android:paddingLeft="7dip"
+    android:paddingRight="7dip"
     android:textAppearance="@style/TextViewStyleVenueNameListItem"
     />
 
@@ -45,6 +46,7 @@
     android:layout_alignParentRight="true"
     android:layout_below="@id/venueName"
     android:paddingLeft="7dip"
+    android:paddingRight="20dip"
     android:textAppearance="@style/TextViewStyleVenueAddressListItem"
     android:singleLine="true"
     android:maxLines="1"
@@ -83,7 +85,7 @@
       android:src="@drawable/people_icon"
       android:layout_gravity="center_vertical"
       android:layout_marginTop="1dip"
-      android:scaleType="fitCenter"   />
+      android:scaleType="fitCenter" />
       
     <TextView
       android:id="@+id/venueCheckinCount"
@@ -94,4 +96,17 @@
       android:ellipsize="end" />
       
   </LinearLayout>
+  
+  <ImageView
+    android:id="@+id/venueTodoCorner"
+    android:src="@drawable/tip_list_item_corner_todo"
+    android:layout_width="22dip"
+    android:layout_height="22dip"
+    android:scaleType="fitXY"
+    android:padding="0dip"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentRight="true"
+    android:visibility="invisible"
+    />
+    
 </RelativeLayout>

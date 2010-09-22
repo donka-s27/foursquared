@@ -52,6 +52,7 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
     private Handler mHandler = new Handler();
     private int mLoadedPhotoIndex;
     private Map<String, String> mCachedTimestamps;
+    private boolean mDisplayVenueTitles;
 
     
     public TodosListAdapter(Context context, RemoteResourceManager rrm) {
@@ -63,6 +64,7 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
         mResourcesObserver = new RemoteResourceManagerObserver();
         mLoadedPhotoIndex = 0;
         mCachedTimestamps = new HashMap<String, String>();
+        mDisplayVenueTitles = true;
         
         mRrm.addObserver(mResourcesObserver);
     }
@@ -109,22 +111,26 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
         Todo todo = (Todo)getItem(position);
         Tip tip = todo.getTip();
 
-        if (tip.getVenue() != null) {
+        if (mDisplayVenueTitles && tip.getVenue() != null) {
             holder.title.setText("@ " + tip.getVenue().getName());
             holder.title.setVisibility(View.VISIBLE);
-            if (tip.getVenue().getCategory() != null) {
-                Uri photoUri = Uri.parse(tip.getVenue().getCategory().getIconUrl());
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
-                    holder.photo.setImageBitmap(bitmap);
-                } catch (IOException e) {
-                    holder.photo.setImageResource(R.drawable.category_none);
-                }
-            } else {
+        } else {
+            holder.title.setVisibility(View.GONE);
+            
+            holder.body.setPadding(
+            	holder.body.getPaddingLeft(), holder.title.getPaddingTop(),
+            	holder.body.getPaddingRight(), holder.body.getPaddingBottom());
+        }
+
+        if (tip.getVenue() != null && tip.getVenue().getCategory() != null) {
+            Uri photoUri = Uri.parse(tip.getVenue().getCategory().getIconUrl());
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
+                holder.photo.setImageBitmap(bitmap);
+            } catch (IOException e) {
                 holder.photo.setImageResource(R.drawable.category_none);
             }
         } else {
-            holder.title.setVisibility(View.GONE);
             holder.photo.setImageResource(R.drawable.category_none);
         }
         
@@ -134,6 +140,7 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
         } else {
             holder.body.setVisibility(View.GONE);
         }
+        
         
         holder.dateAndAuthor.setText(mResources.getString(
                 R.string.todo_added_date,
@@ -176,6 +183,10 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
             String formatted = StringFormatters.getTipAge(mResources, it.getCreated()); 
             mCachedTimestamps.put(it.getId(), formatted);
         }
+    }
+    
+    public void setDisplayTodoVenueTitles(boolean displayTodoVenueTitles) {
+    	mDisplayVenueTitles = displayTodoVenueTitles;
     }
     
     private class RemoteResourceManagerObserver implements Observer {

@@ -262,7 +262,7 @@ public class SearchVenuesActivity extends TabActivity {
     void startItemActivity(Venue venue) {
         Intent intent = new Intent(SearchVenuesActivity.this, VenueActivity.class);
         intent.setAction(Intent.ACTION_VIEW);
-        intent.putExtra(Foursquared.EXTRA_VENUE_ID, venue.getId());
+        intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
         startActivity(intent);
     }
 
@@ -331,7 +331,7 @@ public class SearchVenuesActivity extends TabActivity {
 
         Intent shortcutIntent = new Intent(Intent.ACTION_MAIN);
         shortcutIntent.setClassName(this, VenueActivity.class.getName());
-        shortcutIntent.putExtra(Foursquared.EXTRA_VENUE_ID, venue.getId());
+        shortcutIntent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
 
         // Then, set up the container intent (the response to the caller)
         Intent intent = new Intent();

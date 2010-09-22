@@ -4,22 +4,23 @@
 
 package com.joelapenna.foursquared.util;
 
-import com.joelapenna.foursquare.types.Checkin;
-import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.R;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import android.content.res.Resources;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import com.joelapenna.foursquare.types.Checkin;
+import com.joelapenna.foursquare.types.User;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.R;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -43,6 +44,19 @@ public class StringFormatters {
     public static final SimpleDateFormat DATE_FORMAT_OLDER = new SimpleDateFormat(
             "E MMM d");
     
+    public static String getVenueLocationFull(Venue venue) {
+    	StringBuilder sb = new StringBuilder();
+    	sb.append(venue.getAddress());
+    	if (sb.length() > 0) {
+    		sb.append(" ");
+    	}
+    	if (!TextUtils.isEmpty(venue.getCrossstreet())) {
+            sb.append("(");
+            sb.append(venue.getCrossstreet());
+            sb.append(")");
+    	}
+    	return sb.toString();
+    }
 
     public static String getVenueLocationCrossStreetOrCity(Venue venue) {
         if (!TextUtils.isEmpty(venue.getCrossstreet())) {
@@ -212,5 +226,10 @@ public class StringFormatters {
                 return res.getString(R.string.tip_age_years, String.valueOf(diffYears), "s");
             }
         }
+    }
+    
+    public static String createServerDateFormatV1() {
+    	DateFormat df = new SimpleDateFormat("EEE, dd MMM yy HH:mm:ss Z");
+    	return df.format(new Date());
     }
 }

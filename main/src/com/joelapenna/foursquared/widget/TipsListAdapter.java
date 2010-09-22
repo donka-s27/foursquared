@@ -128,6 +128,10 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
             holder.title.setVisibility(View.VISIBLE);
         } else {
             holder.title.setVisibility(View.GONE);
+            
+            holder.body.setPadding(
+        		 holder.body.getPaddingLeft(), holder.title.getPaddingTop(),
+        		 holder.body.getPaddingRight(), holder.title.getPaddingBottom());
         }
         
         holder.body.setText(tip.getText());

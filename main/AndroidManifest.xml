@@ -251,6 +251,10 @@
     </activity>
     
     <activity
+      android:name=".VenueTodosActivity">
+    </activity>
+    
+    <activity
       android:name=".AddFriendsActivity"
       android:label="@string/add_friends_activity_label">
     </activity>

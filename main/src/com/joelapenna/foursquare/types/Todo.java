@@ -18,7 +18,6 @@ public class Todo implements FoursquareType, Parcelable {
     private String mCreated;
     private String mId;
     private Tip mTip;
-    private Venue mVenue;
 
     public Todo() {
     }
@@ -28,10 +27,6 @@ public class Todo implements FoursquareType, Parcelable {
         mId = ParcelUtils.readStringFromParcel(in);
         if (in.readInt() == 1) {
             mTip = in.readParcelable(Tip.class.getClassLoader());
-        }
-        
-        if (in.readInt() == 1) {
-            mVenue = in.readParcelable(Venue.class.getClassLoader());
         }
     }
     
@@ -70,14 +65,6 @@ public class Todo implements FoursquareType, Parcelable {
         mTip = tip;
     }
 
-    public Venue getVenue() {
-        return mVenue;
-    }
-
-    public void setVenue(Venue venue) {
-        mVenue = venue;
-    }
-
     @Override
     public void writeToParcel(Parcel out, int flags) {
         ParcelUtils.writeStringToParcel(out, mCreated);
@@ -86,13 +73,6 @@ public class Todo implements FoursquareType, Parcelable {
         if (mTip != null) {
             out.writeInt(1);
             out.writeParcelable(mTip, flags);
-        } else {
-            out.writeInt(0);
-        }
-        
-        if (mVenue != null) {
-            out.writeInt(1);
-            out.writeParcelable(mVenue, flags);
         } else {
             out.writeInt(0);
         }
