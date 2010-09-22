@@ -68,14 +68,16 @@ import com.joelapenna.foursquared.widget.SackOfViewsAdapter;
  * changes as a result of a user modifying todos at the venue. Parent activities can
  * check the returned venue to see if this status has changed to update their UI.
  * For example, the NearbyVenues activity wants to show the todo corner png if the
- * venue has a todo. The result will also be set if the venue is fully fetched if
- * originally given only a venue id or partial venue object. This way the parent can
- * also cache the full venue object for next time.
+ * venue has a todo. 
+ * 
+ * The result will also be set if the venue is fully fetched if originally given only 
+ * a venue id or partial venue object. This way the parent can also cache the full venue 
+ * object for next time they want to display this venue activity.
  * 
  * @author Joe LaPenna (joe@joelapenna.com)
  * @author Mark Wyszomierski (markww@gmail.com)
  *         -Replaced shout activity with CheckinGatherInfoActivity (3/10/2010).
- *         -Redesign to remove tabbed layout (9/15/2010).
+ *         -Redesign from tabbed layout (9/15/2010).
  */
 public class VenueActivity extends Activity {
     private static final String TAG = "VenueActivity";
@@ -138,6 +140,7 @@ public class VenueActivity extends Activity {
         StateHolder holder = (StateHolder) getLastNonConfigurationInstance();
         if (holder != null) {
         	mStateHolder = holder;
+            prepareResultIntent();
         } else {
         	mStateHolder = new StateHolder();
             if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
@@ -322,17 +325,8 @@ public class VenueActivity extends Activity {
     					        startActivity(intent);
     							break;
     						case ROW_TAG_TIPS:
-    							if (mStateHolder.getVenue().getTips().size() == 1) {
-    								intent = new Intent(VenueActivity.this, TipActivity.class);
-    				                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, mStateHolder.getVenue().getTips().get(0));
-    				                intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
-    								startActivityForResult(intent, RESULT_CODE_ACTIVITY_TIP);
-    							} else {
-    								intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
-    								intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
-    								startActivityForResult(intent, RESULT_CODE_ACTIVITY_TIPS);
-    							}
-    					        break;
+    							showTipsActivity();
+    							break;
     						case ROW_TAG_MORE:
     							intent = new Intent(VenueActivity.this, VenueMapActivity.class);
     					        intent.putExtra(VenueMapActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
@@ -349,18 +343,16 @@ public class VenueActivity extends Activity {
     	ensureUiTodosHere();
     	
     	ImageView ivSpecialHere = (ImageView)findViewById(R.id.venueActivitySpecialHere);
-		ivSpecialHere.setVisibility(View.GONE);
-    	if (venue != null && venue.getSpecials() != null && venue.getSpecials().size() > 0) {
-    		Venue specialVenue = venue.getSpecials().get(0).getVenue();
-            if (specialVenue == null || specialVenue.getId().equals(venue.getId())) {
-            	ivSpecialHere.setVisibility(View.VISIBLE);
-            	ivSpecialHere.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						showWebViewForSpecial();
-					}
-            	});
-            }
+    	if (VenueUtils.getSpecialHere(venue)) {
+    		ivSpecialHere.setVisibility(View.VISIBLE);
+        	ivSpecialHere.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					showWebViewForSpecial();
+				}
+        	});
+    	} else {
+    		ivSpecialHere.setVisibility(View.GONE);
     	}
     }
     
@@ -624,6 +616,28 @@ public class VenueActivity extends Activity {
         intent.putExtra(SpecialWebViewActivity.EXTRA_SPECIAL_ID, 
                 mStateHolder.getVenue().getSpecials().get(0).getId());
         startActivity(intent);
+    }
+    
+    private void showTipsActivity() {
+    	Intent intent = null;
+    	if (mStateHolder.getVenue().getTips().size() == 1) {
+    		Venue venue = new Venue();
+        	venue.setName(mStateHolder.getVenue().getName());
+        	venue.setAddress(mStateHolder.getVenue().getAddress());
+        	venue.setCrossstreet(mStateHolder.getVenue().getCrossstreet());
+        	
+        	Tip tip = mStateHolder.getVenue().getTips().get(0);
+        	tip.setVenue(venue);
+        	
+			intent = new Intent(VenueActivity.this, TipActivity.class);
+            intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
+            intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
+			startActivityForResult(intent, RESULT_CODE_ACTIVITY_TIP);
+		} else {
+			intent = new Intent(VenueActivity.this, VenueTipsActivity.class);
+			intent.putExtra(VenueTipsActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+			startActivityForResult(intent, RESULT_CODE_ACTIVITY_TIPS);
+		}
     }
     
     private void showTodoHereActivity() {

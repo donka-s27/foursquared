@@ -12,6 +12,7 @@ import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
+import com.joelapenna.foursquared.util.VenueUtils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -123,7 +124,7 @@ public class VenueListAdapter extends BaseVenueAdapter implements ObservableAdap
         }
         
         // If there's a special here, show the special here icon.
-        if (venue.getSpecials() != null && venue.getSpecials().size() > 0) {
+        if (VenueUtils.getSpecialHere(venue)) {
             holder.iconSpecial.setVisibility(View.VISIBLE);
         } else {
             holder.iconSpecial.setVisibility(View.GONE);

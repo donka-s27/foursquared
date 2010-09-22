@@ -95,6 +95,7 @@ public class TipActivity extends Activity {
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivityForTipTask(this);
+            setPreparedResultIntent();
         } else {
             mStateHolder = new StateHolder();
             if (getIntent().getExtras() != null) {
@@ -117,9 +118,7 @@ public class TipActivity extends Activity {
                 return;
             }
         }
-        
-//        prepareResultIntent(mStateHolder.getTip(), null);
-        
+
         ensureUi();
     }
     
@@ -137,11 +136,16 @@ public class TipActivity extends Activity {
         super.onPause();
         
         if (isFinishing()) {
-            unregisterReceiver(mLoggedOutReceiver);
             stopProgressBar();
         }
     }
 
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+        unregisterReceiver(mLoggedOutReceiver);
+    }
+    
     @Override
     public Object onRetainNonConfigurationInstance() {
         mStateHolder.setActivityForTipTask(null);
@@ -172,12 +176,12 @@ public class TipActivity extends Activity {
         TextView tvTitle = (TextView)findViewById(R.id.tipActivityName);
         TextView tvAddress = (TextView)findViewById(R.id.tipActivityAddress);
         if (venue != null) {
-	        tvTitle.setText(tip.getVenue().getName());
+	        tvTitle.setText(venue.getName());
 	        
 	        tvAddress.setText(
-	            tip.getVenue().getAddress() + 
-	            (TextUtils.isEmpty(tip.getVenue().getCrossstreet()) ? 
-	                    "" : " (" + tip.getVenue().getCrossstreet() + ")"));
+	            venue.getAddress() + 
+	            (TextUtils.isEmpty(venue.getCrossstreet()) ? 
+	                    "" : " (" + venue.getCrossstreet() + ")"));
         } else {
         	tvTitle.setText("");
         	tvAddress.setText("");
@@ -309,7 +313,14 @@ public class TipActivity extends Activity {
         if (todo != null) {
         	intent.putExtra(EXTRA_TODO_RETURNED, todo); // tip is also a part of the to-do.
         }
-        setResult(Activity.RESULT_OK, intent);
+        mStateHolder.setPreparedResult(intent);
+        setPreparedResultIntent();
+    }
+    
+    private void setPreparedResultIntent() {
+    	if (mStateHolder.getPreparedResult() != null) {
+    		setResult(Activity.RESULT_OK, mStateHolder.getPreparedResult());
+    	}
     }
     
     private void onTipTaskComplete(FoursquareType tipOrTodo, int type, Exception ex) {
@@ -411,10 +422,12 @@ public class TipActivity extends Activity {
         private TipTask mTipTask;
         private boolean mIsRunningTipTask;
         private boolean mVenueClickable;
+        private Intent mPreparedResult;
         
         
         public StateHolder() {
         	mTip = null;
+            mPreparedResult = null;
             mIsRunningTipTask = false;
             mVenueClickable = true;
         }
@@ -453,6 +466,14 @@ public class TipActivity extends Activity {
         
         public void setVenueClickable(boolean venueClickable) {
         	mVenueClickable = venueClickable;
+        }
+        
+        public Intent getPreparedResult() {
+        	return mPreparedResult;
+        }
+        
+        public void setPreparedResult(Intent intent) {
+        	mPreparedResult = intent;
         }
     }
 }

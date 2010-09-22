@@ -106,7 +106,7 @@
         android:layout_width="wrap_content" 
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextViewStyleVenueActivityTodoHere"
-        android:text="You have a To-Do here!"
+        android:text="@string/venue_activity_todo_here"
         android:layout_alignParentLeft="true"
         android:paddingLeft="15dip"
         android:paddingTop="7dip"
