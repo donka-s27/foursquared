@@ -22,6 +22,7 @@ import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquare.util.VenueUtils;
 import com.joelapenna.foursquared.maps.CrashFixMyLocationOverlay;
 import com.joelapenna.foursquared.maps.VenueItemizedOverlay;
+import com.joelapenna.foursquared.util.UiUtil;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -104,8 +105,9 @@ public class VenueMapActivity extends MapActivity {
     public void onResume() {
         super.onResume();
         mMyLocationOverlay.enableMyLocation();
-        // mMyLocationOverlay.enableCompass(); // Disabled due to a sdk 1.5
-        // emulator bug
+        if (UiUtil.sdkVersion() > 3) {
+        	mMyLocationOverlay.enableCompass();
+        }
     }
 
     @Override

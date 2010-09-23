@@ -4,6 +4,21 @@
 
 package com.joelapenna.foursquared;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import android.content.Intent;
+import android.location.Location;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Toast;
+
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -16,26 +31,12 @@ import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquare.util.VenueUtils;
 import com.joelapenna.foursquared.maps.CheckinGroup;
 import com.joelapenna.foursquared.maps.CheckinGroupItemizedOverlay;
-import com.joelapenna.foursquared.maps.CrashFixMyLocationOverlay;
 import com.joelapenna.foursquared.maps.CheckinGroupItemizedOverlay.CheckinGroupOverlayTapListener;
+import com.joelapenna.foursquared.maps.CrashFixMyLocationOverlay;
 import com.joelapenna.foursquared.util.CheckinTimestampSort;
 import com.joelapenna.foursquared.util.GeoUtils;
+import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.widget.MapCalloutView;
-
-import android.content.Intent;
-import android.location.Location;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -47,25 +48,73 @@ public class FriendsMapActivity extends MapActivity {
     public static final String TAG = "FriendsMapActivity";
     public static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
-    private String mTappedVenueId;
-
-    private Observer mSearchResultsObserver;
-    private MapCalloutView mCallout;
+    public static final String EXTRA_CHECKIN_PARCELS = Foursquared.PACKAGE_NAME
+    		+ ".FriendsMapActivity.EXTRA_CHECKIN_PARCELS";
     
+    private StateHolder mStateHolder;
+    private Venue mTappedVenue;
+    private MapCalloutView mCallout;
     private MapView mMapView;
     private MapController mMapController;
-    private ArrayList<CheckinGroupItemizedOverlay> mCheckinsGroupOverlays = 
-        new ArrayList<CheckinGroupItemizedOverlay>();
+    private List<CheckinGroupItemizedOverlay> mCheckinGroupOverlays;
     private MyLocationOverlay mMyLocationOverlay;
-    private boolean mConstructedPinsOnce;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_map_activity);
         
-        mConstructedPinsOnce = false;
+        if (getLastNonConfigurationInstance() != null) {
+            mStateHolder = (StateHolder) getLastNonConfigurationInstance();
+        } else {
+        	if (getIntent().hasExtra(EXTRA_CHECKIN_PARCELS)) {
+        		Parcelable[] parcelables = getIntent().getParcelableArrayExtra(EXTRA_CHECKIN_PARCELS);
+        		Group<Checkin> checkins = new Group<Checkin>();
+        		for (int i = 0; i < parcelables.length; i++) {
+        			checkins.add((Checkin)parcelables[i]);
+        		}
+        		
+        		mStateHolder = new StateHolder();
+        		mStateHolder.setCheckins(checkins);
+        	} else {
+        		Log.e(TAG, "FriendsMapActivity requires checkin array in intent extras.");
+        		finish();
+        		return;
+        	}
+        }
+        
+        initMap();
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        
+        mMyLocationOverlay.enableMyLocation();
+        if (UiUtil.sdkVersion() > 3) {
+        	mMyLocationOverlay.enableCompass();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        
+        mMyLocationOverlay.disableMyLocation();
+        mMyLocationOverlay.disableCompass();
+    }
+
+    private void initMap() {
+    	
+        mMapView = (MapView) findViewById(R.id.mapView);
+        mMapView.setBuiltInZoomControls(true);
+        mMapController = mMapView.getController();
+
+        mMyLocationOverlay = new CrashFixMyLocationOverlay(this, mMapView);
+        mMapView.getOverlays().add(mMyLocationOverlay);
+        
+        loadSearchResults(mStateHolder.getCheckins());
+        
         mCallout = (MapCalloutView) findViewById(R.id.map_callout);
         mCallout.setVisibility(View.GONE);
         mCallout.setOnClickListener(new OnClickListener() {
@@ -73,97 +122,29 @@ public class FriendsMapActivity extends MapActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(FriendsMapActivity.this, VenueActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
-                intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_ID, mTappedVenueId);
+                intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, mTappedVenue);
                 startActivity(intent);
             }
         });
         
-        initMap();
-
-        mSearchResultsObserver = new Observer() {
-            @Override
-            public void update(Observable observable, Object data) {
-                if (DEBUG) Log.d(TAG, "Observed search results change.");
-                clearMap();
- //               loadSearchResults(FriendsActivity.searchResultsObservable.getSearchResults());
-                recenterMap();
-            }
-        };
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (DEBUG) Log.d(TAG, "onResume()");
-        mMyLocationOverlay.enableMyLocation();
-        //mMyLocationOverlay.enableCompass(); // Disabled due to a sdk 1.5
-        // emulator bug
-        
-        // If this is the first time we're showing the activity, try generating the overlay
-        // immediately. If the results are already loaded, the observer would not be called.
-        if (!mConstructedPinsOnce) {
-            clearMap();
-//            loadSearchResults(FriendsActivity.searchResultsObservable.getSearchResults());
-            recenterMap();
-            mConstructedPinsOnce = true;
-        }
-
-//        FriendsActivity.searchResultsObservable.addObserver(mSearchResultsObserver);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (DEBUG) Log.d(TAG, "onPause()");
-        mMyLocationOverlay.disableMyLocation();
-        mMyLocationOverlay.disableCompass();
-//        FriendsActivity.searchResultsObservable.deleteObserver(mSearchResultsObserver);
-    }
-
-    @Override
-    protected boolean isRouteDisplayed() {
-        return false;
-    }
-
-    private void initMap() {
-        mMapView = (MapView) findViewById(R.id.mapView);
-        mMapView.setBuiltInZoomControls(true);
-        mMapController = mMapView.getController();
-
-        mMyLocationOverlay = new CrashFixMyLocationOverlay(this, mMapView);
-        mMapView.getOverlays().add(mMyLocationOverlay);
+        recenterMap();
     }
 
     private void loadSearchResults(Group<Checkin> checkins) {
-        if (checkins == null) {
-            if (DEBUG) Log.d(TAG, "no search results. Not loading.");
-            return;
-        }
-        if (DEBUG) Log.d(TAG, "Loading search results");
-
         // One CheckinItemizedOverlay per group!
         CheckinGroupItemizedOverlay mappableCheckinsOverlay = createMappableCheckinsOverlay(checkins);
 
-        if (mappableCheckinsOverlay != null) {
-            if (DEBUG) Log.d(TAG, "adding a map view checkin overlay.");
-            mCheckinsGroupOverlays.add(mappableCheckinsOverlay);
+        mCheckinGroupOverlays = new ArrayList<CheckinGroupItemizedOverlay>();
+    	if (mappableCheckinsOverlay != null) {
+            mCheckinGroupOverlays.add(mappableCheckinsOverlay);
         }
-        // Only add the list of checkin group overlays if it contains any
-        // overlays.
-        if (mCheckinsGroupOverlays.size() > 0) {
-            mMapView.getOverlays().addAll(mCheckinsGroupOverlays);
+        // Only add the list of checkin group overlays if it contains any overlays.
+        if (mCheckinGroupOverlays.size() > 0) {
+            mMapView.getOverlays().addAll(mCheckinGroupOverlays);
         } else {
             Toast.makeText(this, getResources().getString(
                     R.string.friendsmapactivity_no_checkins), Toast.LENGTH_LONG).show();
         }
-    }
-
-    private void clearMap() {
-        if (DEBUG) Log.d(TAG, "clearMap()");
-        mCheckinsGroupOverlays.clear();
-        mMapView.getOverlays().clear();
-        mMapView.getOverlays().add(mMyLocationOverlay);
-        mMapView.postInvalidate();
     }
 
     /**
@@ -175,7 +156,7 @@ public class FriendsMapActivity extends MapActivity {
         // of 100 venues total. We should only also display checkins that are within a
         // city radius, and are at most three hours old.
         CheckinTimestampSort timestamps = new CheckinTimestampSort();
-        
+
         Map<String, CheckinGroup> checkinMap = new HashMap<String, CheckinGroup>();
         for (int i = 0, m = group.size(); i < m; i++) {
             Checkin checkin = (Checkin)group.get(i);
@@ -193,7 +174,7 @@ public class FriendsMapActivity extends MapActivity {
                 }
                 
                 // Make sure the checkin happened within the last three hours.
-                try { 
+                try {
                     Date date = new Date(checkin.getCreated());
                     if (date.before(timestamps.getBoundaryRecent())) {
                         continue;
@@ -228,7 +209,7 @@ public class FriendsMapActivity extends MapActivity {
                     this,
                     ((Foursquared) getApplication()).getRemoteResourceManager(),
                     this.getResources().getDrawable(R.drawable.pin_checkin_multiple),
-                    mCheckingGroupOverlayTapListener);
+                    mCheckinGroupOverlayTapListener);
             mappableCheckinsGroupOverlay.setGroup(mappableCheckins);
             return mappableCheckinsGroupOverlay;
         } else {
@@ -241,32 +222,32 @@ public class FriendsMapActivity extends MapActivity {
         // so falling back to zoom at a fixed level.
         GeoPoint center = mMyLocationOverlay.getMyLocation();
         if (center != null) {
-            if (DEBUG) Log.d(TAG, "Using MyLocaionOverlay as center point for recenterMap().");
+            Log.i(TAG, "Using my location overlay as center point for map centering.");
             mMapController.animateTo(center);
             mMapController.setZoom(16);
         } else {
             // Location overlay wasn't ready yet, try using last known geolocation from manager.
             Location bestLocation = GeoUtils.getBestLastGeolocation(this);
             if (bestLocation != null) {
-                if (DEBUG) Log.d(TAG, "Using last known location as center point for recenterMap().");
+                Log.i(TAG, "Using last known location for map centering.");
                 mMapController.animateTo(GeoUtils.locationToGeoPoint(bestLocation));
                 mMapController.setZoom(16);
             } else {
                 // We have no location information at all, so we'll just show the map at a high
                 // zoom level and the user can zoom in as they wish.
-                if (DEBUG) Log.d(TAG, "No location info available for recenterMap().");
+                Log.i(TAG, "No location available for map centering.");
                 mMapController.setZoom(8);
             }
         }
     }
  
     /** Handle taps on one of the pins. */
-    private CheckinGroupOverlayTapListener mCheckingGroupOverlayTapListener = 
+    private CheckinGroupOverlayTapListener mCheckinGroupOverlayTapListener = 
         new CheckinGroupOverlayTapListener() {
         @Override
         public void onTap(OverlayItem itemSelected, OverlayItem itemLastSelected, CheckinGroup cg) {
-            mTappedVenueId = cg.getVenueId();
-            mCallout.setTitle(cg.getVenueName());
+        	mTappedVenue = cg.getVenue();
+            mCallout.setTitle(cg.getVenue().getName());
             mCallout.setMessage(cg.getDescription());
             mCallout.setVisibility(View.VISIBLE);
 
@@ -278,4 +259,25 @@ public class FriendsMapActivity extends MapActivity {
             mCallout.setVisibility(View.GONE);
         }
     };
+    
+    @Override
+    protected boolean isRouteDisplayed() {
+        return false;
+    }
+    
+    private static class StateHolder {
+    	private Group<Checkin> mCheckins;
+    	
+    	public StateHolder() {
+    		mCheckins = new Group<Checkin>();
+    	}
+    	
+    	public Group<Checkin> getCheckins() {
+    		return mCheckins;
+    	}
+    	
+    	public void setCheckins(Group<Checkin> checkins) {
+    		mCheckins = checkins;
+    	}
+    }
 }

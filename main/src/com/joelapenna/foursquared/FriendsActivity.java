@@ -171,7 +171,11 @@ public class FriendsActivity extends LoadableListActivityWithView {
                 return true;
             default:
                 if (item.getTitle().equals("Map")) {
-                    startActivity(new Intent(FriendsActivity.this, FriendsMapActivity.class));
+                	Checkin[] checkins = (Checkin[])mStateHolder.getCheckins().toArray(
+                			new Checkin[mStateHolder.getCheckins().size()]);
+                	Intent intentMap = new Intent(FriendsActivity.this, FriendsMapActivity.class);
+                	intentMap.putExtra(FriendsMapActivity.EXTRA_CHECKIN_PARCELS, checkins);
+                	startActivity(intentMap);
                     return true;
                 } else if (item.getTitle().equals(mMenuMoreSubitems.get(MENU_MORE_LEADERBOARD))) {
                     startActivity(new Intent(FriendsActivity.this, StatsActivity.class));

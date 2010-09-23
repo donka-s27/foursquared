@@ -6,6 +6,7 @@ package com.joelapenna.foursquared.util;
 
 import android.content.Context;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Build;
 import android.view.View;
 
 import com.joelapenna.foursquared.R;
@@ -61,5 +62,9 @@ public class UiUtil {
         
         view.setBackgroundDrawable(sld);
         view.setPadding(padding[0], padding[1], padding[2], padding[3]);
+    }
+    
+    public static int sdkVersion() {
+    	return new Integer(Build.VERSION.SDK).intValue();
     }
 }
