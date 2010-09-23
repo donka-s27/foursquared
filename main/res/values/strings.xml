@@ -46,8 +46,6 @@
   <string name="friends_appwidget_3x3_label">Foursquare Friends (3x3)</string>
   <string name="friends_appwidget_footer_text">Last Updated %s</string>
   <string name="friends_appwidget_not_logged_in">Please log in.</string>
-  <string name="friendsactivity_title_finished">Foursquare Friends</string>
-  <string name="friendsactivity_title_searching">Foursquare - Searching for Friends</string>
   <string name="friendsactivity_title_sort_recent">Last 3 Hours</string>
   <string name="friendsactivity_title_sort_today">Today</string>
   <string name="friendsactivity_title_sort_yesterday">Yesterday</string>
@@ -63,6 +61,8 @@
   <string name="friendsactivity_search_in_progress">A search is already in progress.</string>
   <string name="friendsmapactivity_no_checkins">No recent friend checkins nearby.</string>
   <string name="friendsactivity_menu_friend_requests">Friend Requests</string>
+  <string name="friendsactivity_btn_recent">RECENT</string>
+  <string name="friendsactivity_btn_nearby">NEARBY</string>
   <string name="last_seen_header">Last Seen</string>
   <string name="loading">Loading...</string>
   <string name="login_dialog_message">Please wait while logging into Foursquare...</string>

@@ -22,7 +22,7 @@
 	  android:layout_height="155dip"
       android:src="@drawable/sadface"
       android:scaleType="fitXY"
-      android:layout_marginTop="40dip" />
+      android:layout_marginTop="20dip" />
     
     <TextView
       android:id="@+id/friendsActivityEmptyTextView"

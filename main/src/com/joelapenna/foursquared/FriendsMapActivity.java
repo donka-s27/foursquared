@@ -85,7 +85,7 @@ public class FriendsMapActivity extends MapActivity {
             public void update(Observable observable, Object data) {
                 if (DEBUG) Log.d(TAG, "Observed search results change.");
                 clearMap();
-                loadSearchResults(FriendsActivity.searchResultsObservable.getSearchResults());
+ //               loadSearchResults(FriendsActivity.searchResultsObservable.getSearchResults());
                 recenterMap();
             }
         };
@@ -103,12 +103,12 @@ public class FriendsMapActivity extends MapActivity {
         // immediately. If the results are already loaded, the observer would not be called.
         if (!mConstructedPinsOnce) {
             clearMap();
-            loadSearchResults(FriendsActivity.searchResultsObservable.getSearchResults());
+//            loadSearchResults(FriendsActivity.searchResultsObservable.getSearchResults());
             recenterMap();
             mConstructedPinsOnce = true;
         }
 
-        FriendsActivity.searchResultsObservable.addObserver(mSearchResultsObserver);
+//        FriendsActivity.searchResultsObservable.addObserver(mSearchResultsObserver);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class FriendsMapActivity extends MapActivity {
         if (DEBUG) Log.d(TAG, "onPause()");
         mMyLocationOverlay.disableMyLocation();
         mMyLocationOverlay.disableCompass();
-        FriendsActivity.searchResultsObservable.deleteObserver(mSearchResultsObserver);
+//        FriendsActivity.searchResultsObservable.deleteObserver(mSearchResultsObserver);
     }
 
     @Override
