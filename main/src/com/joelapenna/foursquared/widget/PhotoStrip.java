@@ -79,7 +79,9 @@ public class PhotoStrip extends View
     protected void onDetachedFromWindow() {
     	super.onDetachedFromWindow();
     	
-    	mRrm.deleteObserver(mResourcesObserver);
+    	if (mRrm != null && mResourcesObserver != null) {
+    	    mRrm.deleteObserver(mResourcesObserver);
+    	}
     }
     
     @Override

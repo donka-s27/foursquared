@@ -5,7 +5,7 @@
   android:orientation="vertical"
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
-  android:background="@color/listview_item"
+  android:background="@drawable/listview_item_manual"
   >
 
   <ListView
@@ -15,7 +15,7 @@
     android:layout_weight="1"
     android:drawSelectorOnTop="false"
     android:scrollbars="vertical"
-    android:background="@color/listview_item" />
+    android:background="@drawable/listview_item_manual" />
 
   <include
     android:id="@android:id/empty"
