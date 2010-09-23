@@ -11,7 +11,6 @@ import java.util.Observable;
 import java.util.Observer;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +19,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -50,7 +48,6 @@ import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
-import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
@@ -115,7 +112,6 @@ public class VenueActivity extends Activity {
             + ".VenueActivity.EXTRA_VENUE_RETURNED";
     
     private StateHolder mStateHolder;
-    private ProgressDialog mDlgProgress;
     private Handler mHandler;
 
     private RemoteResourceManager mRrm;
@@ -140,6 +136,7 @@ public class VenueActivity extends Activity {
         StateHolder holder = (StateHolder) getLastNonConfigurationInstance();
         if (holder != null) {
         	mStateHolder = holder;
+        	mStateHolder.setActivityForTasks(this);
             prepareResultIntent();
         } else {
         	mStateHolder = new StateHolder();
@@ -173,21 +170,16 @@ public class VenueActivity extends Activity {
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mLoggedOutReceiver);
+        
+        mHandler.removeCallbacks(mRunnableMayorPhoto);
+        mRrm.deleteObserver(mResourcesObserver);
     }
     
     @Override 
     public void onResume() {
         super.onResume();
         ensureUiCheckinButton();
-    }
-    
-    @Override
-    public void onPause() {
-    	super.onPause();
-
-    	if (isFinishing()) {
-            mRrm.deleteObserver(mResourcesObserver);
-        }
+        // TODO: ensure mayor photo.
     }
     
     private void ensureUi() {
@@ -568,24 +560,6 @@ public class VenueActivity extends Activity {
         }
     }
     
-    private void startProgressBar() {
-        if (mDlgProgress == null) {
-            mDlgProgress = ProgressDialog.show(
-                this, 
-                "Title", "Doing something...");
-        }
-        mDlgProgress.show();
-        setProgressBarIndeterminateVisibility(true);
-    }
-
-    private void stopProgressBar() {
-        if (mDlgProgress != null) {
-            mDlgProgress.dismiss();
-            mDlgProgress = null;
-        }
-        setProgressBarIndeterminateVisibility(false);
-    }
-    
     private void startCheckin() {
         Intent intent = new Intent(this, CheckinOrShoutGatherInfoActivity.class);
         intent.putExtra(CheckinOrShoutGatherInfoActivity.INTENT_EXTRA_IS_CHECKIN, true);
@@ -664,7 +638,6 @@ public class VenueActivity extends Activity {
         
         @Override
         protected void onPreExecute() {
-        	//mActivity.startProgressBar();
         }
 
         @Override
@@ -700,7 +673,6 @@ public class VenueActivity extends Activity {
 
         @Override
         protected void onCancelled() {
-            mActivity.stopProgressBar();
         }
         
         public void setActivity(VenueActivity activity) {
@@ -716,13 +688,15 @@ public class VenueActivity extends Activity {
         
         private TaskVenue mTaskVenue;
         private boolean mIsRunningTaskVenue;
-        
         private int mLoadType;
         
         public static final int LOAD_TYPE_VENUE_ID      = 0;
         public static final int LOAD_TYPE_VENUE_PARTIAL = 1;
         public static final int LOAD_TYPE_VENUE_FULL    = 2;
         
+        public StateHolder() {
+        	mIsRunningTaskVenue = false;
+        }
         
         public Venue getVenue() {
         	return mVenue;
@@ -730,10 +704,6 @@ public class VenueActivity extends Activity {
         
         public void setVenue(Venue venue) {
         	mVenue = venue;
-        }
-        
-        public String getVenueId() {
-        	return mVenueId;
         }
         
         public void setVenueId(String venueId) {
@@ -748,22 +718,20 @@ public class VenueActivity extends Activity {
         	mCheckedInHere = checkedInHere;
         }
         
-        public boolean getIsRunningTaskVenue() {
-        	return mIsRunningTaskVenue;
-        }
-        
         public void setIsRunningTaskVenue(boolean isRunningTaskVenue) {
         	mIsRunningTaskVenue = isRunningTaskVenue;
         }
         
         public void startTaskVenue(VenueActivity activity) {
-        	mIsRunningTaskVenue = true;
-            mTaskVenue = new TaskVenue(activity);
-            if (mLoadType == LOAD_TYPE_VENUE_ID) {
-            	mTaskVenue.execute(mVenueId); 
-            } else if (mLoadType == LOAD_TYPE_VENUE_PARTIAL) {
-            	mTaskVenue.execute(mVenue.getId());
-            }
+        	if (!mIsRunningTaskVenue) {
+        		mIsRunningTaskVenue = true;
+	            mTaskVenue = new TaskVenue(activity);
+	            if (mLoadType == LOAD_TYPE_VENUE_ID) {
+	            	mTaskVenue.execute(mVenueId); 
+	            } else if (mLoadType == LOAD_TYPE_VENUE_PARTIAL) {
+	            	mTaskVenue.execute(mVenue.getId());
+	            }
+        	}
         }
         
         public void setActivityForTasks(VenueActivity activity) {
@@ -788,26 +756,28 @@ public class VenueActivity extends Activity {
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                	ListView lv = (ListView)findViewById(R.id.venueActivityListView);
-                	View viewMayor = lv.getAdapter().getView(0, null, null);
-                	ImageView ivMayorPhoto = (ImageView)viewMayor.findViewById(R.id.venueActivityMayorPhoto);
-                	if (ivMayorPhoto.getTag() != null) {
-                		String mayorPhotoUrl = (String)ivMayorPhoto.getTag();
-                		try {
-                            Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(mayorPhotoUrl)));
-                            ivMayorPhoto.setImageBitmap(bitmap);
-                            ivMayorPhoto.setTag(null);
-                            ivMayorPhoto.invalidate();
-                        } catch (IOException e) {
-                        }
-                	}
-                }
-            });
+            mHandler.post(mRunnableMayorPhoto);
         }
     }
+    
+    private Runnable mRunnableMayorPhoto = new Runnable() {
+        @Override
+        public void run() {
+        	ListView lv = (ListView)findViewById(R.id.venueActivityListView);
+        	View viewMayor = lv.getAdapter().getView(0, null, null);
+        	ImageView ivMayorPhoto = (ImageView)viewMayor.findViewById(R.id.venueActivityMayorPhoto);
+        	if (ivMayorPhoto.getTag() != null) {
+        		String mayorPhotoUrl = (String)ivMayorPhoto.getTag();
+        		try {
+                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(mayorPhotoUrl)));
+                    ivMayorPhoto.setImageBitmap(bitmap);
+                    ivMayorPhoto.setTag(null);
+                    ivMayorPhoto.invalidate();
+                } catch (IOException e) {
+                }
+        	}
+        }
+    };
     
     /**
      * Lets us place each of the row views into a listview so we can use the

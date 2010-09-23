@@ -109,7 +109,7 @@ public class CheckinGroupItemizedOverlay extends BaseGroupItemizedOverlay<Checki
 
         public CheckinGroupOverlayItem(GeoPoint point, CheckinGroup cg, Context context, 
                 RemoteResourceManager rrm, Bitmap bmpPinSingle, Bitmap bmpPinMultiple) {
-            super(point, cg.getVenueName(), cg.getVenueAddress());
+            super(point, cg.getVenue().getName(), cg.getVenue().getAddress());
             mCheckinGroup = cg;
             
             constructPinDrawable(cg, context, rrm, bmpPinSingle, bmpPinMultiple);
