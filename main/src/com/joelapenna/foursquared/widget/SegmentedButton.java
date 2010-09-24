@@ -85,21 +85,35 @@ public class SegmentedButton extends LinearLayout {
                 mColorSelectedStart, mColorSelectedEnd, mCornerRadius, mColorStroke, 
                 mStrokeWidth);
         
-        int buttonCount = mButtonTitles.size();
-        for (int i = 0; i < buttonCount; i++) {
+        if (mButtonTitles.size() > 0) {
+            _addButtons(new String[mButtonTitles.size()]);
+        }
+    }
+    
+    public void clearButtons() {
+        removeAllViews();
+    }
+    
+    public void addButtons(String ... titles) {
+        _addButtons(titles);
+    }
+    
+    private void _addButtons(String[] titles) {
+        
+        for (int i = 0; i < titles.length; i++) {
 
             Button button = new Button(getContext());
-            button.setText(mButtonTitles.get(i));
+            button.setText(titles[i]);
             button.setTag(new Integer(i));
             button.setOnClickListener(mOnClickListener);
             if (mTextStyle != -1) {
                 button.setTextAppearance(getContext(), mTextStyle);
             }
             
-            if (buttonCount == 1) {
+            if (titles.length == 1) {
                 // Don't use a segmented button with one button.
                 return;
-            } else if (buttonCount == 2) {
+            } else if (titles.length == 2) {
                 if (i == 0) {
                     button.setBackgroundDrawable(mBgLeftOff);
                 } else {
@@ -108,7 +122,7 @@ public class SegmentedButton extends LinearLayout {
             } else {
                 if (i == 0) {
                     button.setBackgroundDrawable(mBgLeftOff);
-                } else if (i == buttonCount-1) {
+                } else if (i == titles.length-1) {
                     button.setBackgroundDrawable(mBgRightOn);
                 } else {
                     button.setBackgroundDrawable(mBgCenterOn);

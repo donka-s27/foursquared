@@ -4,13 +4,19 @@
 
 package com.joelapenna.foursquared;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.error.FoursquareException;
+import com.joelapenna.foursquare.types.Checkin;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquared.app.LoadableListActivityWithViewAndHeader;
+import com.joelapenna.foursquared.location.LocationUtils;
+import com.joelapenna.foursquared.util.CheckinTimestampSort;
+import com.joelapenna.foursquared.util.Comparators;
+import com.joelapenna.foursquared.util.MenuUtils;
+import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.widget.CheckinListAdapter;
+import com.joelapenna.foursquared.widget.SegmentedButton;
+import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
+import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -35,19 +41,13 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
 
-import com.joelapenna.foursquare.error.FoursquareException;
-import com.joelapenna.foursquare.types.Checkin;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquared.app.LoadableListActivityWithView;
-import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.util.CheckinTimestampSort;
-import com.joelapenna.foursquared.util.Comparators;
-import com.joelapenna.foursquared.util.MenuUtils;
-import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.widget.CheckinListAdapter;
-import com.joelapenna.foursquared.widget.SegmentedButton;
-import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -58,7 +58,7 @@ import com.joelapenna.foursquared.widget.SeparatedListAdapter;
  *         -Added option to sort by server response, or by distance. (6/10/2010).
  *         -Reformatted/refactored. (9/22/2010).
  */
-public class FriendsActivity extends LoadableListActivityWithView {
+public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
     static final String TAG = "FriendsActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
@@ -84,8 +84,6 @@ public class FriendsActivity extends LoadableListActivityWithView {
     private LinkedHashMap<Integer, String> mMenuMoreSubitems;
     private SeparatedListAdapter mListAdapter;
     private ViewGroup mLayoutEmpty;
-    private LinearLayout mLayoutButtons;
-    private SegmentedButton mSegmentedButton;
 
     
     private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
@@ -204,18 +202,19 @@ public class FriendsActivity extends LoadableListActivityWithView {
     }
 
     private void ensureUi() {
-    	LayoutInflater inflater = LayoutInflater.from(this);
-        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.friends_activity_buttons, getHeaderLayout());
-        mLayoutButtons.setVisibility(View.VISIBLE);
-     
-        mSegmentedButton = (SegmentedButton)findViewById(R.id.segmented);
+       
+        SegmentedButton buttons = getHeaderButton();
+        buttons.clearButtons();
+        buttons.addButtons(
+                getString(R.string.friendsactivity_btn_recent),
+                getString(R.string.friendsactivity_btn_nearby));
         if (mStateHolder.getSortMethod() == SORT_METHOD_RECENT) {
-            mSegmentedButton.setPushedButtonIndex(0);
+            buttons.setPushedButtonIndex(0);
         } else {
-            mSegmentedButton.setPushedButtonIndex(1);
+            buttons.setPushedButtonIndex(1);
         }
 
-        mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
+        buttons.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
             	mListAdapter.removeObserver();
@@ -266,36 +265,38 @@ public class FriendsActivity extends LoadableListActivityWithView {
         // If we don't explicitly set the layout to be fill/fill after inflating, the layout jumps
         // to a wrap/wrap layout. Furthermore, sdk 3 crashes with the original layout using two
         // buttons in a horizontal LinearLayout.
+        LayoutInflater inflater = LayoutInflater.from(this);
         if (MainActivity.getAndroidVersion() > 3) {
-            mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
+            mLayoutEmpty = (ScrollView)inflater.inflate(
                     R.layout.friends_activity_empty, null);
+            
+            Button btnAddFriends = (Button)mLayoutEmpty.findViewById(
+                    R.id.friendsActivityEmptyBtnAddFriends);
+            btnAddFriends.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(FriendsActivity.this, AddFriendsActivity.class);
+                    startActivity(intent);
+                }
+            });
+            
+            Button btnFriendRequests = (Button)mLayoutEmpty.findViewById(
+                    R.id.friendsActivityEmptyBtnFriendRequests);
+            btnFriendRequests.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(FriendsActivity.this, FriendRequestsActivity.class);
+                    startActivity(intent);
+                }
+            });
         } else {
-            mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
+            // Inflation on 1.5 is causing a lot of issues, dropping full layout.
+            mLayoutEmpty = (ScrollView)inflater.inflate(
                     R.layout.friends_activity_empty_sdk3, null);
         }
         
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
-        
-        Button btnAddFriends = (Button)mLayoutEmpty.findViewById(
-                R.id.friendsActivityEmptyBtnAddFriends);
-        btnAddFriends.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(FriendsActivity.this, AddFriendsActivity.class);
-                startActivity(intent);
-            }
-        });
-        
-        Button btnFriendRequests = (Button)mLayoutEmpty.findViewById(
-                R.id.friendsActivityEmptyBtnFriendRequests);
-        btnFriendRequests.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(FriendsActivity.this, FriendRequestsActivity.class);
-                startActivity(intent);
-            }
-        });
         
         if (mStateHolder.getIsRunningTask()) {
         	setLoadingView();
@@ -314,13 +315,6 @@ public class FriendsActivity extends LoadableListActivityWithView {
                 R.string.friendsactivity_menu_friend_requests));
     }
 
-    /*
-    private void setSearchResults(Group<Checkin> searchResults) {
-        mStateHolder.mCheckins = searchResults;
-        searchResultsObservable.notifyObservers();
-    }
-	*/
-    
     private void sortCheckinsRecent(Group<Checkin> checkins, SeparatedListAdapter listAdapter) {
 
         // Sort all by timestamp first.
