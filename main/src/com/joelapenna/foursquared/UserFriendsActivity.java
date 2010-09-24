@@ -56,6 +56,7 @@ public class UserFriendsActivity extends LoadableListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
+        setTitle(getString(R.string.user_friends_activity_title));
 
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
@@ -84,8 +85,13 @@ public class UserFriendsActivity extends LoadableListActivity {
         if (isFinishing()) {
             mStateHolder.cancelTasks();
             mListAdapter.removeObserver();
-            unregisterReceiver(mLoggedOutReceiver);
         }
+    }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mLoggedOutReceiver);
     }
     
     @Override

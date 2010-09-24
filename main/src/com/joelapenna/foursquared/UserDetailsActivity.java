@@ -296,7 +296,7 @@ public class UserDetailsActivity extends Activity {
                         viewCheckins.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                                startCheckinsActivity();
                             }
                         });
                         viewCheckins.setFocusable(true);
@@ -327,7 +327,7 @@ public class UserDetailsActivity extends Activity {
                         viewFriendsFollowers.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                                startFriendsFollowersActivity();
                             }
                         });
                         viewFriendsFollowers.setFocusable(true);
@@ -337,7 +337,7 @@ public class UserDetailsActivity extends Activity {
                     viewAddFriends.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                            startAddFriendsActivity();
                         }
                     });
                     viewAddFriends.setFocusable(true);
@@ -390,7 +390,7 @@ public class UserDetailsActivity extends Activity {
                         viewFriends.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                                startFriendsActivity();
                             }
                         });
                         viewFriends.setFocusable(true);
@@ -510,7 +510,27 @@ public class UserDetailsActivity extends Activity {
             startActivity(intent); 
         }
     }
-
+    
+    private void startCheckinsActivity() {
+        Intent intent = new Intent(UserDetailsActivity.this, UserHistoryActivity.class);
+        intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+        startActivity(intent); 
+    }
+    
+    private void startFriendsFollowersActivity() {
+        startFriendsActivity();
+    }
+    
+    private void startAddFriendsActivity() {
+        Intent intent = new Intent(UserDetailsActivity.this, AddFriendsActivity.class);
+        startActivity(intent); 
+    }
+    
+    private void startFriendsActivity() {
+        Intent intent = new Intent(UserDetailsActivity.this, UserFriendsActivity.class);
+        intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+        startActivity(intent); 
+    }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
