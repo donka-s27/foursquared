@@ -54,8 +54,6 @@
     android:text="Date and Author"
     android:paddingTop="1dip"
     android:paddingBottom="1dip"
-    android:maxLines="1"
-    android:singleLine="true"
     android:textAppearance="@style/TextViewStyleTipListItemDateAuthor"
     android:layout_toRightOf="@id/ivVenueCategory"
     android:layout_below="@id/tvBody" />

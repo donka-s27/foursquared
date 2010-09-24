@@ -72,8 +72,6 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
     
     private static final int MENU_MORE_MAP             = 20;
     private static final int MENU_MORE_LEADERBOARD     = 21;
-    private static final int MENU_MORE_ADD_FRIENDS     = 22;
-    private static final int MENU_MORE_FRIEND_REQUESTS = 23;
     
     private static final int SORT_METHOD_RECENT = 0;
     private static final int SORT_METHOD_NEARBY = 1;
@@ -177,12 +175,6 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
                     return true;
                 } else if (item.getTitle().equals(mMenuMoreSubitems.get(MENU_MORE_LEADERBOARD))) {
                     startActivity(new Intent(FriendsActivity.this, StatsActivity.class));
-                    return true;
-                } else if (item.getTitle().equals(mMenuMoreSubitems.get(MENU_MORE_ADD_FRIENDS))) {
-                    startActivity(new Intent(FriendsActivity.this, AddFriendsActivity.class));
-                    return true;
-                } else if (item.getTitle().equals(mMenuMoreSubitems.get(MENU_MORE_FRIEND_REQUESTS))) {
-                    startActivity(new Intent(FriendsActivity.this, FriendRequestsActivity.class));
                     return true;
                 }
                 break;
@@ -309,10 +301,6 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
                 R.string.friendsactivity_menu_map));
         mMenuMoreSubitems.put(MENU_MORE_LEADERBOARD, getResources().getString(
                 R.string.friendsactivity_menu_leaderboard));
-        mMenuMoreSubitems.put(MENU_MORE_ADD_FRIENDS, getResources().getString(
-                R.string.friendsactivity_menu_add_friends));
-        mMenuMoreSubitems.put(MENU_MORE_FRIEND_REQUESTS, getResources().getString(
-                R.string.friendsactivity_menu_friend_requests));
     }
 
     private void sortCheckinsRecent(Group<Checkin> checkins, SeparatedListAdapter listAdapter) {
