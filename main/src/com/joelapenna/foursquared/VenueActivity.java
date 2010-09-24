@@ -239,7 +239,7 @@ public class VenueActivity extends Activity {
 		    		    		R.string.venue_activity_people_count_plural, venue.getCheckins().size()));
 		    		}
 		    		
-		    		psPeoplePhotos.setUsersAndRemoteResourcesManager(venue.getCheckins(), mRrm);
+		    		psPeoplePhotos.setCheckinsAndRemoteResourcesManager(venue.getCheckins(), mRrm);
                     viewCheckins.setVisibility(View.VISIBLE);
                     setClickHandlerCheckins(viewCheckins);
 		    	} else {

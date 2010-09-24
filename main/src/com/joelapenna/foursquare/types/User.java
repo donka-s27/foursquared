@@ -18,37 +18,53 @@ import android.os.Parcelable;
 public class User implements FoursquareType, Parcelable {
 
     private Group<Badge> mBadges;
+    private int mBadgeCount;
     private Checkin mCheckin;
+    private int mCheckinCount;
     private String mCreated;
     private String mEmail;
     private String mFacebook;
     private String mFirstname;
+    private int mFollowerCount;
+    private int mFriendCount;
+    private Group<User> mFriendsInCommon;
     private String mFriendstatus;
     private String mGender;
+    private String mHometown;
     private String mId;
     private String mLastname;
     private int mMayorCount;
     private String mPhone;
     private String mPhoto;
     private Settings mSettings;
+    private int mTipCount;
+    private int mTodoCount;
     private Types mTypes;
     private String mTwitter;
     private Group<Venue> mMayorships;
+    
 
     public User() {
     }
 
     private User(Parcel in) {
+        mBadgeCount = in.readInt();
+        mCheckinCount = in.readInt();
         mCreated = ParcelUtils.readStringFromParcel(in);
         mEmail = ParcelUtils.readStringFromParcel(in);
         mFacebook = ParcelUtils.readStringFromParcel(in);
         mFirstname = ParcelUtils.readStringFromParcel(in);
+        mFollowerCount = in.readInt();
+        mFriendCount = in.readInt();
         mFriendstatus = ParcelUtils.readStringFromParcel(in);
         mGender = ParcelUtils.readStringFromParcel(in);
+        mHometown = ParcelUtils.readStringFromParcel(in);
         mId = ParcelUtils.readStringFromParcel(in);
         mLastname = ParcelUtils.readStringFromParcel(in);
         mPhone = ParcelUtils.readStringFromParcel(in);
         mPhoto = ParcelUtils.readStringFromParcel(in);
+        mTipCount = in.readInt();
+        mTodoCount = in.readInt();
         mTwitter = ParcelUtils.readStringFromParcel(in);
         
         mBadges = new Group<Badge>();
@@ -79,6 +95,13 @@ public class User implements FoursquareType, Parcelable {
             String type = in.readString();
             mTypes.add(type);
         }
+        
+        mFriendsInCommon = new Group<User>();
+        int numFriendsinCommon = in.readInt();
+        for (int i = 0; i < numFriendsinCommon; i++) {
+            User user = in.readParcelable(User.class.getClassLoader());
+            mFriendsInCommon.add(user);
+        }
     }
     
     public static final User.Creator<User> CREATOR = new Parcelable.Creator<User>() {
@@ -99,6 +122,14 @@ public class User implements FoursquareType, Parcelable {
     public void setBadges(Group<Badge> badges) {
         mBadges = badges;
     }
+    
+    public int getBadgeCount() {
+        return mBadgeCount;
+    }
+    
+    public void setBadgeCount(int badgeCount) {
+        mBadgeCount = badgeCount;
+    }
 
     public Checkin getCheckin() {
         return mCheckin;
@@ -106,6 +137,14 @@ public class User implements FoursquareType, Parcelable {
 
     public void setCheckin(Checkin checkin) {
         mCheckin = checkin;
+    }
+    
+    public int getCheckinCount() {
+        return mCheckinCount;
+    }
+    
+    public void setCheckinCount(int checkinCount) {
+        mCheckinCount = checkinCount;
     }
 
     public String getCreated() {
@@ -139,6 +178,30 @@ public class User implements FoursquareType, Parcelable {
     public void setFirstname(String firstname) {
         mFirstname = firstname;
     }
+    
+    public int getFollowerCount() {
+        return mFollowerCount;
+    }
+    
+    public void setFollowerCount(int followerCount) {
+        mFollowerCount = followerCount;
+    }
+    
+    public int getFriendCount() {
+        return mFriendCount;
+    }
+    
+    public void setFriendCount(int friendCount) {
+        mFriendCount = friendCount;
+    }
+    
+    public Group<User> getFriendsInCommon() {
+        return mFriendsInCommon;
+    }
+    
+    public void setFriendsInCommon(Group<User> friendsInCommon) {
+        mFriendsInCommon = friendsInCommon;
+    }
 
     public String getFriendstatus() {
         return mFriendstatus;
@@ -154,6 +217,14 @@ public class User implements FoursquareType, Parcelable {
 
     public void setGender(String gender) {
         mGender = gender;
+    }
+    
+    public String getHometown() {
+        return mHometown;
+    }
+    
+    public void setHometown(String hometown) {
+        mHometown = hometown;
     }
     
     public String getId() {
@@ -212,6 +283,22 @@ public class User implements FoursquareType, Parcelable {
         mSettings = settings;
     }
     
+    public int getTipCount() {
+        return mTipCount;
+    }
+    
+    public void setTipCount(int tipCount) {
+        mTipCount = tipCount;
+    }
+    
+    public int getTodoCount() { 
+        return mTodoCount;
+    }
+    
+    public void setTodoCount(int todoCount) {
+        mTodoCount = todoCount;
+    }
+    
     public Types getTypes() {
         return mTypes;
     }
@@ -227,19 +314,26 @@ public class User implements FoursquareType, Parcelable {
     public void setTwitter(String twitter) {
         mTwitter = twitter;
     }
-
+ 
     @Override
     public void writeToParcel(Parcel out, int flags) {
+        out.writeInt(mBadgeCount);
+        out.writeInt(mCheckinCount);
         ParcelUtils.writeStringToParcel(out, mCreated);
         ParcelUtils.writeStringToParcel(out, mEmail);
         ParcelUtils.writeStringToParcel(out, mFacebook);
         ParcelUtils.writeStringToParcel(out, mFirstname);
+        out.writeInt(mFollowerCount);
+        out.writeInt(mFriendCount);
         ParcelUtils.writeStringToParcel(out, mFriendstatus);
         ParcelUtils.writeStringToParcel(out, mGender);
+        ParcelUtils.writeStringToParcel(out, mHometown);
         ParcelUtils.writeStringToParcel(out, mId);
         ParcelUtils.writeStringToParcel(out, mLastname);
         ParcelUtils.writeStringToParcel(out, mPhone);
         ParcelUtils.writeStringToParcel(out, mPhoto);
+        out.writeInt(mTipCount);
+        out.writeInt(mTodoCount);
         ParcelUtils.writeStringToParcel(out, mTwitter);
         
         if (mBadges != null) {
@@ -278,6 +372,15 @@ public class User implements FoursquareType, Parcelable {
             out.writeInt(mTypes.size());
             for (int i = 0; i < mTypes.size(); i++) {
                 out.writeString(mTypes.get(i));
+            }
+        } else {
+            out.writeInt(0);
+        }
+        
+        if (mFriendsInCommon != null) {
+            out.writeInt(mFriendsInCommon.size());
+            for (int i = 0; i < mFriendsInCommon.size(); i++) {
+                out.writeParcelable(mFriendsInCommon.get(i), flags);
             }
         } else {
             out.writeInt(0);

@@ -231,6 +231,25 @@
   <string name="user_details_activity_set_photo_progress_message">Updating your photo...</string>
   <string name="user_details_activity_set_photo_success">Photo updated ok!</string>
   <string name="user_details_activity_set_photo_cancel">Set photo request cancelled.</string>
+  
+  <string name="user_details_activity_last_seen">Last seen: %s</string>
+  <string name="user_details_activity_general_mayorships">MAYORSHIPS</string>
+  <string name="user_details_activity_general_badges">BADGES</string>
+  <string name="user_details_activity_general_tips">TIPS</string>
+  <string name="user_details_activity_checkins_text_single">%d Check-in</string>
+  <string name="user_details_activity_checkins_text_plural">%d Check-ins</string>
+  <string name="user_details_activity_friends_followers_text_celeb_single">"%d Follower, "</string>
+  <string name="user_details_activity_friends_followers_text_celeb_plural">"%d Followers, "</string>
+  <string name="user_details_activity_friends_followers_text_single">%d Friend</string>
+  <string name="user_details_activity_friends_followers_text_plural">%d Friends</string>
+  <string name="user_details_activity_todos_text_single">%d item on To-Do List</string>
+  <string name="user_details_activity_todos_text_plural">%d items on To-Do List</string>
+  <string name="user_details_activity_friends_text_single">%d Friend</string>
+  <string name="user_details_activity_friends_text_plural">%d Friends</string>
+  <string name="user_details_activity_friends_in_common_text_single">" (%d friend in common)""</string>
+  <string name="user_details_activity_friends_in_common_text_plural">" (%d friends in common)""</string>
+    
+  <string name="user_details_activity_add_friends">Add Friends</string>
   <string name="checkin_execute_activity_progress_bar_message">Checking-in...</string>
   <string name="shout_execute_activity_progress_bar_message">Posting shout...</string>
   <string name="checkin_result_dialog_badges">Badges</string>
