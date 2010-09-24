@@ -32,11 +32,15 @@
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:textAppearance="@style/TextViewStyleCheckinListItemLineMessage"
-      android:maxLines="1"
-      android:singleLine="true"
       android:layout_toRightOf="@id/photo"
       android:layout_alignParentTop="true"
       />
+      
+    <!-- 
+      Ideally we could ellipsize firstLine but amazingly android 1.5 crashes with:
+        android:maxLines="1"
+        android:singleLine="true"
+     -->
     
     <!-- Shout if available, otherwise venue address, hidden if both are unavailable. -->
     <TextView

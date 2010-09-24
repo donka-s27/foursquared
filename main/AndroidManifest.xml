@@ -304,14 +304,6 @@
     </activity>
 
     <activity
-      android:name=".UserActionsActivity">
-      <intent-filter>
-        <action
-          android:name="com.joelapenna.foursquared.intent.action.LOGGED_OUT" />
-      </intent-filter>
-    </activity>
-    
-    <activity
       android:name=".UserHistoryActivity">
       <intent-filter>
         <action

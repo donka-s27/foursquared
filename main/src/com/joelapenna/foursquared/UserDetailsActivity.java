@@ -11,12 +11,17 @@ import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
+import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.util.UserUtils;
 import com.joelapenna.foursquared.widget.PhotoStrip;
+import com.joelapenna.foursquared.widget.UserContactAdapter;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -25,11 +30,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,8 +68,10 @@ public class UserDetailsActivity extends Activity {
     private static final int LOAD_TYPE_USER_PARTIAL = 2;
     private static final int LOAD_TYPE_USER_FULL    = 3;
     
-    private static final int MENU_FRIEND_REQUESTS    = 0;
-    private static final int MENU_SHOUT              = 1;
+    private static final int MENU_REFRESH   = 0;
+    private static final int MENU_CONTACT   = 1;
+    
+    private static final int DIALOG_CONTACTS = 0;
     
     private StateHolder mStateHolder;
     private RemoteResourceManager mRrm;
@@ -82,6 +91,7 @@ public class UserDetailsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.user_details_activity);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
 
@@ -127,7 +137,8 @@ public class UserDetailsActivity extends Activity {
         ensureUi();
 
         if (mStateHolder.getLoadType() != LOAD_TYPE_USER_FULL && 
-           !mStateHolder.getIsRunningUserDetailsTask()) {
+           !mStateHolder.getIsRunningUserDetailsTask() &&
+           !mStateHolder.getRanOnce()) {
             mStateHolder.startTaskUserDetails(this, mStateHolder.getUser().getId());
         }
     }
@@ -222,7 +233,7 @@ public class UserDetailsActivity extends Activity {
             
             tvLastSeen.setText(user.getHometown());
         
-            if (mStateHolder.getLoadType() == LOAD_TYPE_USER_FULL) {
+            if (mStateHolder.getLoadType() >= LOAD_TYPE_USER_FULL) {
                 viewProgressBar.setVisibility(View.GONE);
                 tvMayorships.setText(String.valueOf(user.getMayorCount()));
                 tvBadges.setText(String.valueOf(user.getBadgeCount()));
@@ -394,12 +405,34 @@ public class UserDetailsActivity extends Activity {
                         }
                     }
                 }
+            } else {
+                // Haven't done a full load.
+                if (mStateHolder.getRanOnce()) {
+                    viewProgressBar.setVisibility(View.GONE);
+                }
             }
+        } else {
+            // Haven't done a full load.
+            if (mStateHolder.getRanOnce()) {
+                viewProgressBar.setVisibility(View.GONE);
+            }
+        }
+        
+        // Regardless of load state, if running the task, show titlebar progress bar.
+        if (mStateHolder.getIsRunningUserDetailsTask()) {
+            setProgressBarIndeterminateVisibility(true);
+        } else {
+            setProgressBarIndeterminateVisibility(false);
         }
     }
     
     private void ensureUiPhoto(User user) {
         ImageView ivPhoto = (ImageView)findViewById(R.id.userDetailsActivityPhoto);
+        
+        if (user == null || user.getPhoto() == null) {
+            ivPhoto.setImageResource(R.drawable.blank_boy);
+            return;
+        }
         
         Uri uriPhoto = Uri.parse(user.getPhoto());
         if (mRrm.exists(uriPhoto)) {
@@ -483,30 +516,52 @@ public class UserDetailsActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        // We have a different set of menu options for the logged-in user vs
-        // viewing a friend and potentially a stranger even.
-        User user = mStateHolder.getUser();
-        if (user != null && user.getId().equals(((Foursquared) getApplication()).getUserId())) {
-            menu.add(Menu.NONE, MENU_FRIEND_REQUESTS, Menu.NONE, 
-                    R.string.preferences_friend_requests_title).setIcon(R.drawable.ic_menu_friends);
-            menu.add(Menu.NONE, MENU_SHOUT, Menu.NONE,  
-                    R.string.shout_action_label).setIcon(R.drawable.ic_menu_shout);
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.user_details_activity_friends_menu_refresh)
+            .setIcon(R.drawable.ic_menu_refresh);
+            
+        if (mStateHolder.getIsLoggedInUser()) {
             MenuUtils.addPreferencesToMenu(this, menu);
+        } else {
+            menu.add(Menu.NONE, MENU_CONTACT, Menu.NONE, R.string.user_details_activity_friends_menu_contact)
+                .setIcon(R.drawable.ic_menu_venue_contact);
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        User user = mStateHolder.getUser();
+        
+        MenuItem refresh = menu.findItem(MENU_REFRESH);
+        MenuItem contact = menu.findItem(MENU_CONTACT);
+        if (!mStateHolder.getIsRunningUserDetailsTask()) {
+            refresh.setEnabled(true);
+            if (contact != null) {
+                boolean contactEnabled = 
+                    !TextUtils.isEmpty(user.getFacebook()) ||
+                    !TextUtils.isEmpty(user.getTwitter()) ||
+                    !TextUtils.isEmpty(user.getEmail()) || 
+                    !TextUtils.isEmpty(user.getPhone());
+                contact.setEnabled(contactEnabled);
+            }
+        } else {
+            refresh.setEnabled(false);
+            if (contact != null) {
+                contact.setEnabled(false);
+            }
         }
         
-        return true;
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case MENU_FRIEND_REQUESTS:
-                startActivity(new Intent(this, FriendRequestsActivity.class));
+            case MENU_REFRESH:
+                mStateHolder.startTaskUserDetails(this, mStateHolder.getUser().getId());
                 return true;
-            case MENU_SHOUT:
-                Intent intent = new Intent(this, CheckinOrShoutGatherInfoActivity.class);
-                intent.putExtra(CheckinOrShoutGatherInfoActivity.INTENT_EXTRA_IS_SHOUT, true);
-                startActivity(intent);
+            case MENU_CONTACT:
+                showDialog(DIALOG_CONTACTS);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -521,21 +576,49 @@ public class UserDetailsActivity extends Activity {
                 break;
         }
     }
-
+    
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch (id) {
+            case DIALOG_CONTACTS:
+                final UserContactAdapter adapter = new UserContactAdapter(this, mStateHolder.getUser());
+                AlertDialog dlgInfo = new AlertDialog.Builder(this)
+                  .setTitle(getResources().getString(R.string.user_details_activity_friends_menu_contact))
+                  .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                      @Override
+                      public void onClick(DialogInterface dlg, int pos) {
+                          UserContactAdapter.Action action = (UserContactAdapter.Action)adapter.getItem(pos);
+                          switch (action.getActionId()) {
+                              case UserContactAdapter.Action.ACTION_ID_SMS:
+                                  UiUtil.startSmsIntent(UserDetailsActivity.this, mStateHolder.getUser().getPhone());
+                                  break;
+                              case UserContactAdapter.Action.ACTION_ID_EMAIL:
+                                  UiUtil.startEmailIntent(UserDetailsActivity.this, mStateHolder.getUser().getEmail());
+                                  break;
+                              case UserContactAdapter.Action.ACTION_ID_PHONE:
+                                  UiUtil.startDialer(UserDetailsActivity.this, mStateHolder.getUser().getPhone());
+                                  break;
+                              case UserContactAdapter.Action.ACTION_ID_TWITTER:
+                                  UiUtil.startWebIntent(UserDetailsActivity.this, "http://www.twitter.com/" +
+                                      mStateHolder.getUser().getTwitter());
+                                  break;
+                              case UserContactAdapter.Action.ACTION_ID_FACEBOOK:
+                                  UiUtil.startWebIntent(UserDetailsActivity.this, "http://www.facebook.com/profile.php?id=" +
+                                      mStateHolder.getUser().getFacebook());
+                                  break;
+                          }
+                      }
+                  })
+                  .create();
+                  return dlgInfo;
+        }
+        
+        return null;
+    }
 
     private void onUserDetailsTaskComplete(User user, Exception ex) {
-        //setProgressBarIndeterminateVisibility(false);
-        //mStateHolder.setFetchedUserDetails(true);
-        //mStateHolder.setIsRunningUserDetailsTask(false);
-        //if (user != null) {
-        //    mStateHolder.setUser(user);
-        //    populateUiAfterFullUserObjectFetched();
-        //} else {
-        //    NotificationsUtil.ToastReasonForFailure(this, ex);
-        //}
-        setProgressBarIndeterminateVisibility(false);
-        
         mStateHolder.setIsRunningUserDetailsTask(false);
+        mStateHolder.setRanOnce(true);
         if (user != null) {
             mStateHolder.setUser(user);
             mStateHolder.setLoadType(LOAD_TYPE_USER_FULL);
@@ -566,7 +649,7 @@ public class UserDetailsActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
-            mActivity.setProgressBarIndeterminateVisibility(true);
+            mActivity.ensureUi();
         }
 
         @Override
@@ -611,12 +694,14 @@ public class UserDetailsActivity extends Activity {
         private boolean mIsLoggedInUser;
         private UserDetailsTask mTaskUserDetails;
         private boolean mIsRunningUserDetailsTask;
+        private boolean mRanOnce;
         private int mLoadType;
         
         
         public StateHolder() {
             mIsRunningUserDetailsTask = false;
             mIsLoggedInUser = false;
+            mRanOnce = false;
             mLoadType = LOAD_TYPE_USER_NONE;
         }
         
@@ -664,6 +749,14 @@ public class UserDetailsActivity extends Activity {
 
         public void setIsRunningUserDetailsTask(boolean isRunning) {
             mIsRunningUserDetailsTask = isRunning;
+        }
+        
+        public boolean getRanOnce() {
+            return mRanOnce;
+        }
+        
+        public void setRanOnce(boolean ranOnce) {
+            mRanOnce = ranOnce;
         }
         
         public void cancelTasks() {
