@@ -5,6 +5,7 @@
 package com.joelapenna.foursquared.util;
 
 import android.os.Parcel;
+import android.text.TextUtils;
 
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Tip;
@@ -149,6 +150,17 @@ public class VenueUtils {
         p2.recycle();
         
         return venueNew;
+    }
+    
+    public static String toStringVenueShare(Venue venue) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(venue.getName()); sb.append("\n");
+        sb.append(StringFormatters.getVenueLocationFull(venue));
+        if (!TextUtils.isEmpty(venue.getPhone())) {
+            sb.append("\n");
+            sb.append(venue.getPhone());
+        }
+        return sb.toString();
     }
     
     /**
