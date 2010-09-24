@@ -1,8 +1,12 @@
 package com.joelapenna.foursquared.widget;
 
-import java.io.IOException;
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.types.Checkin;
+import com.joelapenna.foursquare.types.FoursquareType;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.User;
+import com.joelapenna.foursquared.R;
+import com.joelapenna.foursquared.util.RemoteResourceManager;
+import com.joelapenna.foursquared.util.UserUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -15,12 +19,9 @@ import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.joelapenna.foursquare.types.Checkin;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquared.R;
-import com.joelapenna.foursquared.util.RemoteResourceManager;
-import com.joelapenna.foursquared.util.UserUtils;
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * A single horizontal strip of user photo views. Expected to be used from 
@@ -39,7 +40,7 @@ public class PhotoStrip extends View
     private int mPhotoBorderColor;
     private int mPhotoBorderStrokeColor;
     
-    private Group<Checkin> mCheckins;
+    private Group<User> mTypes;
 
     private RemoteResourceManager mRrm;
     private RemoteResourceManagerObserver mResourcesObserver;
@@ -63,12 +64,22 @@ public class PhotoStrip extends View
         a.recycle();
     }
     
-    public void setUsersAndRemoteResourcesManager(Group<Checkin> checkins, RemoteResourceManager rrm) {
-    	mCheckins = checkins;
+    public void setUsersAndRemoteResourcesManager(Group<User> users, RemoteResourceManager rrm) {
+    	mTypes = users;
         mRrm = rrm;
     	mResourcesObserver = new RemoteResourceManagerObserver();
     	mRrm.addObserver(mResourcesObserver);
     	invalidate();
+    }
+    
+    public void setCheckinsAndRemoteResourcesManager(Group<Checkin> checkins, RemoteResourceManager rrm) {
+        Group<User> users = new Group<User>();
+        for (Checkin it : checkins) {
+            if (it.getUser() != null) {
+                users.add(it.getUser());
+            }
+        }
+        setUsersAndRemoteResourcesManager(users, rrm);
     }
 
     public void removeObserver() {
@@ -97,12 +108,12 @@ public class PhotoStrip extends View
         int index = 0;
         
         while (sum < width) {
-        	if (mCheckins == null || index >= mCheckins.size()) {
+        	if (mTypes == null || index >= mTypes.size()) {
         		break;
         	}
         	
-        	Checkin checkin = mCheckins.get(index);
-        	Bitmap bmp = fetchBitmapForUser(checkin.getUser());
+        	FoursquareType type = mTypes.get(index);
+        	Bitmap bmp = fetchBitmapForUser(type);
         	if (bmp != null) {
 	        	Rect rcSrc = new Rect(0, 0, bmp.getWidth(), bmp.getHeight());
 	        	Rect rcDst = new Rect(
@@ -127,7 +138,20 @@ public class PhotoStrip extends View
         }
     }
     
-    private Bitmap fetchBitmapForUser(User user) {
+    private Bitmap fetchBitmapForUser(FoursquareType type) {
+        User user = null;
+        if (type instanceof User) {
+            user = (User)type;
+        } else if (type instanceof Checkin) {
+            Checkin checkin = (Checkin)type;
+            user = checkin.getUser();
+            if (user == null) {
+                return null;
+            }
+        } else {
+            throw new RuntimeException("PhotoStrip can only accept Users or Checkins.");
+        }
+        
     	String photoUrl = user.getPhoto();
     	Uri uriPhoto = Uri.parse(photoUrl);
         if (mRrm.exists(uriPhoto)) {
@@ -183,7 +207,7 @@ public class PhotoStrip extends View
         // We should be exactly as high as the specified photo size.
     	// An exception would be if we have zero photos to display,
     	// we're not dealing with that at the moment.
-        return mPhotoSize;
+        return mPhotoSize + getPaddingTop() + getPaddingBottom();
     }
     
     private class RemoteResourceManagerObserver implements Observer {

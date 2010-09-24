@@ -388,7 +388,7 @@ public class Foursquared extends Application {
                         Foursquare.Location location = LocationUtils
                                 .createFoursquareLocation(getLastKnownLocation());
                         User user = getFoursquare().user(
-                                null, false, false, location);
+                                null, false, false, false, location);
 
                         Editor editor = mPrefs.edit();
                         Preferences.storeUser(editor, user);

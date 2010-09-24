@@ -274,7 +274,7 @@ public class PingsService extends WakefulIntentService {
     
     private boolean checkUserStillWantsPings(String userId, Foursquare foursquare) {
         try {
-            User user = foursquare.user(userId, false, false, null);
+            User user = foursquare.user(userId, false, false, false, null);
             if (user != null) {
                 return user.getSettings().getPings().equals("on");
             }

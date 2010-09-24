@@ -149,7 +149,7 @@ public class Preferences {
             return false;
         }
         
-        User user = foursquare.user(null, false, false, location);
+        User user = foursquare.user(null, false, false, false, location);
         storeUser(editor, user);
         if (!editor.commit()) {
             if (DEBUG) Log.d(TAG, "storeUser commit failed");

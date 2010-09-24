@@ -5,47 +5,32 @@
 package com.joelapenna.foursquared;
 
 import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.preferences.Preferences;
-import com.joelapenna.foursquared.util.ImageUtils;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
-import com.joelapenna.foursquared.util.TabsUtil;
 import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.widget.PhotoStrip;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.app.TabActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.preference.PreferenceManager;
-import android.provider.MediaStore;
+import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,47 +39,36 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- * Displays information on a user. If the user is the logged-in user, we can
- * show our checkin history. If viewing a stranger, we can show info and
- * friends. Should look like this: Self History | Friends Stranger Info |
- * Friends
- * 
  * @date March 8, 2010.
  * @author Mark Wyszomierski (markww@gmail.com)
  */
-public class UserDetailsActivity extends TabActivity {
+public class UserDetailsActivity extends Activity {
     private static final String TAG = "UserDetailsActivity";
     private static final boolean DEBUG = FoursquaredSettings.DEBUG;
     private static final int ACTIVITY_REQUEST_CODE_GALLERY = 814;
 
-    public static final String EXTRA_USER_PARCEL = "com.joelapenna.foursquared.UserParcel";
-    public static final String EXTRA_USER_ID = "com.joelapenna.foursquared.UserId";
-
+    public static final String EXTRA_USER_PARCEL = Foursquared.PACKAGE_NAME
+        + ".UserDetailsActivity.EXTRA_USER_PARCEL";
+    public static final String EXTRA_USER_ID = Foursquared.PACKAGE_NAME
+        + ".UserDetailsActivity.EXTRA_USER_ID";
+    
     public static final String EXTRA_SHOW_ADD_FRIEND_OPTIONS = Foursquared.PACKAGE_NAME
-            + ".UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS";
+        + ".UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS";
+    
+
+    private static final int LOAD_TYPE_USER_NONE    = 0;
+    private static final int LOAD_TYPE_USER_ID      = 1;
+    private static final int LOAD_TYPE_USER_PARTIAL = 2;
+    private static final int LOAD_TYPE_USER_FULL    = 3;
     
     private static final int MENU_FRIEND_REQUESTS    = 0;
     private static final int MENU_SHOUT              = 1;
     
-    private static final int DIALOG_SET_USER_PHOTO_YES_NO = 8;
-
-    
-    private ImageView mImageViewPhoto;
-    private TextView mTextViewName;
-    private LinearLayout mLayoutNumMayorships;
-    private LinearLayout mLayoutNumBadges;
-    private TextView mTextViewNumMayorships;
-    private TextView mTextViewNumBadges;
-    private TabHost mTabHost;
-    private LinearLayout mLayoutProgressBar;
-
     private StateHolder mStateHolder;
-    private boolean mIsUsersPhotoSet;
-    
     private RemoteResourceManager mRrm;
     private RemoteResourceManagerObserver mResourcesObserver;
+    private Handler mHandler;
 
-    private ProgressDialog mDlgProgress;
     
 
     private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
@@ -111,76 +85,65 @@ public class UserDetailsActivity extends TabActivity {
         setContentView(R.layout.user_details_activity);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
 
-        mIsUsersPhotoSet = false;
-
         Object retained = getLastNonConfigurationInstance();
-        if (retained != null && retained instanceof StateHolder) {
+        if (retained != null) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivityForTasks(this);
         } else {
 
             mStateHolder = new StateHolder();
-
-            String userId = null;
             if (getIntent().getExtras() != null) {
                 if (getIntent().getExtras().containsKey(EXTRA_USER_PARCEL)) {
                     User user = getIntent().getExtras().getParcelable(EXTRA_USER_PARCEL);
-                    userId = user.getId();
                     mStateHolder.setUser(user);
+                    mStateHolder.setLoadType(LOAD_TYPE_USER_PARTIAL);
                 } else if (getIntent().getExtras().containsKey(EXTRA_USER_ID)) {
-                    userId = getIntent().getExtras().getString(EXTRA_USER_ID);
+                    User user = new User();
+                    user.setId(getIntent().getExtras().getString(EXTRA_USER_ID));
+                    mStateHolder.setUser(user);
+                    mStateHolder.setLoadType(LOAD_TYPE_USER_ID);
                 } else {
                     Log.e(TAG, "UserDetailsActivity requires a userid in its intent extras.");
                     finish();
                     return;
                 }
-
-                mStateHolder.setShowAddFriendOptions(getIntent().getBooleanExtra(
-                        EXTRA_SHOW_ADD_FRIEND_OPTIONS, false));
+                
+                mStateHolder.setIsLoggedInUser(
+                  mStateHolder.getUser().getId().equals(
+                      ((Foursquared) getApplication()).getUserId()));
+                
             } else {
                 Log.e(TAG, "UserDetailsActivity requires a userid in its intent extras.");
                 finish();
                 return;
             }
-
-            mStateHolder.startTaskUserDetails(this, userId);
         }
         
+        mHandler = new Handler();
         mRrm = ((Foursquared) getApplication()).getRemoteResourceManager();
         mResourcesObserver = new RemoteResourceManagerObserver();
         mRrm.addObserver(mResourcesObserver);
 
         ensureUi();
-        populateUi();
 
-        if (mStateHolder.getIsRunningUserDetailsTask() == false) {
-            populateUiAfterFullUserObjectFetched();
+        if (mStateHolder.getLoadType() != LOAD_TYPE_USER_FULL && 
+           !mStateHolder.getIsRunningUserDetailsTask()) {
+            mStateHolder.startTaskUserDetails(this, mStateHolder.getUser().getId());
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        
-        if (mStateHolder.getIsRunningSetUserPhotoTask()) {
-            startProgressBar(
-                getResources().getString(R.string.user_details_activity_set_photo_progress_title),
-                getResources().getString(R.string.user_details_activity_set_photo_progress_message));
-        } else {
-            stopProgressBar();
-        }
     }
     
     @Override
     public void onPause() {
         super.onPause();
-
-        if (mStateHolder.getIsRunningSetUserPhotoTask()) {
-            stopProgressBar();
-        }
         
         if (isFinishing()) {
             mStateHolder.cancelTasks();
+            mHandler.removeCallbacks(mRunnableUpdateUserPhoto);
             unregisterReceiver(mLoggedOutReceiver);
 
             RemoteResourceManager rrm = ((Foursquared) getApplication()).getRemoteResourceManager();
@@ -189,20 +152,286 @@ public class UserDetailsActivity extends TabActivity {
     }
 
     private void ensureUi() {
-        mImageViewPhoto = (ImageView) findViewById(R.id.userDetailsActivityPhoto);
-        mImageViewPhoto.setOnClickListener(new OnClickListener() {
+        
+        View viewProgressBar = findViewById(R.id.venueActivityDetailsProgress);
+        TextView tvUsername = (TextView)findViewById(R.id.userDetailsActivityUsername);
+        TextView tvLastSeen = (TextView)findViewById(R.id.userDetailsActivityHometownOrLastSeen);
+        View viewMayorships = findViewById(R.id.userDetailsActivityGeneralMayorships);
+        View viewBadges = findViewById(R.id.userDetailsActivityGeneralBadges);
+        View viewTips = findViewById(R.id.userDetailsActivityGeneralTips);
+        TextView tvMayorships = (TextView)findViewById(R.id.userDetailsActivityGeneralMayorshipsValue);
+        TextView tvBadges = (TextView)findViewById(R.id.userDetailsActivityGeneralBadgesValue);
+        TextView tvTips = (TextView)findViewById(R.id.userDetailsActivityGeneralTipsValue);
+        ImageView ivMayorshipsChevron = (ImageView)findViewById(R.id.userDetailsActivityGeneralMayorshipsChevron);
+        ImageView ivBadgesChevron = (ImageView)findViewById(R.id.userDetailsActivityGeneralBadgesChevron);
+        ImageView ivTipsChevron = (ImageView)findViewById(R.id.userDetailsActivityGeneralTipsChevron);
+        View viewCheckins = findViewById(R.id.userDetailsActivityCheckins);
+        View viewFriendsFollowers = findViewById(R.id.userDetailsActivityFriendsFollowers);
+        View viewAddFriends = findViewById(R.id.userDetailsActivityAddFriends);
+        View viewTodos = findViewById(R.id.userDetailsActivityTodos);
+        View viewFriends = findViewById(R.id.userDetailsActivityFriends);
+        TextView tvCheckins = (TextView)findViewById(R.id.userDetailsActivityCheckinsText);
+        ImageView ivCheckinsChevron = (ImageView)findViewById(R.id.userDetailsActivityCheckinsChevron);
+        TextView tvFriendsFollowers = (TextView)findViewById(R.id.userDetailsActivityFriendsFollowersText);
+        ImageView ivFriendsFollowersChevron = (ImageView)findViewById(R.id.userDetailsActivityFriendsFollowersChevron);
+        TextView tvTodos = (TextView)findViewById(R.id.userDetailsActivityTodosText);
+        ImageView ivTodos = (ImageView)findViewById(R.id.userDetailsActivityTodosChevron);
+        TextView tvFriends = (TextView)findViewById(R.id.userDetailsActivityFriendsText);
+        ImageView ivFriends = (ImageView)findViewById(R.id.userDetailsActivityFriendsChevron);
+        PhotoStrip psFriends = (PhotoStrip)findViewById(R.id.userDetailsActivityFriendsPhotos);
+        
+        viewProgressBar.setVisibility(View.VISIBLE);
+        tvUsername.setText("");
+        tvLastSeen.setText("");
+        viewMayorships.setFocusable(false);
+        viewBadges.setFocusable(false);
+        viewTips.setFocusable(false);
+        tvMayorships.setText("0");
+        tvBadges.setText("0");
+        tvTips.setText("0");
+        ivMayorshipsChevron.setVisibility(View.INVISIBLE);
+        ivBadgesChevron.setVisibility(View.INVISIBLE);
+        ivTipsChevron.setVisibility(View.INVISIBLE);
+
+        viewCheckins.setFocusable(false);
+        viewFriendsFollowers.setFocusable(false);
+        viewAddFriends.setFocusable(false);
+        viewTodos.setFocusable(false);
+        viewFriends.setFocusable(false);
+        viewCheckins.setVisibility(View.GONE);
+        viewFriendsFollowers.setVisibility(View.GONE);
+        viewAddFriends.setVisibility(View.GONE);
+        viewTodos.setVisibility(View.GONE);
+        viewFriends.setVisibility(View.GONE);
+        ivCheckinsChevron.setVisibility(View.INVISIBLE);
+        ivFriendsFollowersChevron.setVisibility(View.INVISIBLE);
+        ivTodos.setVisibility(View.INVISIBLE);
+        ivFriends.setVisibility(View.INVISIBLE);
+        psFriends.setVisibility(View.GONE);
+        
+        if (mStateHolder.getLoadType() >= LOAD_TYPE_USER_PARTIAL) {
+            User user = mStateHolder.getUser();
+            
+            ensureUiPhoto(user);
+        
+            if (mStateHolder.getIsLoggedInUser() || UserUtils.isFriend(user)) {
+                tvUsername.setText(StringFormatters.getUserFullName(user));
+            } else {
+                tvUsername.setText(StringFormatters.getUserAbbreviatedName(user));
+            }
+            
+            tvLastSeen.setText(user.getHometown());
+        
+            if (mStateHolder.getLoadType() == LOAD_TYPE_USER_FULL) {
+                viewProgressBar.setVisibility(View.GONE);
+                tvMayorships.setText(String.valueOf(user.getMayorCount()));
+                tvBadges.setText(String.valueOf(user.getBadgeCount()));
+                tvTips.setText(String.valueOf(user.getTipCount()));
+                
+                if (user.getCheckin() != null && user.getCheckin().getVenue() != null) {
+                    tvLastSeen.setText(getResources().getString(
+                        R.string.user_details_activity_last_seen, 
+                        user.getCheckin().getVenue().getName()));
+                }
+                
+                if (mStateHolder.getIsLoggedInUser() || UserUtils.isFriend(user)) {
+                    if (user.getMayorships() != null && user.getMayorships().size() > 0) {
+                        viewMayorships.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startMayorshipsActivity();
+                            }
+                        });
+                        viewMayorships.setFocusable(true);
+                        ivMayorshipsChevron.setVisibility(View.VISIBLE);
+                    }
+                    
+                    if (user.getBadges() != null && user.getBadges().size() > 0) {
+                        viewBadges.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startBadgesActivity();
+                            }
+                        });
+                        viewBadges.setFocusable(true);
+                        ivBadgesChevron.setVisibility(View.VISIBLE);
+                    }
+                    
+                    if (user.getTipCount() > 0) {
+                        viewTips.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        viewTips.setFocusable(true);
+                        ivTipsChevron.setVisibility(View.VISIBLE);
+                    }
+                }
+                
+                // The rest of the items depend on if we're viewing ourselves or not.
+                if (mStateHolder.getIsLoggedInUser()) {
+                    viewCheckins.setVisibility(View.VISIBLE);
+                    viewFriendsFollowers.setVisibility(View.VISIBLE);
+                    viewAddFriends.setVisibility(View.VISIBLE);
+                    
+                    tvCheckins.setText(
+                        user.getCheckinCount() == 1 ? 
+                            getResources().getString(
+                                R.string.user_details_activity_checkins_text_single, user.getCheckinCount()) :
+                            getResources().getString(
+                                R.string.user_details_activity_checkins_text_plural, user.getCheckinCount()));
+                    if (user.getCheckinCount() > 0) {
+                        viewCheckins.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        viewCheckins.setFocusable(true);
+                        ivCheckinsChevron.setVisibility(View.VISIBLE);
+                    }
+                    
+                    if (user.getFollowerCount() > 0) {
+                        tvFriendsFollowers.setText(
+                            user.getFollowerCount() == 1 ? 
+                                getResources().getString(
+                                    R.string.user_details_activity_friends_followers_text_celeb_single, 
+                                    user.getFollowerCount()) :
+                                getResources().getString(
+                                    R.string.user_details_activity_friends_followers_text_celeb_plural,
+                                    user.getFollowerCount()));
+                    }
+                    
+                    tvFriendsFollowers.setText(tvFriendsFollowers.getText().toString() + 
+                        (user.getFriendCount() == 1 ?    
+                             getResources().getString(
+                                 R.string.user_details_activity_friends_followers_text_single,
+                                 user.getFriendCount()) :
+                             getResources().getString(
+                                 R.string.user_details_activity_friends_followers_text_plural,
+                                 user.getFriendCount())));
+                                    
+                    if (user.getFollowerCount() + user.getFriendCount() > 0) {
+                        viewFriendsFollowers.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        viewFriendsFollowers.setFocusable(true);
+                        ivFriendsFollowersChevron.setVisibility(View.VISIBLE);
+                    }
+                    
+                    viewAddFriends.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    viewAddFriends.setFocusable(true);
+                    
+                } else {
+                    viewTodos.setVisibility(View.VISIBLE);
+                    viewFriends.setVisibility(View.VISIBLE); 
+
+                    tvTodos.setText(
+                        user.getTodoCount() == 1 ? 
+                            getResources().getString(
+                                R.string.user_details_activity_todos_text_single, user.getTodoCount()) :
+                            getResources().getString(
+                                R.string.user_details_activity_todos_text_plural, user.getTodoCount()));
+
+                    if (user.getTodoCount() > 0 && UserUtils.isFriend(user)) {
+                        viewTodos.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        viewTodos.setFocusable(true);
+                        ivTodos.setVisibility(View.VISIBLE);
+                    }
+                                     
+                    if (user.getFriendCount() > 0) {
+                        tvFriends.setText(
+                            user.getFriendCount() == 1 ? 
+                                getResources().getString(
+                                    R.string.user_details_activity_friends_text_single, 
+                                    user.getFriendCount()) :
+                                getResources().getString(
+                                    R.string.user_details_activity_friends_text_plural,
+                                    user.getFriendCount()));
+                    }
+                    
+                    int friendsInCommon = user.getFriendsInCommon() == null ? 0 :
+                        user.getFriendsInCommon().size();
+                    tvFriends.setText(tvFriends.getText().toString() + 
+                        (friendsInCommon == 1 ?    
+                             getResources().getString(
+                                 R.string.user_details_activity_friends_in_common_text_single,
+                                 friendsInCommon) :
+                             getResources().getString(
+                                 R.string.user_details_activity_friends_in_common_text_plural,
+                                 friendsInCommon)));
+  
+                    if (user.getFriendCount() > 0) {
+                        viewFriends.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        viewFriends.setFocusable(true);
+                        ivFriends.setVisibility(View.VISIBLE);
+                        
+                        if (friendsInCommon > 0) {
+                            psFriends.setVisibility(View.VISIBLE);
+                            psFriends.setUsersAndRemoteResourcesManager(user.getFriendsInCommon(), mRrm);
+                        } else {
+                            tvFriends.setPadding(tvFriends.getPaddingLeft(), tvTodos.getPaddingTop(),
+                                    tvFriends.getPaddingRight(), tvTodos.getPaddingBottom());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void ensureUiPhoto(User user) {
+        ImageView ivPhoto = (ImageView)findViewById(R.id.userDetailsActivityPhoto);
+        
+        Uri uriPhoto = Uri.parse(user.getPhoto());
+        if (mRrm.exists(uriPhoto)) {
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(user
+                        .getPhoto())));
+                ivPhoto.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                setUserPhotoMissing(ivPhoto, user);
+            }
+        } else {
+            mRrm.request(uriPhoto);
+            setUserPhotoMissing(ivPhoto, user);
+        }
+        
+        ivPhoto.postInvalidate();
+        ivPhoto.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mStateHolder.getUser() != null) {
+                if (mStateHolder.getLoadType() == LOAD_TYPE_USER_FULL) {
+                    User user = mStateHolder.getUser();
+                    
                     // If we're viewing our own page, clicking the thumbnail should let the
                     // user choose a new photo from the camera gallery.
-                    if (mStateHolder.getUser().getId().equals(((Foursquared) getApplication()).getUserId())) {
-                        startGalleryIntent();
+                    if (mStateHolder.getIsLoggedInUser()) {
+//                        startGalleryIntent();
+                        // TODO: Start different activity for setting user photo.
                     }
                     else {
                         // If "_thumbs" exists, remove it to get the url of the
                         // full-size image.
-                        String photoUrl = mStateHolder.getUser().getPhoto().replace("_thumbs", "");
+                        String photoUrl = user.getPhoto().replace("_thumbs", "");
     
                         Intent intent = new Intent();
                         intent.setClass(UserDetailsActivity.this, FetchImageForViewIntent.class);
@@ -216,176 +445,16 @@ public class UserDetailsActivity extends TabActivity {
                 }
             }
         });
-
-        mTextViewName = (TextView) findViewById(R.id.userDetailsActivityName);
-        mTextViewNumMayorships = (TextView) findViewById(R.id.userDetailsActivityNumMayorships);
-        mTextViewNumBadges = (TextView) findViewById(R.id.userDetailsActivityNumBadges);
-
-        // When the user clicks the mayorships section, then launch the mayorships activity.
-        mLayoutNumMayorships = (LinearLayout) findViewById(R.id.userDetailsActivityNumMayorshipsLayout);
-        mLayoutNumMayorships.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startMayorshipsActivity();
-            }
-        });
-        mLayoutNumMayorships.setEnabled(false);
-        
-        // When the user clicks the badges section, then launch the badges
-        // activity.
-        mLayoutNumBadges = (LinearLayout) findViewById(R.id.userDetailsActivityNumBadgesLayout);
-        mLayoutNumBadges.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startBadgesActivity();
-            }
-        });
-        mLayoutNumBadges.setEnabled(false);
-
-        // At startup, we need to have at least one tab. Once we load the full
-        // user object, we can clear all tabs, and add our real tabs once we know 
-        // what they are.
-        mTabHost = getTabHost();
-        mTabHost.addTab(mTabHost.newTabSpec("dummy").setIndicator("").setContent(
-                R.id.userDetailsActivityTextViewTabDummy));
-        mTabHost.getTabWidget().setVisibility(View.GONE);
-
-        mLayoutProgressBar = (LinearLayout) findViewById(R.id.userDetailsActivityLayoutProgressBar);
     }
-
-    private void populateUi() {
-        User user = mStateHolder.getUser();
-
-        // User photo.
-        if (user != null && mIsUsersPhotoSet == false) {
-            if (Foursquare.MALE.equals(user.getGender())) {
-                mImageViewPhoto.setImageResource(R.drawable.blank_boy);
-            } else {
-                mImageViewPhoto.setImageResource(R.drawable.blank_girl);
-            }
-            if (user != null) {
-                Uri uriPhoto = Uri.parse(user.getPhoto());
-                if (mRrm.exists(uriPhoto)) {
-                    try {
-                        Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(user
-                                .getPhoto())));
-                        mImageViewPhoto.setImageBitmap(bitmap);
-                        mIsUsersPhotoSet = true;
-                    } catch (IOException e) {
-                    }
-                } else {
-                    mRrm.request(uriPhoto);
-                }
-            }
-        }
-
-        // User name.
-        if (user != null) {
-            if (UserUtils.isFriend(user)
-                    || user.getId().equals(((Foursquared) getApplication()).getUserId())) {
-                mTextViewName.setText(StringFormatters.getUserFullName(user));
-            } else {
-                mTextViewName.setText(StringFormatters.getUserAbbreviatedName(user));
-            }
+    
+    private void setUserPhotoMissing(ImageView ivPhoto, User user) {
+        if (Foursquare.MALE.equals(user.getGender())) {
+            ivPhoto.setImageResource(R.drawable.blank_boy);
         } else {
-            mTextViewName.setText("");
-        }
-
-        // Number of mayorships.
-        if (user != null) {
-            if (mStateHolder.getFetchedUserDetails()) {
-                mTextViewNumMayorships.setText(String.valueOf(user.getMayorCount()));
-            } else {
-                mTextViewNumMayorships.setText("-");
-            }
-        } else {
-            mTextViewNumMayorships.setText("-");
-        }
-
-        // Number of badges.
-        if (user != null) {
-            if (mStateHolder.getFetchedUserDetails()) {
-                mTextViewNumBadges.setText(String.valueOf(user.getBadges().size()));
-            } else {
-                mTextViewNumBadges.setText("-");
-            }
-        } else {
-            mTextViewNumBadges.setText("-");
+            ivPhoto.setImageResource(R.drawable.blank_girl);
         }
     }
-
-    private void populateUiAfterFullUserObjectFetched() {
-        populateUi();
-
-        // User object may still be unavailable.
-        User user = mStateHolder.getUser();
-        if (user == null) {
-            return;
-        }
-
-        mLayoutProgressBar.setVisibility(View.GONE);
-
-        mTabHost.clearAllTabs();
-        mTabHost.getTabWidget().setVisibility(View.VISIBLE);
-
-        // Add tab1.
-        TabHost.TabSpec specTab1 = mTabHost.newTabSpec("tab1");
-        if (mStateHolder.getUser().getId().equals(((Foursquared) getApplication()).getUserId())) {
-            // Ourselves, History tab.
-            View tabView = prepareTabView(getResources().getString(
-                    R.string.user_details_activity_tab_title_history));
-            TabsUtil.setTabIndicator(specTab1, getResources().getString(
-                    R.string.user_details_activity_tab_title_history), null, tabView);
-
-            Intent intent = new Intent(this, UserHistoryActivity.class);
-            specTab1.setContent(intent);
-        } else {
-            // Friend or stranger, Info tab.
-            View tabView = prepareTabView(getResources().getString(
-                    R.string.user_details_activity_tab_title_info));
-            TabsUtil.setTabIndicator(specTab1, getResources().getString(
-                    R.string.user_details_activity_tab_title_info), null, tabView);
-
-            Intent intent = new Intent(this, UserActionsActivity.class);
-            intent.putExtra(UserActionsActivity.EXTRA_USER_PARCEL, mStateHolder.getUser());
-            intent.putExtra(UserActionsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, mStateHolder
-                    .getShowAddFriendOptions());
-            specTab1.setContent(intent);
-        }
-        mTabHost.addTab(specTab1);
-
-        // Add tab2, always Friends tab.
-        TabHost.TabSpec specTab2 = mTabHost.newTabSpec("tab2");
-        View tabView = prepareTabView(getResources().getString(
-                R.string.user_details_activity_tab_title_friends));
-        TabsUtil.setTabIndicator(specTab2, getResources().getString(
-                R.string.user_details_activity_tab_title_friends), null, tabView);
-
-        Intent intent = new Intent(this, UserFriendsActivity.class);
-        intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
-        intent.putExtra(UserFriendsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, mStateHolder
-                .getShowAddFriendOptions());
-        specTab2.setContent(intent);
-        mTabHost.addTab(specTab2);
-
-        // User can also now click on the badges.
-        mLayoutNumBadges.setEnabled(true);
-        
-        // If user is a friend of ours, we may be able to see their mayorships.
-        if (user.getMayorships() != null && user.getMayorships().size() > 0) {
-            mLayoutNumMayorships.setEnabled(true);
-        } else {
-            mLayoutNumMayorships.setEnabled(false);
-        }
-    }
-
-    private View prepareTabView(String text) {
-        View view = LayoutInflater.from(this).inflate(R.layout.user_details_activity_tabs, null);
-        TextView tv = (TextView) view.findViewById(R.id.userDetailsActivityTabTextView);
-        tv.setText(text);
-        return view;
-    }
-
+    
     @Override
     public Object onRetainNonConfigurationInstance() {
         mStateHolder.setActivityForTasks(null);
@@ -409,17 +478,6 @@ public class UserDetailsActivity extends TabActivity {
         }
     }
 
-    private void onUserDetailsTaskComplete(User user, Exception ex) {
-        setProgressBarIndeterminateVisibility(false);
-        mStateHolder.setFetchedUserDetails(true);
-        mStateHolder.setIsRunningUserDetailsTask(false);
-        if (user != null) {
-            mStateHolder.setUser(user);
-            populateUiAfterFullUserObjectFetched();
-        } else {
-            NotificationsUtil.ToastReasonForFailure(this, ex);
-        }
-    }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -456,106 +514,41 @@ public class UserDetailsActivity extends TabActivity {
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)  {
-        String pathInput = null;
         switch (requestCode) {
             case ACTIVITY_REQUEST_CODE_GALLERY:
                 if (resultCode == Activity.RESULT_OK) { 
-                    try {
-                        String [] proj = { MediaStore.Images.Media.DATA };  
-                        Cursor cursor = managedQuery(data.getData(), proj, null, null, null);  
-                        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);  
-                        cursor.moveToFirst();  
-                        pathInput = cursor.getString(column_index); 
-                    }
-                    catch (Exception ex) {
-                        Toast.makeText(this, getResources().getString(R.string.user_details_activity_error_set_photo_load), 
-                                Toast.LENGTH_SHORT).show();
-                    }
-
-                    // If everything worked ok, ask the user if they're sure they want to upload?
-                    try {
-                        String pathOutput = Environment.getExternalStorageDirectory() + "/tmp_fsquare.jpg";
-                        ImageUtils.resampleImageAndSaveToNewLocation(pathInput, pathOutput);
-                        mStateHolder.setNewUserPhotoPath(pathOutput);
-                        showDialog(DIALOG_SET_USER_PHOTO_YES_NO);
-                    }
-                    catch (Exception ex) {
-                        Toast.makeText(this, getResources().getString(R.string.user_details_activity_error_set_photo_resample), 
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-                else {
-                    return;
                 }
                 break;
         }
     }
-    
-    protected Dialog onCreateDialog(int id) { 
-        switch (id) {  
-            case DIALOG_SET_USER_PHOTO_YES_NO: 
-                return new AlertDialog.Builder(this) 
-                    .setTitle(getResources().getString(R.string.user_details_activity_set_photo_confirm_title)) 
-                    .setMessage(getResources().getString(R.string.user_details_activity_set_photo_confirm_message))
-                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() { 
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(UserDetailsActivity.this);
-                            String username = sp.getString(Preferences.PREFERENCE_LOGIN, "");
-                            String password = sp.getString(Preferences.PREFERENCE_PASSWORD, "");
-                            mStateHolder.startTaskSetUserPhoto(
-                                    UserDetailsActivity.this, mStateHolder.getNewUserPhotoPath(), username, password);
-                        }
-                    }) 
-                    .setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() { 
-                        public void onClick(DialogInterface dialog, int whichButton) { 
-                        }
-                    }) 
-                    .create(); 
-            default:
-                return null; 
-        } 
-    }
 
-    private void startGalleryIntent() {
-        try {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT); 
-            intent.setType("image/*"); 
-            startActivityForResult(intent, ACTIVITY_REQUEST_CODE_GALLERY);
-        }
-        catch (Exception ex) {
-            Toast.makeText(this, getResources().getString(R.string.user_details_activity_error_no_photo_gallery), 
-                Toast.LENGTH_SHORT).show(); 
-        }
-    }
-    
-    private void startProgressBar(String title, String message) {
-        if (mDlgProgress == null) {
-            mDlgProgress = ProgressDialog.show(this, title, message);
-        }
-        mDlgProgress.show();
-    }
-    
-    private void stopProgressBar() {
-        if (mDlgProgress != null) {
-            mDlgProgress.dismiss();
-            mDlgProgress = null;
-        }
-    }
-    
-    private void onSetUserPhotoTaskComplete(User user, Exception ex) {
-        stopProgressBar();
-        mStateHolder.setIsRunningSetUserPhotoTask(false);
+
+    private void onUserDetailsTaskComplete(User user, Exception ex) {
+        //setProgressBarIndeterminateVisibility(false);
+        //mStateHolder.setFetchedUserDetails(true);
+        //mStateHolder.setIsRunningUserDetailsTask(false);
+        //if (user != null) {
+        //    mStateHolder.setUser(user);
+        //    populateUiAfterFullUserObjectFetched();
+        //} else {
+        //    NotificationsUtil.ToastReasonForFailure(this, ex);
+        //}
+        setProgressBarIndeterminateVisibility(false);
+        
+        mStateHolder.setIsRunningUserDetailsTask(false);
         if (user != null) {
-            Toast.makeText(this, getResources().getString(R.string.user_details_activity_set_photo_success), 
-                    Toast.LENGTH_SHORT).show();
-            mStateHolder.getUser().setPhoto(user.getPhoto());
-            Uri uriPhoto = Uri.parse(user.getPhoto());
-            mRrm.request(uriPhoto);
-        } else {
+            mStateHolder.setUser(user);
+            mStateHolder.setLoadType(LOAD_TYPE_USER_FULL);
+        } else if (ex != null) {
             NotificationsUtil.ToastReasonForFailure(this, ex);
+        } else {
+            Toast.makeText(this, "A surprising new error has occurred!", Toast.LENGTH_SHORT).show();
         }
+        
+        ensureUi();
     }
-
+    
+    
     /**
      * Even if the caller supplies us with a User object parcelable, it won't
      * have all the badge etc extra info in it. As soon as the activity starts,
@@ -581,6 +574,7 @@ public class UserDetailsActivity extends TabActivity {
             try {
                 return ((Foursquared) mActivity.getApplication()).getFoursquare().user(
                         params[0],
+                        true,
                         true,
                         true,
                         LocationUtils.createFoursquareLocation(((Foursquared) mActivity
@@ -610,90 +604,28 @@ public class UserDetailsActivity extends TabActivity {
         }
     }
     
-    private static class SetUserPhotoTask extends AsyncTask<String, Void, User> {
-
-        private UserDetailsActivity mActivity;
-        private Exception mReason;
-        
-
-        public SetUserPhotoTask(UserDetailsActivity activity) {
-            mActivity = activity;
-        }
-        
-        public void setActivity(UserDetailsActivity activity) {
-            mActivity = activity;
-        }
-        
-        @Override
-        protected void onPreExecute() {
-            mActivity.startProgressBar(
-                mActivity.getResources().getString(
-                    R.string.user_details_activity_set_photo_progress_title),
-                mActivity.getResources().getString(
-                    R.string.user_details_activity_set_photo_progress_message));
-        }
- 
-        /** Params should be image path, username, password. */
-        @Override
-        protected User doInBackground(String... params) {
-            try {
-                return ((Foursquared) mActivity.getApplication()).getFoursquare().userUpdate(
-                        params[0], params[1], params[2]);
-            } catch (Exception e) {
-                Log.e(TAG, "Error submitting new profile photo.", e);
-                mReason = e;
-            }
-            return null;
-        }
- 
-        @Override
-        protected void onPostExecute(User user) {
-            if (mActivity != null) {
-                mActivity.onSetUserPhotoTaskComplete(user, mReason);
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            if (mActivity != null) {
-                mActivity.onSetUserPhotoTaskComplete(null, new FoursquareException(
-                        mActivity.getResources().getString(R.string.user_details_activity_set_photo_cancel)));
-            }
-        }
-    }
+    
 
     private static class StateHolder {
-
-        /** The user object we are rendering. */
         private User mUser;
-
-        /** Show options to add friends for strangers. */
-        private boolean mShowAddFriendOptions;
-
-        /** Only used if logged-in user wants to update their photo. */
-        private String mNewUserPhotoPath;
-        
+        private boolean mIsLoggedInUser;
         private UserDetailsTask mTaskUserDetails;
         private boolean mIsRunningUserDetailsTask;
-        private boolean mFetchedUserDetails;
+        private int mLoadType;
         
-        private SetUserPhotoTask mTaskSetUserPhoto;
-        private boolean mIsRunningSetUserPhotoTask;
-
         
         public StateHolder() {
-            mShowAddFriendOptions = false;
             mIsRunningUserDetailsTask = false;
-            mIsRunningSetUserPhotoTask = false;
-            mFetchedUserDetails = false;
+            mIsLoggedInUser = false;
+            mLoadType = LOAD_TYPE_USER_NONE;
         }
-
-        public void setFetchedUserDetails(boolean fetched) {
-            mFetchedUserDetails = fetched;
+        
+        public boolean getIsLoggedInUser() {
+            return mIsLoggedInUser;
         }
-
-        public boolean getFetchedUserDetails() {
-            return mFetchedUserDetails;
+        
+        public void setIsLoggedInUser(boolean isLoggedInUser) {
+            mIsLoggedInUser = isLoggedInUser;
         }
 
         public User getUser() {
@@ -703,33 +635,26 @@ public class UserDetailsActivity extends TabActivity {
         public void setUser(User user) {
             mUser = user;
         }
-
-        public void setShowAddFriendOptions(boolean showAddFriendOptions) {
-            mShowAddFriendOptions = showAddFriendOptions;
+        
+        public int getLoadType() {
+            return mLoadType;
         }
-
-        public boolean getShowAddFriendOptions() {
-            return mShowAddFriendOptions;
+        
+        public void setLoadType(int loadType) {
+            mLoadType = loadType;
         }
 
         public void startTaskUserDetails(UserDetailsActivity activity, String userId) {
-            mIsRunningUserDetailsTask = true;
-            mTaskUserDetails = new UserDetailsTask(activity);
-            mTaskUserDetails.execute(userId);
+            if (!mIsRunningUserDetailsTask) {
+                mIsRunningUserDetailsTask = true;
+                mTaskUserDetails = new UserDetailsTask(activity);
+                mTaskUserDetails.execute(userId);
+            }
         }
         
-        public void startTaskSetUserPhoto(UserDetailsActivity activity, String pathImage, String username, String password) {
-            mIsRunningSetUserPhotoTask = true;
-            mTaskSetUserPhoto = new SetUserPhotoTask(activity);
-            mTaskSetUserPhoto.execute(pathImage, username, password);
-        }
-
         public void setActivityForTasks(UserDetailsActivity activity) {
             if (mTaskUserDetails != null) {
                 mTaskUserDetails.setActivity(activity);
-            }
-            if (mTaskSetUserPhoto != null) {
-                mTaskSetUserPhoto.setActivity(activity);
             }
         }
         
@@ -741,30 +666,10 @@ public class UserDetailsActivity extends TabActivity {
             mIsRunningUserDetailsTask = isRunning;
         }
         
-        public boolean getIsRunningSetUserPhotoTask() {
-            return mIsRunningSetUserPhotoTask;
-        }
-        
-        public void setIsRunningSetUserPhotoTask(boolean isRunning) {
-            mIsRunningSetUserPhotoTask = isRunning;
-        }
-        
-        public String getNewUserPhotoPath() {
-            return mNewUserPhotoPath;
-        }
-        
-        public void setNewUserPhotoPath(String path) {
-            mNewUserPhotoPath = path;
-        }
-        
         public void cancelTasks() {
             if (mTaskUserDetails != null) {
                 mTaskUserDetails.setActivity(null);
                 mTaskUserDetails.cancel(true);
-            }
-            if (mTaskSetUserPhoto != null) {
-                mTaskSetUserPhoto.setActivity(null);
-                mTaskSetUserPhoto.cancel(true);
             }
         }
     }
@@ -772,24 +677,14 @@ public class UserDetailsActivity extends TabActivity {
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-            mImageViewPhoto.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    if (mStateHolder.getUser() != null) {
-                        Uri uriPhoto = Uri.parse(mStateHolder.getUser().getPhoto());
-                        if (mRrm.exists(uriPhoto)) {
-                            try {
-                                Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(uriPhoto));
-                                mImageViewPhoto.setImageBitmap(bitmap);
-                                mIsUsersPhotoSet = true;
-                                mImageViewPhoto.setImageBitmap(bitmap);
-                                mImageViewPhoto.postInvalidate();
-                            } catch (IOException e) {
-                            }
-                        }
-                    }
-                }
-            });
+            mHandler.post(mRunnableUpdateUserPhoto);
         }
     }
+    
+    private Runnable mRunnableUpdateUserPhoto = new Runnable() {
+        @Override 
+        public void run() {
+            ensureUiPhoto(mStateHolder.getUser());
+        }
+    };
 }

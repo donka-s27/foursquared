@@ -36,8 +36,14 @@ public class UserParser extends AbstractParser<User> {
                 new GroupParser(
                     new BadgeParser()).parse(json.getJSONArray("badges")));
         }  
+        if (json.has("badgecount")) {
+            user.setBadgeCount(json.getInt("badgecount"));
+        }
         if (json.has("checkin")) {
             user.setCheckin(new CheckinParser().parse(json.getJSONObject("checkin")));
+        }
+        if (json.has("checkincount")) {
+            user.setCheckinCount(json.getInt("checkincount"));
         }
         if (json.has("created")) {
             user.setCreated(json.getString("created"));
@@ -51,11 +57,25 @@ public class UserParser extends AbstractParser<User> {
         if (json.has("firstname")) {
             user.setFirstname(json.getString("firstname"));
         }
+        if (json.has("followercount")) {
+            user.setFollowerCount(json.getInt("followercount"));
+        }
+        if (json.has("friendcount")) {
+            user.setFriendCount(json.getInt("friendcount"));
+        }
+        if (json.has("friendsincommon")) {
+            user.setFriendsInCommon(
+                new GroupParser(
+                    new UserParser()).parse(json.getJSONArray("friendsincommon")));
+        }  
         if (json.has("friendstatus")) {
             user.setFriendstatus(json.getString("friendstatus"));
         }
         if (json.has("gender")) {
             user.setGender(json.getString("gender"));
+        }
+        if (json.has("hometown")) {
+            user.setHometown(json.getString("hometown"));
         }
         if (json.has("id")) {
             user.setId(json.getString("id"));
@@ -80,6 +100,12 @@ public class UserParser extends AbstractParser<User> {
         if (json.has("settings")) {
             user.setSettings(new SettingsParser().parse(json.getJSONObject("settings")));
         } 
+        if (json.has("tipcount")) {
+            user.setTipCount(json.getInt("tipcount"));
+        }
+        if (json.has("todocount")) {
+            user.setTodoCount(json.getInt("todocount"));
+        }
         if (json.has("twitter")) {
             user.setTwitter(json.getString("twitter"));
         } 

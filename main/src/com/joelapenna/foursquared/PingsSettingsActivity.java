@@ -318,7 +318,7 @@ public class PingsSettingsActivity extends Activity {
                 Foursquare foursquare = foursquared.getFoursquare();
                 Location location = foursquared.getLastKnownLocation();
                 return foursquare.user(
-                        null, false, false, LocationUtils
+                        null, false, false, false, LocationUtils
                             .createFoursquareLocation(location));
             } catch (Exception e) {
                 mReason = e;
