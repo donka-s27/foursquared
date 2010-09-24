@@ -370,6 +370,7 @@
   <string name="venue_activity_tip_added_ok">Tip added!</string>
   <string name="venue_activity_todo_added_ok">To-Do added!</string>
   <string name="venue_activity_todo_here">You have a To-Do here!</string>
+  <string name="venue_share_activity_title">Share</string>
   <string name="venue_tips_activity_title">Tips left here (%d)</string>
   <string name="add_tip_activity_text_hint">For example: Try the sea salt vanilla ice cream. Best dessert downtown!</string>
   <string name="add_tip_activity_text_button">Leave Tip</string>

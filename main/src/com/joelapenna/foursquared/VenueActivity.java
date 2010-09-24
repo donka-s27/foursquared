@@ -474,7 +474,9 @@ public class VenueActivity extends Activity {
                 }
                 return true;
             case MENU_SHARE:
-                Toast.makeText(this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                Intent intentShare = new Intent(this, VenueShareActivity.class);
+                intentShare.putExtra(VenueShareActivity.INTENT_EXTRA_VENUE, mStateHolder.getVenue());
+                startActivity(intentShare);
                 return true;
         }
         return super.onOptionsItemSelected(item);
