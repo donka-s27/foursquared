@@ -9,14 +9,14 @@ import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Todo;
-import com.joelapenna.foursquared.app.LoadableListActivityWithView;
+import com.joelapenna.foursquared.app.LoadableListActivityWithViewAndHeader;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.TipUtils;
 import com.joelapenna.foursquared.widget.SegmentedButton;
-import com.joelapenna.foursquared.widget.TodosListAdapter;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
+import com.joelapenna.foursquared.widget.TodosListAdapter;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -32,10 +32,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
-import android.widget.AdapterView.OnItemClickListener;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -46,7 +46,7 @@ import java.util.Observer;
  * @date September 12, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  */
-public class TodosActivity extends LoadableListActivityWithView {
+public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     static final String TAG = "TodosActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
@@ -55,8 +55,6 @@ public class TodosActivity extends LoadableListActivityWithView {
     private StateHolder mStateHolder;
     private TodosListAdapter mListAdapter;
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
-    private LinearLayout mLayoutButtons;
-    private SegmentedButton mSegmentedButton;
     private ScrollView mLayoutEmpty;
     
     private static final int MENU_REFRESH = 0;
@@ -121,10 +119,8 @@ public class TodosActivity extends LoadableListActivityWithView {
 
     private void ensureUi() {
         LayoutInflater inflater = LayoutInflater.from(this);
-        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.todos_activity_buttons, getHeaderLayout());
-        mLayoutButtons.setVisibility(View.VISIBLE);
         
-        mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
+        mLayoutEmpty = (ScrollView)inflater.inflate(
                 R.layout.todos_activity_empty, null);     
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
@@ -153,14 +149,18 @@ public class TodosActivity extends LoadableListActivityWithView {
         }
         
         
-        mSegmentedButton = (SegmentedButton)findViewById(R.id.segmented);
+        SegmentedButton buttons = getHeaderButton();
+        buttons.clearButtons();
+        buttons.addButtons(
+                getString(R.string.todos_activity_btn_recent),
+                getString(R.string.todos_activity_btn_nearby));
         if (mStateHolder.getRecentOnly()) {
-            mSegmentedButton.setPushedButtonIndex(0);
+            buttons.setPushedButtonIndex(0);
         } else {
-            mSegmentedButton.setPushedButtonIndex(1);
+            buttons.setPushedButtonIndex(1);
         }
         
-        mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
+        buttons.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
                 if (index == 0) {
@@ -278,17 +278,19 @@ public class TodosActivity extends LoadableListActivityWithView {
     }
     
     private void onTaskTodosComplete(Group<Todo> group, boolean recentOnly, Exception ex) {
+        SegmentedButton buttons = getHeaderButton();
+        
         boolean update = false;
         if (group != null) {
             if (recentOnly) {
                 mStateHolder.setTodosRecent(group);
-                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                if (buttons.getSelectedButtonIndex() == 0) {
                     mListAdapter.setGroup(mStateHolder.getTodosRecent());
                     update = true;
                 }
             } else {
                 mStateHolder.setTodosNearby(group);
-                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                if (buttons.getSelectedButtonIndex() == 1) {
                     mListAdapter.setGroup(mStateHolder.getTodosNearby());
                     update = true;
                 }
@@ -297,13 +299,13 @@ public class TodosActivity extends LoadableListActivityWithView {
         else {
             if (recentOnly) {
                 mStateHolder.setTodosRecent(new Group<Todo>());
-                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                if (buttons.getSelectedButtonIndex() == 0) {
                     mListAdapter.setGroup(mStateHolder.getTodosRecent());
                     update = true;
                 }
             } else {
                 mStateHolder.setTodosNearby(new Group<Todo>());
-                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                if (buttons.getSelectedButtonIndex() == 1) {
                     mListAdapter.setGroup(mStateHolder.getTodosNearby());
                     update = true;
                 }
@@ -316,14 +318,14 @@ public class TodosActivity extends LoadableListActivityWithView {
             mStateHolder.setIsRunningTaskTodosRecent(false);
             mStateHolder.setRanOnceTodosRecent(true);
             if (mStateHolder.getTodosRecent().size() == 0 && 
-                    mSegmentedButton.getSelectedButtonIndex() == 0) {
+                    buttons.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
             mStateHolder.setIsRunningTaskTodosNearby(false);
             mStateHolder.setRanOnceTodosNearby(true);
             if (mStateHolder.getTodosNearby().size() == 0 &&
-                    mSegmentedButton.getSelectedButtonIndex() == 1) {
+                    buttons.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
         }

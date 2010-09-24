@@ -99,29 +99,27 @@ public class MainActivity extends TabActivity {
                     1, intent);
             addTab(getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector,
                     2, new Intent(this, FriendsActivity.class));
-        } 
+        }
 
         addTab(getString(R.string.tab_main_nav_tips), R.drawable.tab_main_nav_tips_selector, 
                 3, new Intent(this, TipsActivity.class));
         addTab(getString(R.string.tab_main_nav_todos), R.drawable.tab_main_nav_todos_selector, 
                 4, new Intent(this, TodosActivity.class));
         
-        // 1.5 can't display tabs within tabs, so we won't have the 'me' tab for
-        // 1.5 users. They can access the 'me' page through the context menu.
-        if (getAndroidVersion() > 3) {
-            // 'Me' tab, just shows our own info. At this point we should have a
-            // stored user id, and a user gender to control the image which is
-            // displayed on the tab.
-            String userId = ((Foursquared) getApplication()).getUserId();
-            String userGender = ((Foursquared) getApplication()).getUserGender();
-            
-            Intent intentTabMe = new Intent(this, UserDetailsActivity.class);
-            intentTabMe.putExtra(UserDetailsActivity.EXTRA_USER_ID, userId == null ? "unknown"
-                    : userId);
-            addTab(getString(R.string.tab_main_nav_me), 
-                    UserUtils.getDrawableForMeTabByGender(userGender), 5, intentTabMe);
-            
-        } else {
+        // 'Me' tab, just shows our own info. At this point we should have a
+        // stored user id, and a user gender to control the image which is
+        // displayed on the tab.
+        String userId = ((Foursquared) getApplication()).getUserId();
+        String userGender = ((Foursquared) getApplication()).getUserGender();
+        
+        Intent intentTabMe = new Intent(this, UserDetailsActivity.class);
+        intentTabMe.putExtra(UserDetailsActivity.EXTRA_USER_ID, userId == null ? "unknown"
+                : userId);
+        addTab(getString(R.string.tab_main_nav_me), 
+                UserUtils.getDrawableForMeTabByGender(userGender), 5, intentTabMe);
+        
+        // Fix layout for 1.5.
+        if (getAndroidVersion() < 4) {
             FrameLayout flTabContent = (FrameLayout)findViewById(android.R.id.tabcontent);
             flTabContent.setPadding(0, 0, 0, 0);
         }

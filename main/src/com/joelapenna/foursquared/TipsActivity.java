@@ -4,8 +4,17 @@
 
 package com.joelapenna.foursquared;
 
-import java.util.Observable;
-import java.util.Observer;
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.error.FoursquareException;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquared.app.LoadableListActivityWithViewAndHeader;
+import com.joelapenna.foursquared.location.LocationUtils;
+import com.joelapenna.foursquared.util.MenuUtils;
+import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.widget.SegmentedButton;
+import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
+import com.joelapenna.foursquared.widget.TipsListAdapter;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -26,17 +35,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
 
-import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.error.FoursquareException;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Tip;
-import com.joelapenna.foursquared.app.LoadableListActivityWithView;
-import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.util.MenuUtils;
-import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.widget.SegmentedButton;
-import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
-import com.joelapenna.foursquared.widget.TipsListAdapter;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * Shows a list of nearby tips. User can sort tips by friends-only.
@@ -44,7 +44,7 @@ import com.joelapenna.foursquared.widget.TipsListAdapter;
  * @date August 31, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  */
-public class TipsActivity extends LoadableListActivityWithView {
+public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     static final String TAG = "TipsActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
@@ -53,8 +53,6 @@ public class TipsActivity extends LoadableListActivityWithView {
     private StateHolder mStateHolder;
     private TipsListAdapter mListAdapter;
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
-    private LinearLayout mLayoutButtons;
-    private SegmentedButton mSegmentedButton;
     private ScrollView mLayoutEmpty;
     
     private static final int MENU_REFRESH = 0;
@@ -117,14 +115,10 @@ public class TipsActivity extends LoadableListActivityWithView {
 
     private void ensureUi() {
         LayoutInflater inflater = LayoutInflater.from(this);
-        mLayoutButtons = (LinearLayout)inflater.inflate(R.layout.tips_activity_buttons, getHeaderLayout());
-        mLayoutButtons.setVisibility(View.VISIBLE);
         
-        mLayoutEmpty = (ScrollView)LayoutInflater.from(this).inflate(
-                R.layout.tips_activity_empty, null);     
+        mLayoutEmpty = (ScrollView)inflater.inflate(R.layout.tips_activity_empty, null);     
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
-        
         
         mListAdapter = new TipsListAdapter(this, 
             ((Foursquared) getApplication()).getRemoteResourceManager());
@@ -148,14 +142,18 @@ public class TipsActivity extends LoadableListActivityWithView {
             }
         }
         
-        mSegmentedButton = (SegmentedButton)findViewById(R.id.segmented);
+        SegmentedButton buttons = getHeaderButton();
+        buttons.clearButtons();
+        buttons.addButtons(
+                getString(R.string.tips_activity_btn_friends_only),
+                getString(R.string.tips_activity_btn_everyone));
         if (mStateHolder.mFriendsOnly) {
-            mSegmentedButton.setPushedButtonIndex(0);
+            buttons.setPushedButtonIndex(0);
         } else {
-            mSegmentedButton.setPushedButtonIndex(1);
+            buttons.setPushedButtonIndex(1);
         }
 
-        mSegmentedButton.setOnClickListener(new OnClickListenerSegmentedButton() {
+        buttons.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
                 if (index == 0) {
@@ -267,17 +265,19 @@ public class TipsActivity extends LoadableListActivityWithView {
     }
     
     private void onTaskTipsComplete(Group<Tip> group, boolean friendsOnly, Exception ex) {
+        SegmentedButton buttons = getHeaderButton();
+        
         boolean update = false;
         if (group != null) {
             if (friendsOnly) {
                 mStateHolder.setTipsFriends(group);
-                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                if (buttons.getSelectedButtonIndex() == 0) {
                     mListAdapter.setGroup(mStateHolder.getTipsFriends());
                     update = true;
                 }
             } else {
                 mStateHolder.setTipsEveryone(group);
-                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                if (buttons.getSelectedButtonIndex() == 1) {
                     mListAdapter.setGroup(mStateHolder.getTipsEveryone());
                     update = true;
                 }
@@ -286,13 +286,13 @@ public class TipsActivity extends LoadableListActivityWithView {
         else {
             if (friendsOnly) {
                 mStateHolder.setTipsFriends(new Group<Tip>());
-                if (mSegmentedButton.getSelectedButtonIndex() == 0) {
+                if (buttons.getSelectedButtonIndex() == 0) {
                     mListAdapter.setGroup(mStateHolder.getTipsFriends());
                     update = true;
                 }
             } else {
                 mStateHolder.setTipsEveryone(new Group<Tip>());
-                if (mSegmentedButton.getSelectedButtonIndex() == 1) {
+                if (buttons.getSelectedButtonIndex() == 1) {
                     mListAdapter.setGroup(mStateHolder.getTipsEveryone());
                     update = true;
                 }
@@ -305,14 +305,14 @@ public class TipsActivity extends LoadableListActivityWithView {
             mStateHolder.setIsRunningTaskTipsFriends(false);
             mStateHolder.setRanOnceTipsFriends(true);
             if (mStateHolder.getTipsFriends().size() == 0 && 
-                    mSegmentedButton.getSelectedButtonIndex() == 0) {
+                    buttons.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
             mStateHolder.setIsRunningTaskTipsEveryone(false);
             mStateHolder.setRanOnceTipsEveryone(true);
             if (mStateHolder.getTipsEveryone().size() == 0 &&
-                    mSegmentedButton.getSelectedButtonIndex() == 1) {
+                    buttons.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
         }
