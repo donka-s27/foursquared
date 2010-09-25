@@ -354,7 +354,7 @@ class FoursquareHttpApiV1 {
      * /todos?geolat=37.770900&geolong=-122.436987&l=1&sort=[recent|nearby]
      */
     @SuppressWarnings("unchecked")
-    Group<Todo> todos(String geolat, String geolong, String geohacc, String geovacc,
+    Group<Todo> todos(String uid, String geolat, String geolong, String geohacc, String geovacc,
             String geoalt, boolean recent, boolean nearby, int limit) 
             throws FoursquareException, FoursquareError, IOException {
         String sort = null;
@@ -364,6 +364,7 @@ class FoursquareHttpApiV1 {
             sort = "nearby";
         }
         HttpGet httpGet = mHttpApi.createHttpGet(fullUrl(URL_API_TODOS), //
+                new BasicNameValuePair("uid", uid), //
                 new BasicNameValuePair("geolat", geolat), //
                 new BasicNameValuePair("geolong", geolong), //
                 new BasicNameValuePair("geohacc", geohacc), //
