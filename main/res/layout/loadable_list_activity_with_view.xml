@@ -19,7 +19,8 @@
     android:layout_width="fill_parent"
     android:layout_weight="1"
     android:drawSelectorOnTop="false"
-    android:scrollbars="vertical" />
+    android:scrollbars="vertical"
+    android:fadingEdgeLength="0dip" />
 
   <LinearLayout
     android:id="@android:id/empty"
