@@ -170,10 +170,10 @@ public class Foursquare {
     }
 
     @V1
-    public Group<Tip> tips(Location location, String filter, int limit) throws FoursquareException,
+    public Group<Tip> tips(Location location, String uid, String filter, int limit) throws FoursquareException,
             FoursquareError, IOException {
         return mFoursquareV1.tips(location.geolat, location.geolong, location.geohacc,
-                location.geovacc, location.geoalt, filter, limit);
+                location.geovacc, location.geoalt, uid, filter, limit);
     }
 
     @V1

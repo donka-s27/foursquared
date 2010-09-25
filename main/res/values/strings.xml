@@ -343,6 +343,7 @@
   <string name="tip_activity_btn_tip_2">I\'VE DONE THIS</string>
   <string name="tip_activity_btn_tip_3">UNDO THIS</string>
   <string name="tip_activity_btn_tip_4">CONGRATS! YOU\'VE DONE THIS</string>
+  <string name="todos_activity_title">Foursquare To-Do List %s</string>
   <string name="todos_activity_btn_recent">RECENT</string>
   <string name="todos_activity_btn_nearby">NEARBY</string>
   <string name="todos_activity_no_todos">No To-Dos Here!</string>
@@ -377,4 +378,7 @@
   <string name="add_tip_todo_activity_progress_message">Adding...</string>
   <string name="add_todo_activity_text_hint">Add a note (optional)</string>
   <string name="add_todo_activity_text_button">Add to my to-do list</string>
+  <string name="user_details_tips_activity_title">Foursquare Tips</string>
+  <string name="user_details_tips_activity_btn_recent">RECENT</string>
+  <string name="user_details_tips_activity_btn_popular">POPULAR</string>
 </resources>

@@ -130,6 +130,8 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     private void ensureUi() {
         LayoutInflater inflater = LayoutInflater.from(this);
         
+        setTitle(getString(R.string.todos_activity_title, ""));
+        
         mLayoutEmpty = (ScrollView)inflater.inflate(
                 R.layout.todos_activity_empty, null);     
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(

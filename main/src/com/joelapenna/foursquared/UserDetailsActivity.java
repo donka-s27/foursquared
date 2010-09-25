@@ -272,7 +272,7 @@ public class UserDetailsActivity extends Activity {
                         viewTips.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                                startTipsActivity();
                             }
                         });
                         viewTips.setFocusable(true);
@@ -535,6 +535,12 @@ public class UserDetailsActivity extends Activity {
     private void startTodosActivity() {
         Intent intent = new Intent(UserDetailsActivity.this, TodosActivity.class);
         intent.putExtra(TodosActivity.INTENT_EXTRA_USER_ID, mStateHolder.getUser().getId());
+        startActivity(intent); 
+    }
+    
+    private void startTipsActivity() {
+        Intent intent = new Intent(UserDetailsActivity.this, UserDetailsTipsActivity.class);
+        intent.putExtra(UserDetailsTipsActivity.INTENT_EXTRA_USER_ID, mStateHolder.getUser().getId());
         startActivity(intent); 
     }
     

@@ -10,7 +10,6 @@ import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquared.app.LoadableListActivityWithViewAndHeader;
 import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
@@ -39,14 +38,19 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- * Shows a list of nearby tips. User can sort tips by friends-only.
+ * Shows a tips of a user, but not the logged-in user. This is pretty much a copy-paste
+ * of TipsActivity, but there are enough small differences to put it in its own activity.
+ * The direction of this activity is unknown too, so separating i here.
  * 
- * @date August 31, 2010
+ * @date September 23, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  */
-public class TipsActivity extends LoadableListActivityWithViewAndHeader {
-    static final String TAG = "TipsActivity";
+public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHeader {
+    static final String TAG = "UserDetailsTipsActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
+
+    public static final String INTENT_EXTRA_USER_ID = Foursquared.PACKAGE_NAME
+            + ".TipsActivity.INTENT_EXTRA_USER_ID";
     
     private static final int ACTIVITY_TIP = 500;
     
@@ -70,19 +74,26 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
+        setTitle(getString(R.string.user_details_tips_activity_title));
         
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivity(this);
         } else {
-            mStateHolder = new StateHolder();
+            if (getIntent().hasExtra(INTENT_EXTRA_USER_ID)) {
+                mStateHolder = new StateHolder(getIntent().getStringExtra(INTENT_EXTRA_USER_ID));
+            } else {
+                Log.e(TAG, TAG + " requires user ID in intent extras.");
+                finish();
+                return;
+            }
         }
 
         ensureUi();
 
         // Friend tips is shown first by default so auto-fetch it if necessary.
-        if (!mStateHolder.getRanOnceTipsFriends()) {
+        if (!mStateHolder.getRanOnceTipsRecent()) {
             mStateHolder.startTaskTips(this, true);
         }
     }
@@ -121,20 +132,20 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
         
         mListAdapter = new TipsListAdapter(this, 
-            ((Foursquared) getApplication()).getRemoteResourceManager(), R.layout.tip_list_item);
-        if (mStateHolder.getFriendsOnly()) {
-            mListAdapter.setGroup(mStateHolder.getTipsFriends());
-            if (mStateHolder.getTipsFriends().size() == 0) {
-                if (mStateHolder.getRanOnceTipsFriends()) {
+            ((Foursquared) getApplication()).getRemoteResourceManager(), R.layout.tip_venue_list_item);
+        if (mStateHolder.getRecentOnly()) {
+            mListAdapter.setGroup(mStateHolder.getTipsRecent());
+            if (mStateHolder.getTipsRecent().size() == 0) {
+                if (mStateHolder.getRanOnceTipsRecent()) {
                     setEmptyView(mLayoutEmpty);
                 } else {
                     setLoadingView();
                 }
             }
         } else {
-            mListAdapter.setGroup(mStateHolder.getTipsEveryone());
-            if (mStateHolder.getTipsEveryone().size() == 0) {
-                if (mStateHolder.getRanOnceTipsEveryone()) {
+            mListAdapter.setGroup(mStateHolder.getTipsPopular());
+            if (mStateHolder.getTipsPopular().size() == 0) {
+                if (mStateHolder.getRanOnceTipsPopular()) {
                     setEmptyView(mLayoutEmpty);
                 } else {
                     setLoadingView();
@@ -145,9 +156,9 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
         SegmentedButton buttons = getHeaderButton();
         buttons.clearButtons();
         buttons.addButtons(
-                getString(R.string.tips_activity_btn_friends_only),
-                getString(R.string.tips_activity_btn_everyone));
-        if (mStateHolder.mFriendsOnly) {
+                getString(R.string.user_details_tips_activity_btn_recent),
+                getString(R.string.user_details_tips_activity_btn_popular));
+        if (mStateHolder.mRecentOnly) {
             buttons.setPushedButtonIndex(0);
         } else {
             buttons.setPushedButtonIndex(1);
@@ -157,25 +168,25 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
             @Override
             public void onClick(int index) {
                 if (index == 0) {
-                    mStateHolder.setFriendsOnly(true);
-                    mListAdapter.setGroup(mStateHolder.getTipsFriends());
-                    if (mStateHolder.getTipsFriends().size() < 1) {
-                        if (mStateHolder.getRanOnceTipsFriends()) {
+                    mStateHolder.setRecentOnly(true);
+                    mListAdapter.setGroup(mStateHolder.getTipsRecent());
+                    if (mStateHolder.getTipsRecent().size() < 1) {
+                        if (mStateHolder.getRanOnceTipsRecent()) {
                             setEmptyView(mLayoutEmpty);
                         } else {
                             setLoadingView();
-                            mStateHolder.startTaskTips(TipsActivity.this, true);
+                            mStateHolder.startTaskTips(UserDetailsTipsActivity.this, true);
                         }
                     }
                 } else {
-                    mStateHolder.setFriendsOnly(false);
-                    mListAdapter.setGroup(mStateHolder.getTipsEveryone());
-                    if (mStateHolder.getTipsEveryone().size() < 1) {
-                        if (mStateHolder.getRanOnceTipsEveryone()) {
+                    mStateHolder.setRecentOnly(false);
+                    mListAdapter.setGroup(mStateHolder.getTipsPopular());
+                    if (mStateHolder.getTipsPopular().size() < 1) {
+                        if (mStateHolder.getRanOnceTipsPopular()) {
                             setEmptyView(mLayoutEmpty);
                         } else {
                             setLoadingView();
-                            mStateHolder.startTaskTips(TipsActivity.this, false);
+                            mStateHolder.startTaskTips(UserDetailsTipsActivity.this, false);
                         }
                     }
                 }
@@ -192,14 +203,14 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Tip tip = (Tip) parent.getAdapter().getItem(position);
-                Intent intent = new Intent(TipsActivity.this, TipActivity.class);
+                Intent intent = new Intent(UserDetailsTipsActivity.this, TipActivity.class);
                 intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, tip);
                 startActivityForResult(intent, ACTIVITY_TIP);
             }
         });
 
-        if (mStateHolder.getIsRunningTaskTipsFriends() || 
-            mStateHolder.getIsRunningTaskTipsEveryone()) {
+        if (mStateHolder.getIsRunningTaskTipsRecent() || 
+            mStateHolder.getIsRunningTaskTipsPopular()) {
             setProgressBarIndeterminateVisibility(true);
         } else {
             setProgressBarIndeterminateVisibility(false);
@@ -212,7 +223,6 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
         
         menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.tips_activity_menu_refresh)
             .setIcon(R.drawable.ic_menu_refresh);
-        MenuUtils.addPreferencesToMenu(this, menu);
         
         return true;
     }
@@ -221,7 +231,7 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_REFRESH:
-                mStateHolder.startTaskTips(this, mStateHolder.getFriendsOnly());
+                mStateHolder.startTaskTips(this, mStateHolder.getRecentOnly());
                 return true;
         }
 
@@ -230,16 +240,16 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	// We don't care about the returned to-do (if any) since we're not bound
-    	// to a venue in this activity for update. We just update the status member
-    	// of the target tip.
+        // We don't care about the returned to-do (if any) since we're not bound
+        // to a venue in this activity for update. We just update the status member
+        // of the target tip.
         if (requestCode == ACTIVITY_TIP && resultCode == Activity.RESULT_OK) {
-        	if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
-        		Log.d(TAG, "onActivityResult(), return tip intent extra found, processing.");
-        		updateTip((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED));
-        	} else {
-        		Log.d(TAG, "onActivityResult(), no return tip intent extra found.");
-        	}
+            if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
+                Log.d(TAG, "onActivityResult(), return tip intent extra found, processing.");
+                updateTip((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED));
+            } else {
+                Log.d(TAG, "onActivityResult(), no return tip intent extra found.");
+            }
         }
     }
     
@@ -250,12 +260,12 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     
     private void onStartTaskTips() {
         if (mListAdapter != null) {
-            if (mStateHolder.getFriendsOnly()) {
-                mStateHolder.setIsRunningTaskTipsFriends(true);
-                mListAdapter.setGroup(mStateHolder.getTipsFriends());
+            if (mStateHolder.getRecentOnly()) {
+                mStateHolder.setIsRunningTaskTipsRecent(true);
+                mListAdapter.setGroup(mStateHolder.getTipsRecent());
             } else {
-                mStateHolder.setIsRunningTaskTipsEveryone(true);
-                mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                mStateHolder.setIsRunningTaskTipsPopular(true);
+                mListAdapter.setGroup(mStateHolder.getTipsPopular());
             }
             mListAdapter.notifyDataSetChanged();
         }
@@ -264,36 +274,36 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
         setLoadingView();
     }
     
-    private void onTaskTipsComplete(Group<Tip> group, boolean friendsOnly, Exception ex) {
+    private void onTaskTipsComplete(Group<Tip> group, boolean recentOnly, Exception ex) {
         SegmentedButton buttons = getHeaderButton();
         
         boolean update = false;
         if (group != null) {
-            if (friendsOnly) {
-                mStateHolder.setTipsFriends(group);
+            if (recentOnly) {
+                mStateHolder.setTipsRecent(group);
                 if (buttons.getSelectedButtonIndex() == 0) {
-                    mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                    mListAdapter.setGroup(mStateHolder.getTipsRecent());
                     update = true;
                 }
             } else {
-                mStateHolder.setTipsEveryone(group);
+                mStateHolder.setTipsPopular(group);
                 if (buttons.getSelectedButtonIndex() == 1) {
-                    mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                    mListAdapter.setGroup(mStateHolder.getTipsPopular());
                     update = true;
                 }
             }
         }
         else {
-            if (friendsOnly) {
-                mStateHolder.setTipsFriends(new Group<Tip>());
+            if (recentOnly) {
+                mStateHolder.setTipsRecent(new Group<Tip>());
                 if (buttons.getSelectedButtonIndex() == 0) {
-                    mListAdapter.setGroup(mStateHolder.getTipsFriends());
+                    mListAdapter.setGroup(mStateHolder.getTipsRecent());
                     update = true;
                 }
             } else {
-                mStateHolder.setTipsEveryone(new Group<Tip>());
+                mStateHolder.setTipsPopular(new Group<Tip>());
                 if (buttons.getSelectedButtonIndex() == 1) {
-                    mListAdapter.setGroup(mStateHolder.getTipsEveryone());
+                    mListAdapter.setGroup(mStateHolder.getTipsPopular());
                     update = true;
                 }
             }
@@ -301,17 +311,17 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
             NotificationsUtil.ToastReasonForFailure(this, ex);
         }
         
-        if (friendsOnly) {
-            mStateHolder.setIsRunningTaskTipsFriends(false);
-            mStateHolder.setRanOnceTipsFriends(true);
-            if (mStateHolder.getTipsFriends().size() == 0 && 
+        if (recentOnly) {
+            mStateHolder.setIsRunningTaskTipsRecent(false);
+            mStateHolder.setRanOnceTipsRecent(true);
+            if (mStateHolder.getTipsRecent().size() == 0 && 
                     buttons.getSelectedButtonIndex() == 0) {
                 setEmptyView(mLayoutEmpty);
             }
         } else {
-            mStateHolder.setIsRunningTaskTipsEveryone(false);
-            mStateHolder.setRanOnceTipsEveryone(true);
-            if (mStateHolder.getTipsEveryone().size() == 0 &&
+            mStateHolder.setIsRunningTaskTipsPopular(false);
+            mStateHolder.setRanOnceTipsPopular(true);
+            if (mStateHolder.getTipsPopular().size() == 0 &&
                     buttons.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
@@ -322,24 +332,24 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
             getListView().setSelection(0);
         }
         
-        if (!mStateHolder.getIsRunningTaskTipsFriends() &&
-            !mStateHolder.getIsRunningTaskTipsEveryone()) {
+        if (!mStateHolder.getIsRunningTaskTipsRecent() &&
+            !mStateHolder.getIsRunningTaskTipsPopular()) {
             setProgressBarIndeterminateVisibility(false);
         }
     }
     
-    /**
-     * Gets friends of the current user we're working for.
-     */
+    
     private static class TaskTips extends AsyncTask<Void, Void, Group<Tip>> {
 
-        private TipsActivity mActivity;
-        private boolean mFriendsOnly;
+        private String mUserId;
+        private UserDetailsTipsActivity mActivity;
+        private boolean mRecentOnly;
         private Exception mReason;
 
-        public TaskTips(TipsActivity activity, boolean friendsOnly) {
+        public TaskTips(UserDetailsTipsActivity activity, String userId, boolean recentOnly) {
             mActivity = activity;
-            mFriendsOnly = friendsOnly;
+            mUserId = userId;
+            mRecentOnly = recentOnly;
         }
         
         @Override
@@ -364,8 +374,8 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
                 
                 return foursquare.tips(
                         LocationUtils.createFoursquareLocation(loc), 
-                        null,
-                        mFriendsOnly ? "friends" : "nearby",
+                        mUserId,
+                        mRecentOnly ? "recent" : "popular",
                         30);
             } catch (Exception e) {
                 mReason = e;
@@ -376,18 +386,18 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
         @Override
         protected void onPostExecute(Group<Tip> tips) {
             if (mActivity != null) {
-                mActivity.onTaskTipsComplete(tips, mFriendsOnly, mReason);
+                mActivity.onTaskTipsComplete(tips, mRecentOnly, mReason);
             }
         }
 
         @Override
         protected void onCancelled() {
             if (mActivity != null) {
-                mActivity.onTaskTipsComplete(null, mFriendsOnly, mReason);
+                mActivity.onTaskTipsComplete(null, mRecentOnly, mReason);
             }
         }
         
-        public void setActivity(TipsActivity activity) {
+        public void setActivity(UserDetailsTipsActivity activity) {
             mActivity = activity;
         }
     }
@@ -395,150 +405,140 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     
     private static class StateHolder {
         
-        /** Tips by friends. */
-        private Group<Tip> mTipsFriends;
-        
-        /** Tips by everyone. */
-        private Group<Tip> mTipsEveryone;
-        
-        private TaskTips mTaskTipsFriends;
-        private TaskTips mTaskTipsEveryone;
-        private boolean mIsRunningTaskTipsFriends;
-        private boolean mIsRunningTaskTipsEveryone;
-        
-        private boolean mFriendsOnly;
-
-        private boolean mRanOnceTipsFriends;
-        private boolean mRanOnceTipsEveryone;
+        private String mUserId;
+        private Group<Tip> mTipsRecent;
+        private Group<Tip> mTipsPopular;
+        private TaskTips mTaskTipsRecent;
+        private TaskTips mTaskTipsPopular;
+        private boolean mIsRunningTaskTipsRecent;
+        private boolean mIsRunningTaskTipsPopular;
+        private boolean mRecentOnly;
+        private boolean mRanOnceTipsRecent;
+        private boolean mRanOnceTipsPopular;
         
         
-        public StateHolder() {
-            mIsRunningTaskTipsFriends = false;
-            mIsRunningTaskTipsEveryone = false;
-            mRanOnceTipsFriends = false;
-            mRanOnceTipsEveryone = false;
-            mTipsFriends = new Group<Tip>();
-            mTipsEveryone = new Group<Tip>();
-            mFriendsOnly = true;
+        public StateHolder(String userId) {
+            mUserId = userId;
+            mIsRunningTaskTipsRecent = false;
+            mIsRunningTaskTipsPopular = false;
+            mRanOnceTipsRecent = false;
+            mRanOnceTipsPopular = false;
+            mTipsRecent = new Group<Tip>();
+            mTipsPopular = new Group<Tip>();
+            mRecentOnly = true;
         }
         
-        public Group<Tip> getTipsFriends() {
-            return mTipsFriends;
+        public Group<Tip> getTipsRecent() {
+            return mTipsRecent;
         }
         
-        public void setTipsFriends(Group<Tip> tipsFriends) {
-            mTipsFriends = tipsFriends;
+        public void setTipsRecent(Group<Tip> tipsRecent) {
+            mTipsRecent = tipsRecent;
         }
         
-        public Group<Tip> getTipsEveryone() {
-            return mTipsEveryone;
+        public Group<Tip> getTipsPopular() {
+            return mTipsPopular;
         }
         
-        public void setTipsEveryone(Group<Tip> tipsEveryone) {
-            mTipsEveryone = tipsEveryone;
+        public void setTipsPopular(Group<Tip> tipsPopular) {
+            mTipsPopular = tipsPopular;
         }
         
-        public void startTaskTips(TipsActivity activity,
-                                  boolean friendsOnly) {
-            mFriendsOnly = friendsOnly;
-            if (friendsOnly) {
-                if (mIsRunningTaskTipsFriends) {
+        public void startTaskTips(UserDetailsTipsActivity activity,
+                                  boolean recentOnly) {
+            mRecentOnly = recentOnly;
+            if (recentOnly) {
+                if (mIsRunningTaskTipsRecent) {
                     return;
                 }
-                mIsRunningTaskTipsFriends = true;
-                mTaskTipsFriends = new TaskTips(activity, friendsOnly);
-                mTaskTipsFriends.execute();
+                mIsRunningTaskTipsRecent = true;
+                mTaskTipsRecent = new TaskTips(activity, mUserId, recentOnly);
+                mTaskTipsRecent.execute();
             } else {
-                if (mIsRunningTaskTipsEveryone) {
+                if (mIsRunningTaskTipsPopular) {
                     return;
                 }
-                mIsRunningTaskTipsEveryone = true;
-                mTaskTipsEveryone = new TaskTips(activity, friendsOnly);
-                mTaskTipsEveryone.execute();
+                mIsRunningTaskTipsPopular = true;
+                mTaskTipsPopular = new TaskTips(activity, mUserId, recentOnly);
+                mTaskTipsPopular.execute();
             }
         }
 
-        public void setActivity(TipsActivity activity) {
-            if (mTaskTipsFriends != null) {
-                mTaskTipsFriends.setActivity(activity);
+        public void setActivity(UserDetailsTipsActivity activity) {
+            if (mTaskTipsRecent != null) {
+                mTaskTipsRecent.setActivity(activity);
             }
-            if (mTaskTipsEveryone != null) {
-                mTaskTipsEveryone.setActivity(activity);
+            if (mTaskTipsPopular != null) {
+                mTaskTipsPopular.setActivity(activity);
             }
         }
 
-        public boolean getIsRunningTaskTipsFriends() {
-            return mIsRunningTaskTipsFriends;
+        public boolean getIsRunningTaskTipsRecent() {
+            return mIsRunningTaskTipsRecent;
         }
         
-        public void setIsRunningTaskTipsFriends(boolean isRunning) {
-            mIsRunningTaskTipsFriends = isRunning;
+        public void setIsRunningTaskTipsRecent(boolean isRunning) {
+            mIsRunningTaskTipsRecent = isRunning;
         }
 
-        public boolean getIsRunningTaskTipsEveryone() {
-            return mIsRunningTaskTipsEveryone;
+        public boolean getIsRunningTaskTipsPopular() {
+            return mIsRunningTaskTipsPopular;
         }
         
-        public void setIsRunningTaskTipsEveryone(boolean isRunning) {
-            mIsRunningTaskTipsEveryone = isRunning;
+        public void setIsRunningTaskTipsPopular(boolean isRunning) {
+            mIsRunningTaskTipsPopular = isRunning;
         }
         
         public void cancelTasks() {
-            if (mTaskTipsFriends != null) {
-                mTaskTipsFriends.setActivity(null);
-                mTaskTipsFriends.cancel(true);
+            if (mTaskTipsRecent != null) {
+                mTaskTipsRecent.setActivity(null);
+                mTaskTipsRecent.cancel(true);
             }
-            if (mTaskTipsEveryone != null) {
-                mTaskTipsEveryone.setActivity(null);
-                mTaskTipsEveryone.cancel(true);
+            if (mTaskTipsPopular != null) {
+                mTaskTipsPopular.setActivity(null);
+                mTaskTipsPopular.cancel(true);
             }
         }
         
-        public boolean getFriendsOnly() {
-            return mFriendsOnly;
+        public boolean getRecentOnly() {
+            return mRecentOnly;
         }
         
-        public void setFriendsOnly(boolean friendsOnly) {
-            mFriendsOnly = friendsOnly;
+        public void setRecentOnly(boolean recentOnly) {
+            mRecentOnly = recentOnly;
         }
         
-        public boolean getRanOnceTipsFriends() {
-            return mRanOnceTipsFriends;
+        public boolean getRanOnceTipsRecent() {
+            return mRanOnceTipsRecent;
         }
         
-        public void setRanOnceTipsFriends(boolean ranOnce) {
-            mRanOnceTipsFriends = ranOnce;
+        public void setRanOnceTipsRecent(boolean ranOnce) {
+            mRanOnceTipsRecent = ranOnce;
         }
         
-        public boolean getRanOnceTipsEveryone() {
-            return mRanOnceTipsEveryone;
+        public boolean getRanOnceTipsPopular() {
+            return mRanOnceTipsPopular;
         }
         
-        public void setRanOnceTipsEveryone(boolean ranOnce) {
-            mRanOnceTipsEveryone = ranOnce;
+        public void setRanOnceTipsPopular(boolean ranOnce) {
+            mRanOnceTipsPopular = ranOnce;
         }
         
         public void updateTip(Tip tip) {
-            updateTipFromArray(tip, mTipsFriends);
-            updateTipFromArray(tip, mTipsEveryone);
+            updateTipFromArray(tip, mTipsRecent);
+            updateTipFromArray(tip, mTipsPopular);
         }
         
         private void updateTipFromArray(Tip tip, Group<Tip> target) {
             for (Tip it : target) {
                 if (it.getId().equals(tip.getId())) {
-                	it.setStatus(tip.getStatus());
+                    it.setStatus(tip.getStatus());
                     break;
                 }
             }
         }
     }
-    
-    /** 
-     * This is really just a dummy observer to get the GPS running
-     * since this is the new splash page. After getting a fix, we
-     * might want to stop registering this observer thereafter so
-     * it doesn't annoy the user too much.
-     */
+
     private class SearchLocationObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
