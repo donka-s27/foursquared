@@ -297,7 +297,7 @@
     </activity>
     
     <activity
-      android:name=".UserFriendsActivity">
+      android:name=".UserDetailsFriendsActivity">
       <intent-filter>
         <action
           android:name="com.joelapenna.foursquared.intent.action.LOGGED_OUT" />
@@ -441,9 +441,15 @@
       </intent-filter>
     </activity>
     
-    
     <activity 
       android:name=".UserDetailsFriendsInCommonActivity" >
+      <intent-filter>
+        <action android:name="com.joelapenna.foursquared.intent.action.LOGGED_OUT" />
+      </intent-filter>
+    </activity>
+    
+    <activity 
+      android:name=".UserDetailsFriendsFollowersActivity" >
       <intent-filter>
         <action android:name="com.joelapenna.foursquared.intent.action.LOGGED_OUT" />
       </intent-filter>

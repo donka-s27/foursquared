@@ -83,6 +83,7 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
         } else {
             if (getIntent().hasExtra(INTENT_EXTRA_USER_ID)) {
                 mStateHolder = new StateHolder(getIntent().getStringExtra(INTENT_EXTRA_USER_ID));
+                mStateHolder.setRecentOnly(true);
             } else {
                 Log.e(TAG, TAG + " requires user ID in intent extras.");
                 finish();
@@ -221,7 +222,7 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.tips_activity_menu_refresh)
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh)
             .setIcon(R.drawable.ic_menu_refresh);
         
         return true;
@@ -446,7 +447,6 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
         
         public void startTaskTips(UserDetailsTipsActivity activity,
                                   boolean recentOnly) {
-            mRecentOnly = recentOnly;
             if (recentOnly) {
                 if (mIsRunningTaskTipsRecent) {
                     return;

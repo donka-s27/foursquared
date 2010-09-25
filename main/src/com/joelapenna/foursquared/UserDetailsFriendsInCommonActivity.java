@@ -121,7 +121,7 @@ public class UserDetailsFriendsInCommonActivity extends LoadableListActivityWith
     private void ensureUi() {
         LayoutInflater inflater = LayoutInflater.from(this);
         
-        mLayoutEmpty = (ScrollView)inflater.inflate(R.layout.user_details_friends_in_common_activity_empty, 
+        mLayoutEmpty = (ScrollView)inflater.inflate(R.layout.user_details_friends_activity_empty, 
                 null);     
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
@@ -201,7 +201,7 @@ public class UserDetailsFriendsInCommonActivity extends LoadableListActivityWith
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.tips_activity_menu_refresh)
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh)
             .setIcon(R.drawable.ic_menu_refresh);
         
         return true;

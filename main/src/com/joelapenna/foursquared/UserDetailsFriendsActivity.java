@@ -30,15 +30,15 @@ import android.widget.AdapterView.OnItemClickListener;
  * @date March 9, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  */
-public class UserFriendsActivity extends LoadableListActivity {
-    static final String TAG = "UserFriendsActivity";
+public class UserDetailsFriendsActivity extends LoadableListActivity {
+    static final String TAG = "UserDetailsFriendsActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
     public static final String EXTRA_USER_ID = Foursquared.PACKAGE_NAME
-        + ".UserFriendsActivity.EXTRA_USER_ID";
+        + ".UserDetailsFriendsActivity.EXTRA_USER_ID";
 
     public static final String EXTRA_SHOW_ADD_FRIEND_OPTIONS = Foursquared.PACKAGE_NAME
-        + ".UserFriendsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS";
+        + ".UserDetailsFriendsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS";
 
     private StateHolder mStateHolder;
     private FriendListAdapter mListAdapter;
@@ -112,7 +112,7 @@ public class UserFriendsActivity extends LoadableListActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 User user = (User) parent.getAdapter().getItem(position);
-                Intent intent = new Intent(UserFriendsActivity.this, UserDetailsActivity.class);
+                Intent intent = new Intent(UserDetailsFriendsActivity.this, UserDetailsActivity.class);
                 intent.putExtra(UserDetailsActivity.EXTRA_USER_PARCEL, user);
                 intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
                 startActivity(intent);
@@ -156,10 +156,10 @@ public class UserFriendsActivity extends LoadableListActivity {
      */
     private static class FriendsTask extends AsyncTask<String, Void, Group<User>> {
 
-        private UserFriendsActivity mActivity;
+        private UserDetailsFriendsActivity mActivity;
         private Exception mReason;
 
-        public FriendsTask(UserFriendsActivity activity) {
+        public FriendsTask(UserDetailsFriendsActivity activity) {
             mActivity = activity;
         }
         
@@ -195,7 +195,7 @@ public class UserFriendsActivity extends LoadableListActivity {
             }
         }
         
-        public void setActivity(UserFriendsActivity activity) {
+        public void setActivity(UserDetailsFriendsActivity activity) {
             mActivity = activity;
         }
     }
@@ -236,14 +236,14 @@ public class UserFriendsActivity extends LoadableListActivity {
             mFriends = friends;
         }
         
-        public void startTaskFriends(UserFriendsActivity activity,
+        public void startTaskFriends(UserDetailsFriendsActivity activity,
                                      String userId) {
             mIsRunningFriendsTask = true;
             mTaskFriends = new FriendsTask(activity);
             mTaskFriends.execute(userId);
         }
 
-        public void setActivityForTaskFriends(UserFriendsActivity activity) {
+        public void setActivityForTaskFriends(UserDetailsFriendsActivity activity) {
             if (mTaskFriends != null) {
                 mTaskFriends.setActivity(activity);
             }
