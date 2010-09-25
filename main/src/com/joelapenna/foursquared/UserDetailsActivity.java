@@ -394,7 +394,7 @@ public class UserDetailsActivity extends Activity {
                         viewFriends.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                startFriendsActivity();
+                                startFriendsInCommonActivity();
                             }
                         });
                         viewFriends.setFocusable(true);
@@ -517,12 +517,12 @@ public class UserDetailsActivity extends Activity {
     
     private void startCheckinsActivity() {
         Intent intent = new Intent(UserDetailsActivity.this, UserHistoryActivity.class);
-        intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
         startActivity(intent); 
     }
     
     private void startFriendsFollowersActivity() {
-        startFriendsActivity();
+        // TODO: Need a special case for this one.
+        startFriendsInCommonActivity();
     }
     
     private void startAddFriendsActivity() {
@@ -530,9 +530,17 @@ public class UserDetailsActivity extends Activity {
         startActivity(intent); 
     }
     
-    private void startFriendsActivity() {
-        Intent intent = new Intent(UserDetailsActivity.this, UserFriendsActivity.class);
-        intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+    private void startFriendsInCommonActivity() {
+        User user = mStateHolder.getUser();
+        
+        Intent intent = null;
+        if (user.getFriendsInCommon() != null && user.getFriendsInCommon().size() > 0) {
+            intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsInCommonActivity.class);
+            intent.putExtra(UserDetailsFriendsInCommonActivity.EXTRA_USER_PARCEL, mStateHolder.getUser());
+        } else {
+            intent = new Intent(UserDetailsActivity.this, UserFriendsActivity.class);
+            intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+        }
         startActivity(intent); 
     }
     

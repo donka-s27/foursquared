@@ -381,4 +381,7 @@
   <string name="user_details_tips_activity_title">Foursquare Tips</string>
   <string name="user_details_tips_activity_btn_recent">RECENT</string>
   <string name="user_details_tips_activity_btn_popular">POPULAR</string>
+  <string name="user_details_friends_in_common_title">Foursquare Friends</string>
+  <string name="user_details_friends_in_common_common_friends">FRIENDS IN COMMON</string>
+  <string name="user_details_friends_in_common_all_friends">ALL FRIENDS</string>
 </resources>

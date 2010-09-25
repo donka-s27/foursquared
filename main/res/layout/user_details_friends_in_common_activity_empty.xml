@@ -9,7 +9,6 @@
   android:background="@drawable/listview_item_manual" >
 
   <LinearLayout
-    android:id="@+id/todosActivityEmptyInner"
     android:layout_height="fill_parent"
     android:layout_width="fill_parent"
     android:padding="5dip"
@@ -17,23 +16,12 @@
     android:gravity="center_horizontal" > 
     
     <ImageView
-      android:id="@+id/todosActivityEmptyImageView"
+      android:id="@+id/tipsActivityEmptyImageView"
   	  android:layout_width="170dip"
 	  android:layout_height="155dip"
       android:src="@drawable/sadface"
       android:scaleType="fitXY"
       android:layout_marginTop="20dip" />
-   
-    <TextView
-      android:id="@+id/todosActivityEmptyTextView"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:textColor="@color/black_end"
-      android:textAppearance="@android:style/TextAppearance.Medium" 
-      android:singleLine="true"
-      android:paddingTop="20dip"
-      android:paddingBottom="20dip"
-      android:text="@string/todos_activity_no_todos"/>
     
   </LinearLayout>
   
