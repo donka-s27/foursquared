@@ -77,6 +77,7 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
             mStateHolder.setActivity(this);
         } else {
             mStateHolder = new StateHolder();
+            mStateHolder.setFriendsOnly(true);
         }
 
         ensureUi();
@@ -210,7 +211,7 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.tips_activity_menu_refresh)
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh)
             .setIcon(R.drawable.ic_menu_refresh);
         MenuUtils.addPreferencesToMenu(this, menu);
         
@@ -440,7 +441,6 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
         
         public void startTaskTips(TipsActivity activity,
                                   boolean friendsOnly) {
-            mFriendsOnly = friendsOnly;
             if (friendsOnly) {
                 if (mIsRunningTaskTipsFriends) {
                     return;

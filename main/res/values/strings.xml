@@ -137,7 +137,6 @@
   <string name="preferences_profile_settings_label">Profile Settings</string>
   <string name="preferences_profile_settings_summary">Information about your Foursquare account.</string>
   <string name="refresh_address_label">Refresh Address</string>
-  <string name="refresh_label">Refresh</string>
   <string name="search_already_in_progress_toast">A search is already in progress.</string>
   <string name="search_label">Search</string>
   <string name="search_venues_label">Venues</string>
@@ -239,8 +238,8 @@
   <string name="user_details_activity_general_tips">TIPS</string>
   <string name="user_details_activity_checkins_text_single">%d Check-in</string>
   <string name="user_details_activity_checkins_text_plural">%d Check-ins</string>
-  <string name="user_details_activity_friends_followers_text_celeb_single">"%d Follower, "</string>
-  <string name="user_details_activity_friends_followers_text_celeb_plural">"%d Followers, "</string>
+  <string name="user_details_activity_friends_followers_text_celeb_single">%d Follower</string>
+  <string name="user_details_activity_friends_followers_text_celeb_plural">%d Followers</string>
   <string name="user_details_activity_friends_followers_text_single">%d Friend</string>
   <string name="user_details_activity_friends_followers_text_plural">%d Friends</string>
   <string name="user_details_activity_todos_text_single">%d item on To-Do List</string>
@@ -250,7 +249,6 @@
   <string name="user_details_activity_friends_in_common_text_single">" (%d friend in common)""</string>
   <string name="user_details_activity_friends_in_common_text_plural">" (%d friends in common)""</string>
   <string name="user_details_activity_add_friends">Add Friends</string>
-  <string name="user_details_activity_friends_menu_refresh">Refresh</string>
   <string name="user_details_activity_friends_menu_contact">Contact</string>
     
   <string name="checkin_execute_activity_progress_bar_message">Checking-in...</string>
@@ -326,7 +324,6 @@
   <string name="settings_user_info_label_email">Email:</string>
   <string name="tips_activity_btn_friends_only">FRIENDS\' TIPS</string>
   <string name="tips_activity_btn_everyone">ALL TIPS</string> 
-  <string name="tips_activity_menu_refresh">Refresh</string>
   <string name="tips_activity_no_tips">No Tips Found!</string>
   <string name="tip_age_today">today</string>
   <string name="tip_age_days">%s day%s ago</string>
@@ -384,4 +381,8 @@
   <string name="user_details_friends_in_common_title">Foursquare Friends</string>
   <string name="user_details_friends_in_common_common_friends">FRIENDS IN COMMON</string>
   <string name="user_details_friends_in_common_all_friends">ALL FRIENDS</string>
+  <string name="user_details_friends_followers_activity_title">Foursquare Friends</string>
+  <string name="user_details_friends_followers_activity_followers">FOLLOWERS</string>
+  <string name="user_details_friends_followers_activity_friends">ALL FRIENDS</string>
+  <string name="refresh">Refresh</string>
 </resources>

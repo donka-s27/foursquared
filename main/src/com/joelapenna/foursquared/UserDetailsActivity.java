@@ -316,6 +316,10 @@ public class UserDetailsActivity extends Activity {
                                 getResources().getString(
                                     R.string.user_details_activity_friends_followers_text_celeb_plural,
                                     user.getFollowerCount()));
+                        
+                        if (user.getFriendCount() > 0) {
+                            tvFriendsFollowers.setText(tvFriendsFollowers.getText() + ", ");
+                        }
                     }
                     
                     tvFriendsFollowers.setText(tvFriendsFollowers.getText().toString() + 
@@ -521,8 +525,16 @@ public class UserDetailsActivity extends Activity {
     }
     
     private void startFriendsFollowersActivity() {
-        // TODO: Need a special case for this one.
-        startFriendsInCommonActivity();
+        User user = mStateHolder.getUser();
+
+        Intent intent = null;
+        if (user.getFollowerCount() > 0) {
+            intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsFollowersActivity.class);
+        } else {
+            intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsActivity.class);
+            intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+        }
+        startActivity(intent); 
     }
     
     private void startAddFriendsActivity() {
@@ -538,8 +550,8 @@ public class UserDetailsActivity extends Activity {
             intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsInCommonActivity.class);
             intent.putExtra(UserDetailsFriendsInCommonActivity.EXTRA_USER_PARCEL, mStateHolder.getUser());
         } else {
-            intent = new Intent(UserDetailsActivity.this, UserFriendsActivity.class);
-            intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+            intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsActivity.class);
+            intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
         }
         startActivity(intent); 
     }
@@ -560,7 +572,7 @@ public class UserDetailsActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.user_details_activity_friends_menu_refresh)
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh)
             .setIcon(R.drawable.ic_menu_refresh);
             
         if (mStateHolder.getIsLoggedInUser()) {

@@ -89,6 +89,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
         } else {
             // Optional user id, if not present, will be null and default to logged-in user.
             mStateHolder = new StateHolder(getIntent().getStringExtra(INTENT_EXTRA_USER_ID));
+            mStateHolder.setRecentOnly(false);
         }
         
         ensureUi();
@@ -229,7 +230,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.tips_activity_menu_refresh)
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh)
             .setIcon(R.drawable.ic_menu_refresh);
         MenuUtils.addPreferencesToMenu(this, menu);
         
@@ -454,7 +455,6 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
         
         public void startTaskTodos(TodosActivity activity,
                                    boolean recentOnly) {
-            mRecentOnly = recentOnly;
             if (recentOnly) {
                 if (mIsRunningTaskTodosRecent) {
                     return;
