@@ -219,6 +219,10 @@ public class UserDetailsActivity extends Activity {
         ivTodos.setVisibility(View.INVISIBLE);
         ivFriends.setVisibility(View.INVISIBLE);
         psFriends.setVisibility(View.GONE);
+        tvCheckins.setText("");
+        tvFriendsFollowers.setText("");
+        tvTodos.setText("");
+        tvFriends.setText("");
         
         if (mStateHolder.getLoadType() >= LOAD_TYPE_USER_PARTIAL) {
             User user = mStateHolder.getUser();
@@ -364,28 +368,28 @@ public class UserDetailsActivity extends Activity {
                         ivTodos.setVisibility(View.VISIBLE);
                     }
                                      
-                    if (user.getFriendCount() > 0) {
-                        tvFriends.setText(
-                            user.getFriendCount() == 1 ? 
-                                getResources().getString(
-                                    R.string.user_details_activity_friends_text_single, 
-                                    user.getFriendCount()) :
-                                getResources().getString(
-                                    R.string.user_details_activity_friends_text_plural,
-                                    user.getFriendCount()));
-                    }
+                    tvFriends.setText(
+                        user.getFriendCount() == 1 ? 
+                            getResources().getString(
+                                R.string.user_details_activity_friends_text_single, 
+                                user.getFriendCount()) :
+                            getResources().getString(
+                                R.string.user_details_activity_friends_text_plural,
+                                user.getFriendCount()));
                     
                     int friendsInCommon = user.getFriendsInCommon() == null ? 0 :
                         user.getFriendsInCommon().size();
-                    tvFriends.setText(tvFriends.getText().toString() + 
-                        (friendsInCommon == 1 ?    
-                             getResources().getString(
-                                 R.string.user_details_activity_friends_in_common_text_single,
-                                 friendsInCommon) :
-                             getResources().getString(
-                                 R.string.user_details_activity_friends_in_common_text_plural,
-                                 friendsInCommon)));
-  
+                    if (friendsInCommon > 0) {
+                        tvFriends.setText(tvFriends.getText().toString() + 
+                            (friendsInCommon == 1 ?    
+                                 getResources().getString(
+                                     R.string.user_details_activity_friends_in_common_text_single,
+                                     friendsInCommon) :
+                                 getResources().getString(
+                                     R.string.user_details_activity_friends_in_common_text_plural,
+                                     friendsInCommon)));
+                    }
+                    
                     if (user.getFriendCount() > 0) {
                         viewFriends.setOnClickListener(new OnClickListener() {
                             @Override
@@ -395,14 +399,14 @@ public class UserDetailsActivity extends Activity {
                         });
                         viewFriends.setFocusable(true);
                         ivFriends.setVisibility(View.VISIBLE);
+                    }
                         
-                        if (friendsInCommon > 0) {
-                            psFriends.setVisibility(View.VISIBLE);
-                            psFriends.setUsersAndRemoteResourcesManager(user.getFriendsInCommon(), mRrm);
-                        } else {
-                            tvFriends.setPadding(tvFriends.getPaddingLeft(), tvTodos.getPaddingTop(),
-                                    tvFriends.getPaddingRight(), tvTodos.getPaddingBottom());
-                        }
+                    if (friendsInCommon > 0) {
+                        psFriends.setVisibility(View.VISIBLE);
+                        psFriends.setUsersAndRemoteResourcesManager(user.getFriendsInCommon(), mRrm);
+                    } else {
+                        tvFriends.setPadding(tvFriends.getPaddingLeft(), tvTodos.getPaddingTop(),
+                            tvFriends.getPaddingRight(), tvTodos.getPaddingBottom());
                     }
                 }
             } else {

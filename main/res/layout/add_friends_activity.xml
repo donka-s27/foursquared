@@ -10,7 +10,7 @@
   android:paddingRight="8dip"
   android:paddingTop="8dip"
   android:paddingBottom="8dip"
-  android:background="@color/listview_item"
+  android:background="@drawable/listview_item_manual"
   >
   <ScrollView
     android:layout_width="fill_parent"

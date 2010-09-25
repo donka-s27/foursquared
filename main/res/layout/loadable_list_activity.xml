@@ -15,7 +15,7 @@
     android:layout_weight="1"
     android:drawSelectorOnTop="false"
     android:scrollbars="vertical"
-    android:background="@drawable/listview_item_manual" />
+    android:fadingEdgeLength="0dip" />
 
   <include
     android:id="@android:id/empty"
