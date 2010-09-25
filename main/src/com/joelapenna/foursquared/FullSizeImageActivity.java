@@ -29,6 +29,9 @@ import android.widget.ImageView;
  * No attempt is made to check the size of the input image, for now we're trusting
  * the foursquare api is keeping these images < 200kb.
  * 
+ * The INTENT_EXTRA_ALLOW_SET_NEW_PHOTO flag lets the user pick a new photo from
+ * their phone for their user profile.
+ * 
  * @date July 28, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  * 
@@ -38,6 +41,11 @@ public class FullSizeImageActivity extends Activity {
 
     public static final String INTENT_EXTRA_IMAGE_PATH = Foursquared.PACKAGE_NAME
         + ".FullSizeImageActivity.INTENT_EXTRA_IMAGE_PATH";
+    public static final String INTENT_EXTRA_ALLOW_SET_NEW_PHOTO = Foursquared.PACKAGE_NAME
+        + ".FullSizeImageActivity.INTENT_EXTRA_ALLOW_SET_NEW_PHOTO";
+    
+    public static final String INTENT_RETURN_NEW_PHOTO_PATH = Foursquared.PACKAGE_NAME
+        + ".FullSizeImageActivity.INTENT_RETURN_NEW_PHOTO_PATH";
     
     
     @Override

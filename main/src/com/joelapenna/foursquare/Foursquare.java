@@ -177,9 +177,9 @@ public class Foursquare {
     }
 
     @V1
-    public Group<Todo> todos(Location location, boolean recent, boolean nearby, int limit) 
+    public Group<Todo> todos(Location location, String uid, boolean recent, boolean nearby, int limit) 
             throws FoursquareException, FoursquareError, IOException {
-        return mFoursquareV1.todos(location.geolat, location.geolong, location.geohacc,
+        return mFoursquareV1.todos(uid, location.geolat, location.geolong, location.geohacc,
                 location.geovacc, location.geoalt, recent, nearby, limit);
     }
 

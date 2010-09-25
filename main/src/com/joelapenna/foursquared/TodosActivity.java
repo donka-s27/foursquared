@@ -41,7 +41,12 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- * Shows a list of the user's to-dos.
+ * Shows a list of a user's todos. We can operate on the logged-in user,
+ * or a friend user, specified through the intent extras. 
+ * 
+ * If operating on the logged-in user, we remove items from the todo list
+ * if they mark a todo as done or un-mark it. If operating on another user,
+ * we do not remove them from the list.
  * 
  * @date September 12, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
@@ -49,6 +54,10 @@ import java.util.Observer;
 public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     static final String TAG = "TodosActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
+    
+
+    public static final String INTENT_EXTRA_USER_ID = Foursquared.PACKAGE_NAME
+            + ".TodosActivity.INTENT_EXTRA_USER_ID";
     
     private static final int ACTIVITY_TIP = 500;
     
@@ -78,9 +87,10 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivity(this);
         } else {
-            mStateHolder = new StateHolder();
+            // Optional user id, if not present, will be null and default to logged-in user.
+            mStateHolder = new StateHolder(getIntent().getStringExtra(INTENT_EXTRA_USER_ID));
         }
-
+        
         ensureUi();
         
         // Nearby todos is shown first by default so auto-fetch it if necessary.
@@ -241,24 +251,14 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     	// state holder by the linked tip ID for update.
     	if (requestCode == ACTIVITY_TIP && resultCode == Activity.RESULT_OK) {
         	if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
-        		Log.d(TAG, "onActivityResult(), return tip intent extra found, processing.");
         		updateTodo((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED));
-        	} else {
-        		Log.d(TAG, "onActivityResult(), no return tip intent extra found.");
         	}
     	}
     }
     
     private void updateTodo(Tip tip) {
-    	// If the tip status is no longer 'todo', we just remove it.
-    	// If it's still a todo, we can ignore, however it's possible
-    	// that the user un-marked then re-marked as a to-do, which 
-    	// would generate a new to-do ID. We can overwrite the to-do
-    	// ID and creation date if we want.
-    	if (!TipUtils.isTodo(tip)) {
-    		mStateHolder.updateTodo(tip.getId());
-    		mListAdapter.notifyDataSetInvalidated();
-    	}
+		mStateHolder.updateTodo(tip);
+		mListAdapter.notifyDataSetInvalidated();
     }
     
     private void onStartTaskTodos() {
@@ -346,12 +346,14 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
      */
     private static class TaskTodos extends AsyncTask<Void, Void, Group<Todo>> {
 
+        private String mUserId;
         private TodosActivity mActivity;
         private boolean mRecentOnly;
         private Exception mReason;
 
-        public TaskTodos(TodosActivity activity, boolean friendsOnly) {
+        public TaskTodos(TodosActivity activity, String userId, boolean friendsOnly) {
             mActivity = activity;
+            mUserId = userId;
             mRecentOnly = friendsOnly;
         }
         
@@ -377,7 +379,9 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
                 
                 return foursquare.todos(
                         LocationUtils.createFoursquareLocation(loc), 
-                        mRecentOnly, !mRecentOnly,
+                        mUserId,
+                        mRecentOnly, 
+                        !mRecentOnly,
                         30);
             } catch (Exception e) {
                 mReason = e;
@@ -416,9 +420,10 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
         private boolean mRanOnceTodosNearby;
         private TaskTodos mTaskTodosRecent;
         private TaskTodos mTaskTodosNearby;
+        private String mUserId;
         
         
-        public StateHolder() {
+        public StateHolder(String userId) {
             mIsRunningTaskTodosRecent = false;
             mIsRunningTaskTodosNearby = false;
             mRanOnceTodosRecent = false;
@@ -426,6 +431,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
             mTodosRecent = new Group<Todo>();
             mTodosNearby = new Group<Todo>();
             mRecentOnly = false;
+            mUserId = userId;
         }
         
         public Group<Todo> getTodosRecent() {
@@ -452,14 +458,14 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
                     return;
                 }
                 mIsRunningTaskTodosRecent = true;
-                mTaskTodosRecent = new TaskTodos(activity, recentOnly);
+                mTaskTodosRecent = new TaskTodos(activity, mUserId, recentOnly);
                 mTaskTodosRecent.execute();
             } else {
                 if (mIsRunningTaskTodosNearby) {
                     return;
                 }
                 mIsRunningTaskTodosNearby = true;
-                mTaskTodosNearby = new TaskTodos(activity, recentOnly);
+                mTaskTodosNearby = new TaskTodos(activity, mUserId, recentOnly);
                 mTaskTodosNearby.execute();
             }
         }
@@ -524,16 +530,26 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
             mRanOnceTodosNearby = ranOnce;
         }
         
-        public void updateTodo(String tipId) {
-            updateTodoFromArray(tipId, mTodosRecent);
-            updateTodoFromArray(tipId, mTodosNearby);
+        public void updateTodo(Tip tip) {
+            updateTodoFromArray(tip, mTodosRecent);
+            updateTodoFromArray(tip, mTodosNearby);
         }
         
-        private void updateTodoFromArray(String tipId, Group<Todo> target) {
+        private void updateTodoFromArray(Tip tip, Group<Todo> target) {
             for (int i = 0, m = target.size(); i < m; i++) {
                 Todo todo = target.get(i);
-                if (todo.getTip().getId().equals(tipId)) {
-                    target.remove(todo);
+                if (todo.getTip().getId().equals(tip.getId())) {
+                    if (mUserId == null) {
+                        // Activity is operating on logged-in user, only removing todos
+                        // from the list, don't have to worry about updating states.
+                        if (!TipUtils.isTodo(tip)) {
+                            target.remove(todo);
+                        }
+                    } else {
+                        // Activity is operating on another user, so just update the status
+                        // of the tip within the todo.
+                        todo.getTip().setStatus(tip.getStatus());
+                    }
                     break;
                 }
             }

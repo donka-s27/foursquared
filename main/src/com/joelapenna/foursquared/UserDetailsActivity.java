@@ -357,7 +357,7 @@ public class UserDetailsActivity extends Activity {
                         viewTodos.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Toast.makeText(UserDetailsActivity.this, "Not yet implemented!", Toast.LENGTH_SHORT).show();
+                                startTodosActivity();
                             }
                         });
                         viewTodos.setFocusable(true);
@@ -529,6 +529,12 @@ public class UserDetailsActivity extends Activity {
     private void startFriendsActivity() {
         Intent intent = new Intent(UserDetailsActivity.this, UserFriendsActivity.class);
         intent.putExtra(UserFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
+        startActivity(intent); 
+    }
+    
+    private void startTodosActivity() {
+        Intent intent = new Intent(UserDetailsActivity.this, TodosActivity.class);
+        intent.putExtra(TodosActivity.INTENT_EXTRA_USER_ID, mStateHolder.getUser().getId());
         startActivity(intent); 
     }
     
