@@ -336,13 +336,15 @@ class FoursquareHttpApiV1 {
      */
     @SuppressWarnings("unchecked")
     Group<Tip> tips(String geolat, String geolong, String geohacc, String geovacc,
-            String geoalt, String filter, int limit) throws FoursquareException, FoursquareError, IOException {
+            String geoalt, String uid, String filter, int limit) throws FoursquareException, 
+            FoursquareError, IOException {
         HttpGet httpGet = mHttpApi.createHttpGet(fullUrl(URL_API_TIPS), //
                 new BasicNameValuePair("geolat", geolat), //
                 new BasicNameValuePair("geolong", geolong), //
                 new BasicNameValuePair("geohacc", geohacc), //
                 new BasicNameValuePair("geovacc", geovacc), //
                 new BasicNameValuePair("geoalt", geoalt), //
+                new BasicNameValuePair("uid", uid), //
                 new BasicNameValuePair("filter", filter), //
                 new BasicNameValuePair("l", String.valueOf(limit)) //
                 );

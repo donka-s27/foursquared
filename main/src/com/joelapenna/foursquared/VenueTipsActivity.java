@@ -100,7 +100,7 @@ public class VenueTipsActivity extends LoadableListActivity {
     	Group<Tip> tips = mStateHolder.getVenue().getTips();
 
     	TipsListAdapter groupAdapter = new TipsListAdapter(this,
-                ((Foursquared) getApplication()).getRemoteResourceManager());
+                ((Foursquared) getApplication()).getRemoteResourceManager(), R.layout.tip_list_item);
     	groupAdapter.setDisplayTipVenueTitles(false);
         groupAdapter.setGroup(tips);
         

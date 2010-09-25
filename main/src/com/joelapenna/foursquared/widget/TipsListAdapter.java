@@ -5,8 +5,11 @@
 package com.joelapenna.foursquared.widget;
 
 import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.types.Category;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.User;
+import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
@@ -53,10 +56,10 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
     private Map<String, String> mCachedTimestamps;
 
     
-    public TipsListAdapter(Context context, RemoteResourceManager rrm) {
+    public TipsListAdapter(Context context, RemoteResourceManager rrm, int layout) {
         super(context);
         mInflater = LayoutInflater.from(context);
-        mLayoutToInflate = R.layout.tip_list_item;
+        mLayoutToInflate = layout;
         mResources = context.getResources();
         mRrm = rrm;
         mResourcesObserver = new RemoteResourceManagerObserver();
@@ -93,7 +96,7 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
             // Creates a ViewHolder and store references to the two children
             // views we want to bind data to.
             holder = new ViewHolder();
-            holder.photo = (ImageView) convertView.findViewById(R.id.ivAuthor);
+            holder.photo = (ImageView) convertView.findViewById(R.id.icon);
             holder.title = (TextView) convertView.findViewById(R.id.tvTitle);
             holder.body = (TextView) convertView.findViewById(R.id.tvBody);
             holder.dateAndAuthor = (TextView) convertView.findViewById(R.id.tvDateAndAuthor);
@@ -111,15 +114,37 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
         }
 
         Tip tip = (Tip) getItem(position);
-        Uri photoUri = Uri.parse(tip.getUser().getPhoto());
-        try {
-            Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
-            holder.photo.setImageBitmap(bitmap);
-        } catch (IOException e) {
-            if (Foursquare.MALE.equals(tip.getUser().getGender())) {
-                holder.photo.setImageResource(R.drawable.blank_boy);
+        User user = tip.getUser();
+        if (user != null) {
+            Uri photoUri = Uri.parse(user.getPhoto());
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
+                holder.photo.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                if (Foursquare.MALE.equals(user.getGender())) {
+                    holder.photo.setImageResource(R.drawable.blank_boy);
+                } else {
+                    holder.photo.setImageResource(R.drawable.blank_girl);
+                }
+            }
+        } else {
+            Venue venue = tip.getVenue();
+            Category category = venue.getCategory();
+            if (category != null) {
+                holder.photo.setBackgroundDrawable(null);
+                
+                Uri photoUri = Uri.parse(category.getIconUrl());
+                try {
+                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
+                    holder.photo.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                    holder.photo.setImageResource(R.drawable.category_none);
+                }
             } else {
-                holder.photo.setImageResource(R.drawable.blank_girl);
+                // If there is no category for this venue, fall back to the original
+                // method of the
+                // blue/grey pin depending on if the user has been there or not.
+                holder.photo.setImageResource(R.drawable.category_none);
             }
         }
 
@@ -136,12 +161,12 @@ public class TipsListAdapter extends BaseGroupAdapter<Tip>
         
         holder.body.setText(tip.getText());
         holder.dateAndAuthor.setText(mCachedTimestamps.get(tip.getId()));
-        if (tip.getUser() != null) {
+        if (user != null) {
             holder.dateAndAuthor.setText(
                     holder.dateAndAuthor.getText() +
                     mResources.getString(
                             R.string.tip_age_via, 
-                            StringFormatters.getUserFullName(tip.getUser())));
+                            StringFormatters.getUserFullName(user)));
         }
         /*
         if (tip.getStats().getTodoCount() > 0) {
