@@ -5,6 +5,7 @@
 package com.joelapenna.foursquared;
 
 import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.MenuUtils;
@@ -42,6 +43,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -149,22 +151,23 @@ public class UserDetailsActivity extends Activity {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-    
-    @Override
     public void onPause() {
         super.onPause();
         
         if (isFinishing()) {
             mStateHolder.cancelTasks();
             mHandler.removeCallbacks(mRunnableUpdateUserPhoto);
-            unregisterReceiver(mLoggedOutReceiver);
 
             RemoteResourceManager rrm = ((Foursquared) getApplication()).getRemoteResourceManager();
             rrm.deleteObserver(mResourcesObserver);
         }
+    }
+    
+    @Override 
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        unregisterReceiver(mLoggedOutReceiver);
     }
 
     private void ensureUi() {
@@ -172,6 +175,7 @@ public class UserDetailsActivity extends Activity {
         View viewProgressBar = findViewById(R.id.venueActivityDetailsProgress);
         TextView tvUsername = (TextView)findViewById(R.id.userDetailsActivityUsername);
         TextView tvLastSeen = (TextView)findViewById(R.id.userDetailsActivityHometownOrLastSeen);
+        Button btnFriend = (Button)findViewById(R.id.userDetailsActivityFriendButton);
         View viewMayorships = findViewById(R.id.userDetailsActivityGeneralMayorships);
         View viewBadges = findViewById(R.id.userDetailsActivityGeneralBadges);
         View viewTips = findViewById(R.id.userDetailsActivityGeneralTips);
@@ -208,6 +212,7 @@ public class UserDetailsActivity extends Activity {
         ivMayorshipsChevron.setVisibility(View.INVISIBLE);
         ivBadgesChevron.setVisibility(View.INVISIBLE);
         ivTipsChevron.setVisibility(View.INVISIBLE);
+        btnFriend.setVisibility(View.INVISIBLE);
 
         viewCheckins.setFocusable(false);
         viewFriendsFollowers.setFocusable(false);
@@ -241,6 +246,31 @@ public class UserDetailsActivity extends Activity {
             }
             
             tvLastSeen.setText(user.getHometown());
+            
+            if (mStateHolder.getIsLoggedInUser() || 
+               UserUtils.isFriend(user) || 
+               UserUtils.isFriendStatusPendingThem(user)) {
+                btnFriend.setVisibility(View.INVISIBLE);
+            } else if (UserUtils.isFriendStatusPendingYou(user)) {
+                btnFriend.setVisibility(View.VISIBLE);
+                btnFriend.setText(getString(R.string.user_details_activity_friend_confirm));
+                btnFriend.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mStateHolder.startTaskFriend(UserDetailsActivity.this, StateHolder.TASK_FRIEND_ACCEPT);
+                    }                   
+                });
+            } else {
+                btnFriend.setVisibility(View.VISIBLE);
+                btnFriend.setText(getString(R.string.user_details_activity_friend_add));
+                btnFriend.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        view.setEnabled(false);
+                        mStateHolder.startTaskFriend(UserDetailsActivity.this, StateHolder.TASK_FRIEND_ADD);
+                    }                   
+                });
+            }
         
             if (mStateHolder.getLoadType() >= LOAD_TYPE_USER_FULL) {
                 viewProgressBar.setVisibility(View.GONE);
@@ -255,9 +285,6 @@ public class UserDetailsActivity extends Activity {
                     SpannableString ss = new SpannableString(full);
                     ss.setSpan(bold, fixed.length(), full.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                     tvLastSeen.setText(ss);
-                    //tvLastSeen.setText(getResources().getString(
-                    //    R.string.user_details_activity_last_seen, 
-                    //    user.getCheckin().getVenue().getName()));
                     
                     tvLastSeen.setOnClickListener(new OnClickListener() {
                         @Override
@@ -267,39 +294,37 @@ public class UserDetailsActivity extends Activity {
                     });
                 }
                 
-                if (mStateHolder.getIsLoggedInUser() || UserUtils.isFriend(user)) {
-                    if (user.getMayorships() != null && user.getMayorships().size() > 0) {
-                        viewMayorships.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                startMayorshipsActivity();
-                            }
-                        });
-                        viewMayorships.setFocusable(true);
-                        ivMayorshipsChevron.setVisibility(View.VISIBLE);
-                    }
-                    
-                    if (user.getBadges() != null && user.getBadges().size() > 0) {
-                        viewBadges.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                startBadgesActivity();
-                            }
-                        });
-                        viewBadges.setFocusable(true);
-                        ivBadgesChevron.setVisibility(View.VISIBLE);
-                    }
-                    
-                    if (user.getTipCount() > 0) {
-                        viewTips.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                startTipsActivity();
-                            }
-                        });
-                        viewTips.setFocusable(true);
-                        ivTipsChevron.setVisibility(View.VISIBLE);
-                    }
+                if (user.getMayorships() != null && user.getMayorships().size() > 0) {
+                    viewMayorships.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startMayorshipsActivity();
+                        }
+                    });
+                    viewMayorships.setFocusable(true);
+                    ivMayorshipsChevron.setVisibility(View.VISIBLE);
+                }
+                
+                if (user.getBadges() != null && user.getBadges().size() > 0) {
+                    viewBadges.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startBadgesActivity();
+                        }
+                    });
+                    viewBadges.setFocusable(true);
+                    ivBadgesChevron.setVisibility(View.VISIBLE);
+                }
+                
+                if (user.getTipCount() > 0) {
+                    viewTips.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startTipsActivity();
+                        }
+                    });
+                    viewTips.setFocusable(true);
+                    ivTipsChevron.setVisibility(View.VISIBLE);
                 }
                 
                 // The rest of the items depend on if we're viewing ourselves or not.
@@ -444,11 +469,18 @@ public class UserDetailsActivity extends Activity {
             }
         }
         
-        // Regardless of load state, if running the task, show titlebar progress bar.
-        if (mStateHolder.getIsRunningUserDetailsTask()) {
+        // Regardless of load state, if running a task, show titlebar progress bar.
+        if (mStateHolder.getIsTaskRunning()) {
             setProgressBarIndeterminateVisibility(true);
         } else {
             setProgressBarIndeterminateVisibility(false);
+        }
+        
+        // Disable friend button if running friend task.
+        if (mStateHolder.getIsRunningFriendTask()) {
+            btnFriend.setEnabled(false);
+        } else {
+            btnFriend.setEnabled(true);
         }
     }
     
@@ -771,9 +803,91 @@ public class UserDetailsActivity extends Activity {
         }
     }
     
+    private void onFriendTaskComplete(User user, int action, Exception ex) {
+        mStateHolder.setIsRunningFriendTask(false);
+        
+        // The api isn't returning an updated friend status flag here, so we'll
+        // overwrite it manually for now, assuming success if the user object
+        // was not null.
+        User userCurrent = mStateHolder.getUser();
+        if (user != null) {
+            switch (action) {
+                case StateHolder.TASK_FRIEND_ACCEPT:
+                    userCurrent.setFirstname(user.getFirstname());
+                    userCurrent.setLastname(user.getLastname());
+                    userCurrent.setFriendstatus("friend");
+                    break;
+                case StateHolder.TASK_FRIEND_ADD:
+                    userCurrent.setFriendstatus("pendingthem");
+                    break;
+            }
+        } else {
+            NotificationsUtil.ToastReasonForFailure(this, ex);
+        }
+        
+        ensureUi();
+    }
+    
+    private static class FriendTask extends AsyncTask<Void, Void, User> {
+
+        private UserDetailsActivity mActivity;
+        private String mUserId;
+        private int mAction;
+        private Exception mReason;
+
+        public FriendTask(UserDetailsActivity activity, String userId, int action) {
+            mActivity = activity;
+            mUserId = userId;
+            mAction = action;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mActivity.ensureUi();
+        }
+
+        @Override
+        protected User doInBackground(Void... params) {
+            Foursquare foursquare = ((Foursquared) mActivity.getApplication()).getFoursquare();
+            try {
+                switch (mAction) {
+                    case StateHolder.TASK_FRIEND_ACCEPT:
+                        return foursquare.friendApprove(mUserId);
+                    case StateHolder.TASK_FRIEND_ADD:
+                        return foursquare.friendSendrequest(mUserId);
+                    default:
+                        throw new FoursquareException("Unknown action type supplied.");
+                }
+            } catch (Exception e) {
+                mReason = e;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(User user) {
+            if (mActivity != null) {
+                mActivity.onFriendTaskComplete(user, mAction, mReason);
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            if (mActivity != null) {
+                mActivity.onFriendTaskComplete(null, mAction, mReason);
+            }
+        }
+
+        public void setActivity(UserDetailsActivity activity) {
+            mActivity = activity;
+        }
+    }
     
 
     private static class StateHolder {
+        public static final int TASK_FRIEND_ACCEPT = 0;
+        public static final int TASK_FRIEND_ADD    = 1;
+        
         private User mUser;
         private boolean mIsLoggedInUser;
         private UserDetailsTask mTaskUserDetails;
@@ -781,9 +895,13 @@ public class UserDetailsActivity extends Activity {
         private boolean mRanOnce;
         private int mLoadType;
         
+        private FriendTask mTaskFriend;
+        private boolean mIsRunningFriendTask;
+        
         
         public StateHolder() {
             mIsRunningUserDetailsTask = false;
+            mIsRunningFriendTask = false;
             mIsLoggedInUser = false;
             mRanOnce = false;
             mLoadType = LOAD_TYPE_USER_NONE;
@@ -821,9 +939,20 @@ public class UserDetailsActivity extends Activity {
             }
         }
         
+        public void startTaskFriend(UserDetailsActivity activity, int action) {
+            if (!mIsRunningFriendTask) {
+                mIsRunningFriendTask = true;
+                mTaskFriend = new FriendTask(activity, mUser.getId(), action);
+                mTaskFriend.execute();
+            }
+        }
+        
         public void setActivityForTasks(UserDetailsActivity activity) {
             if (mTaskUserDetails != null) {
                 mTaskUserDetails.setActivity(activity);
+            }
+            if (mTaskFriend != null) {
+                mTaskFriend.setActivity(activity);
             }
         }
         
@@ -843,11 +972,27 @@ public class UserDetailsActivity extends Activity {
             mRanOnce = ranOnce;
         }
         
+        public boolean getIsRunningFriendTask() {
+            return mIsRunningFriendTask;
+        }
+        
+        public void setIsRunningFriendTask(boolean isRunning) {
+            mIsRunningFriendTask = isRunning;
+        }
+        
         public void cancelTasks() {
             if (mTaskUserDetails != null) {
                 mTaskUserDetails.setActivity(null);
                 mTaskUserDetails.cancel(true);
             }
+            if (mTaskFriend != null) {
+                mTaskFriend.setActivity(null);
+                mTaskFriend.cancel(true);
+            }
+        }
+        
+        public boolean getIsTaskRunning() {
+            return mIsRunningUserDetailsTask || mIsRunningFriendTask;
         }
     }
     

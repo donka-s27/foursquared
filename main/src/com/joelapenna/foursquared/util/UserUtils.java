@@ -109,6 +109,16 @@ public class UserUtils {
         }
     }
     
+    public static boolean isFriendStatusPendingYou(User user) {
+        return user != null && user.getFriendstatus() != null &&
+            user.getFriendstatus().equals("pendingyou");
+    }
+    
+    public static boolean isFriendStatusPendingThem(User user) {
+        return user != null && user.getFriendstatus() != null &&
+        user.getFriendstatus().equals("pendingthem");
+    }
+    
     public static int getDrawableForMeTabByGender(String gender) {
         if (gender != null && gender.equals("female")) {
             return R.drawable.tab_main_nav_me_girl_selector;
