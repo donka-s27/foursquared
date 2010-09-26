@@ -56,6 +56,13 @@
         android:singleLine="true"
         android:maxLines="1"
         android:textAppearance="@style/TextViewStyleUserDetailsActivityLastSeen" />
+        
+      <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add as Friend"
+        android:layout_marginLeft="0dip"
+        />
           
     </LinearLayout>
         
