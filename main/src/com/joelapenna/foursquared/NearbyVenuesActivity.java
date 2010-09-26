@@ -4,12 +4,20 @@
 
 package com.joelapenna.foursquared;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Set;
+import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.error.FoursquareException;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.app.LoadableListActivity;
+import com.joelapenna.foursquared.location.BestLocationListener;
+import com.joelapenna.foursquared.location.LocationUtils;
+import com.joelapenna.foursquared.preferences.Preferences;
+import com.joelapenna.foursquared.util.MenuUtils;
+import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.util.VenueUtils;
+import com.joelapenna.foursquared.widget.SeparatedListAdapter;
+import com.joelapenna.foursquared.widget.VenueListAdapter;
 
 import android.app.Activity;
 import android.app.SearchManager;
@@ -38,20 +46,12 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.error.FoursquareException;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.app.LoadableListActivity;
-import com.joelapenna.foursquared.location.BestLocationListener;
-import com.joelapenna.foursquared.location.LocationUtils;
-import com.joelapenna.foursquared.preferences.Preferences;
-import com.joelapenna.foursquared.util.MenuUtils;
-import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.util.UserUtils;
-import com.joelapenna.foursquared.util.VenueUtils;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
-import com.joelapenna.foursquared.widget.VenueListAdapter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)

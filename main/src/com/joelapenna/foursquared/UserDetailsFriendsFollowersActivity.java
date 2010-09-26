@@ -10,7 +10,8 @@ import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquared.app.LoadableListActivityWithViewAndHeader;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.widget.FriendListAdapter;
+import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.widget.FriendActionableListAdapter;
 import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
 
@@ -32,6 +33,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Shows the logged-in user's followers and friends. If the user has no followers, then 
  * they should just be shown UserDetailsFriendsActivity directly.
@@ -47,7 +51,7 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         + ".UserDetailsFriendsFollowersActivity.INTENT_EXTRA_USER_ID";
 
     private StateHolder mStateHolder;
-    private FriendListAdapter mListAdapter;
+    private FriendActionableListAdapter mListAdapter;
     private ScrollView mLayoutEmpty;
     
     private static final int MENU_REFRESH = 0;
@@ -113,7 +117,9 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
         
-        mListAdapter = new FriendListAdapter(this, ((Foursquared) getApplication()).getRemoteResourceManager());
+        mListAdapter = new FriendActionableListAdapter(
+            this, mButtonRowClickHandler, ((Foursquared) getApplication()).getRemoteResourceManager());
+        
         if (mStateHolder.getFollowersOnly()) {
             mListAdapter.setGroup(mStateHolder.getFollowers());
             if (mStateHolder.getFollowers().size() == 0) {
@@ -180,6 +186,7 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
         listView.setSmoothScrollbarEnabled(false);
+        listView.setItemsCanFocus(false);
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -197,6 +204,24 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
             setProgressBarIndeterminateVisibility(false);
         }
     }
+    
+    private FriendActionableListAdapter.ButtonRowClickHandler mButtonRowClickHandler = 
+        new FriendActionableListAdapter.ButtonRowClickHandler() {
+
+        @Override
+        public void onBtnClickBtn1(User user) {
+            if (mStateHolder.getFollowersOnly()) {
+                updateFollowerStatus(user, true);
+            }
+        }
+        
+        @Override
+        public void onBtnClickBtn2(User user) {
+            if (mStateHolder.getFollowersOnly()) {
+                updateFollowerStatus(user, false);
+            }
+        }
+    };
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -219,6 +244,16 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         return super.onOptionsItemSelected(item);
     }
     
+    private void updateFollowerStatus(User user, boolean approve) {
+        mStateHolder.startTaskUpdateFollower(this, user, approve);
+        if (mStateHolder.getFollowersOnly()) {
+            mListAdapter.notifyDataSetChanged();
+            if (mStateHolder.getFollowers().size() == 0) {
+                setEmptyView(mLayoutEmpty);
+            }
+        }
+    }
+    
     private void onStartTaskUsers() {
         if (mListAdapter != null) {
             if (mStateHolder.getFollowersOnly()) {
@@ -233,6 +268,10 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
 
         setProgressBarIndeterminateVisibility(true);
         setLoadingView();
+    }
+    
+    private void onStartUpdateFollower() {
+        setProgressBarIndeterminateVisibility(true);
     }
     
     private void onTaskUsersComplete(Group<User> group, boolean friendsOnly, Exception ex) {
@@ -293,8 +332,25 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
             getListView().setSelection(0);
         }
         
-        if (!mStateHolder.getIsRunningTaskFollowers() &&
-            !mStateHolder.getIsRunningTaskFriends()) {
+        if (!mStateHolder.areAnyTasksRunning()) {
+            setProgressBarIndeterminateVisibility(false);
+        }
+    }
+    
+    private void onTaskUpdateFollowerComplete(TaskUpdateFollower task, User user, 
+            boolean approve, Exception ex) {
+        
+        if (user != null) {
+            if (UserUtils.isFriend(user)) {
+                if (mStateHolder.addFriend(user)) {
+                    mListAdapter.notifyDataSetChanged();
+                }
+            }
+        }
+        
+        mStateHolder.removeTaskUpdateFollower(task);
+        
+        if (!mStateHolder.areAnyTasksRunning()) {
             setProgressBarIndeterminateVisibility(false);
         }
     }
@@ -353,6 +409,70 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         }
     }
     
+    private static class TaskUpdateFollower extends AsyncTask<Void, Void, User> {
+
+        private UserDetailsFriendsFollowersActivity mActivity;
+        private String mUserId;
+        private boolean mApprove;
+        private Exception mReason;
+        private boolean mDone;
+
+        public TaskUpdateFollower(UserDetailsFriendsFollowersActivity activity, 
+                                  String userId,
+                                  boolean approve) {
+            mActivity = activity;
+            mUserId = userId;
+            mApprove = approve;
+            mDone = false;
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            mActivity.onStartUpdateFollower();
+        }
+
+        @Override
+        protected User doInBackground(Void... params) {
+            try {
+                Foursquared foursquared = (Foursquared) mActivity.getApplication();
+                Foursquare foursquare = foursquared.getFoursquare();
+
+                if (mApprove) {
+                    return foursquare.friendApprove(mUserId);
+                } else {
+                    return foursquare.friendDeny(mUserId);
+                }
+
+            } catch (Exception e) {
+                mReason = e;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(User user) {
+            if (mActivity != null) {
+                mActivity.onTaskUpdateFollowerComplete(this, user, mApprove, mReason);
+            }
+            mDone = true;
+        }
+
+        @Override
+        protected void onCancelled() {
+            if (mActivity != null) {
+                mActivity.onTaskUpdateFollowerComplete(this, null, mApprove, mReason);
+            }
+            mDone = true;
+        }
+        
+        public void setActivity(UserDetailsFriendsFollowersActivity activity) {
+            mActivity = activity;
+        }
+
+        public boolean getIsDone() {
+            return mDone;
+        }
+    }
     
     private static class StateHolder {
         private Group<User> mFollowers;
@@ -363,9 +483,10 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         private boolean mIsRunningTaskFollowers;
         private boolean mIsRunningTaskFriends;
         private boolean mFollowersOnly;
-
         private boolean mRanOnceFollowers;
         private boolean mRanOnceFriends;
+        
+        private List<TaskUpdateFollower> mTasksUpdateFollowers;
         
         
         public StateHolder() {
@@ -376,6 +497,7 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
             mFollowers = new Group<User>();
             mFriends = new Group<User>();
             mFollowersOnly = true;
+            mTasksUpdateFollowers = new ArrayList<TaskUpdateFollower>();
         }
         
         public Group<User> getFollowers() {
@@ -412,6 +534,21 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
                 mTaskFriends.execute();
             }
         }
+        
+        public void startTaskUpdateFollower(UserDetailsFriendsFollowersActivity activity,
+                                            User user,
+                                            boolean approve) {
+            for (User it : mFollowers) {
+                if (it.getId().equals(user.getId())) {
+                    mFollowers.remove(it);
+                    break;
+                }
+            }
+            
+            TaskUpdateFollower task = new TaskUpdateFollower(activity, user.getId(), approve);
+            task.execute();
+            mTasksUpdateFollowers.add(task);
+        }
 
         public void setActivity(UserDetailsFriendsFollowersActivity activity) {
             if (mTaskFollowers != null) {
@@ -419,6 +556,9 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
             }
             if (mTaskFriends != null) {
                 mTaskFriends.setActivity(activity);
+            }
+            for (TaskUpdateFollower it : mTasksUpdateFollowers) {
+                it.setActivity(activity);
             }
         }
 
@@ -447,6 +587,10 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
                 mTaskFriends.setActivity(null);
                 mTaskFriends.cancel(true);
             }
+            for (TaskUpdateFollower it : mTasksUpdateFollowers) {
+                it.setActivity(null);
+                it.cancel(true);
+            }
         }
         
         public boolean getFollowersOnly() {
@@ -471,6 +615,37 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         
         public void setRanOnceFriends(boolean ranOnce) {
             mRanOnceFriends = ranOnce;
+        }
+        
+        public boolean areAnyTasksRunning() {
+            return mIsRunningTaskFollowers || mIsRunningTaskFriends
+                || mTasksUpdateFollowers.size() > 0;
+        }
+        
+        public boolean addFriend(User user) {
+            for (User it : mFriends) {
+                if (it.getId().equals(user.getId())) {
+                    return false;
+                }
+            }
+            
+            mFriends.add(user);
+            return true;
+        }
+        
+        public void removeTaskUpdateFollower(TaskUpdateFollower task) {
+            Log.i(TAG, "Cleaning up followers tasks... " + mTasksUpdateFollowers.size());
+            mTasksUpdateFollowers.remove(task);
+            Log.i(TAG, "   Cleanup s1 complete... " + mTasksUpdateFollowers.size());
+            
+            // Try to cleanup anyone we missed, this could happen for a brief period
+            // during rotation.
+            for (int i = mTasksUpdateFollowers.size()-1; i > -1; i--) {
+                if (mTasksUpdateFollowers.get(i).getIsDone()) {
+                    mTasksUpdateFollowers.remove(i);
+                }
+            }
+            Log.i(TAG, "   Cleanup s2 complete... " + mTasksUpdateFollowers.size());
         }
     }
 }
