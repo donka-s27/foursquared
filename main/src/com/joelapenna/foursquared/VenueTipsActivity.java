@@ -4,6 +4,16 @@
 
 package com.joelapenna.foursquared;
 
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.Tip;
+import com.joelapenna.foursquare.types.Todo;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.app.LoadableListActivity;
+import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.util.VenueUtils;
+import com.joelapenna.foursquared.widget.SeparatedListAdapter;
+import com.joelapenna.foursquared.widget.TipsListAdapter;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,16 +26,12 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Tip;
-import com.joelapenna.foursquare.types.Todo;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.app.LoadableListActivity;
-import com.joelapenna.foursquared.util.VenueUtils;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
-import com.joelapenna.foursquared.widget.TipsListAdapter;
+import java.util.List;
 
 /**
+ * Shows tips left at a venue as a sectioned list adapter. Groups are split
+ * into tips left by friends and tips left by everyone else.
+ * 
  * @author Joe LaPenna (joe@joelapenna.com)
  * @author Mark Wyszomierski (markww@gmail.com)
  *   -modified to start TipActivity on tip click (2010-03-25)
@@ -61,6 +67,7 @@ public class VenueTipsActivity extends LoadableListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
+        setTitle(getString(R.string.venue_tips_activity_title));
 
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
@@ -86,8 +93,14 @@ public class VenueTipsActivity extends LoadableListActivity {
         
         if (isFinishing()) {
             mListAdapter.removeObserver();
-            unregisterReceiver(mLoggedOutReceiver);
         }
+    }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        unregisterReceiver(mLoggedOutReceiver);
     }
     
     @Override
@@ -97,17 +110,26 @@ public class VenueTipsActivity extends LoadableListActivity {
 
     private void ensureUi() {
     	
-    	Group<Tip> tips = mStateHolder.getVenue().getTips();
-
-    	TipsListAdapter groupAdapter = new TipsListAdapter(this,
-                ((Foursquared) getApplication()).getRemoteResourceManager(), R.layout.tip_list_item);
-    	groupAdapter.setDisplayTipVenueTitles(false);
-        groupAdapter.setGroup(tips);
-        
-        String title = getResources().getString(R.string.venue_tips_activity_title, tips.size());
-        
     	mListAdapter = new SeparatedListAdapter(this);
-        mListAdapter.addSection(title, groupAdapter);
+    	
+    	if (mStateHolder.getTipsFriends().size() > 0) {
+    	    TipsListAdapter adapter = new TipsListAdapter(this,
+                    ((Foursquared) getApplication()).getRemoteResourceManager(), R.layout.tip_list_item);
+    	    adapter.setDisplayTipVenueTitles(false);
+    	    adapter.setGroup(mStateHolder.getTipsFriends());
+            mListAdapter.addSection(getString(R.string.venue_tips_activity_section_friends, 
+                    mStateHolder.getTipsFriends().size()), 
+                    adapter);
+    	}
+
+    	TipsListAdapter adapter = new TipsListAdapter(this,
+                ((Foursquared) getApplication()).getRemoteResourceManager(), R.layout.tip_list_item);
+    	adapter.setDisplayTipVenueTitles(false);
+    	adapter.setGroup(mStateHolder.getTipsAll());
+        mListAdapter.addSection(getString(R.string.venue_tips_activity_section_all, 
+                mStateHolder.getTipsAll().size()), 
+                adapter);
+        
         
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
@@ -149,10 +171,7 @@ public class VenueTipsActivity extends LoadableListActivity {
     }
     
     private void updateTip(Tip tip, Todo todo) {
-    	// Changes to a tip status can produce or remove a to-do from
-    	// the venue, update it now.
-    	VenueUtils.handleTipChange(mStateHolder.getVenue(), tip, todo);
-    	
+    	mStateHolder.updateTip(tip, todo);
     	mListAdapter.notifyDataSetInvalidated();
     	prepareResultIntent();
     }
@@ -174,10 +193,14 @@ public class VenueTipsActivity extends LoadableListActivity {
     private static class StateHolder {
         
         private Venue mVenue;
+        private Group<Tip> mTipsFriends;
+        private Group<Tip> mTipsAll;
         private Intent mPreparedResult;
         
         public StateHolder() {
         	mPreparedResult = null;
+        	mTipsFriends = new Group<Tip>();
+        	mTipsAll = new Group<Tip>();
         }
  
         public Venue getVenue() {
@@ -186,6 +209,23 @@ public class VenueTipsActivity extends LoadableListActivity {
         
         public void setVenue(Venue venue) {
         	mVenue = venue;
+        	mTipsFriends.clear();
+        	mTipsAll.clear();
+        	for (Tip tip : venue.getTips()) {
+                if (UserUtils.isFriend(tip.getUser())) {
+                    mTipsFriends.add(tip);
+                } else {
+                    mTipsAll.add(tip);
+                }
+            }
+        }
+        
+        public Group<Tip> getTipsFriends() {
+            return mTipsFriends;
+        }
+        
+        public Group<Tip> getTipsAll() {
+            return mTipsAll;
         }
         
         public Intent getPreparedResult() {
@@ -194,6 +234,26 @@ public class VenueTipsActivity extends LoadableListActivity {
         
         public void setPreparedResult(Intent intent) {
         	mPreparedResult = intent;
+        }
+        
+        public void updateTip(Tip tip, Todo todo) {
+            // Changes to a tip status can produce or remove a to-do for its 
+            // parent venue.
+            VenueUtils.handleTipChange(mVenue, tip, todo);
+            
+            // Also update the tip from wherever it appears in the separated
+            // list adapter sections.
+            updateTip(tip, mTipsFriends);
+            updateTip(tip, mTipsAll);
+        }
+        
+        private void updateTip(Tip tip, List<Tip> target) {
+            for (Tip it : target) {
+                if (it.getId().equals(tip.getId())) {
+                    it.setStatus(tip.getStatus());
+                    break;
+                }
+            }
         }
     }
 }

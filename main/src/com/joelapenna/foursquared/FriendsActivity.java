@@ -135,9 +135,9 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(MENU_GROUP_SEARCH, MENU_REFRESH, Menu.NONE, R.string.refresh_label) //
+        menu.add(MENU_GROUP_SEARCH, MENU_REFRESH, Menu.NONE, R.string.refresh)
                 .setIcon(R.drawable.ic_menu_refresh);
-        menu.add(Menu.NONE, MENU_SHOUT, Menu.NONE, R.string.shout_action_label) //
+        menu.add(Menu.NONE, MENU_SHOUT, Menu.NONE, R.string.shout_action_label)
                 .setIcon(R.drawable.ic_menu_shout);
 
         SubMenu menuMore = menu.addSubMenu(Menu.NONE, MENU_MORE, Menu.NONE, "More");

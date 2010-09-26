@@ -4,11 +4,13 @@
 
 package com.joelapenna.foursquared;
 
+import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Mayor;
 import com.joelapenna.foursquare.types.Stats;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Todo;
+import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
@@ -187,6 +189,7 @@ public class VenueActivity extends Activity {
 
         View viewTips = findViewById(R.id.venueActivityTips);
     	TextView tvTipsText = (TextView)findViewById(R.id.venueActivityTipsText);
+    	TextView tvTipsTextExtra = (TextView)findViewById(R.id.venueActivityTipsExtra);
     	ImageView ivTipsChevron = (ImageView)findViewById(R.id.venueActivityTipsChevron);
 
         View viewMoreInfo = findViewById(R.id.venueActivityMoreInfo);
@@ -231,14 +234,40 @@ public class VenueActivity extends Activity {
                 setClickHandlerMayor(viewMayor);
 		    	
 		    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
-		    		if (venue.getCheckins().size() == 1) {
-		    		    tvPeopleText.setText(getResources().getString(
-		    		    		R.string.venue_activity_people_count_single, venue.getCheckins().size()));
-		    		} else {
-		    		    tvPeopleText.setText(getResources().getString(
-		    		    		R.string.venue_activity_people_count_plural, venue.getCheckins().size()));
-		    		}
-		    		
+		    	    int friendCount = getFriendCountAtVenue();
+		    	    int rest = venue.getCheckins().size() - friendCount;
+		    	    
+		    	    if (friendCount > 0 && rest == 0) {
+		    	        // N friends are here
+		    	        tvPeopleText.setText(getResources().getString(
+		    	            friendCount == 1 ?
+                                R.string.venue_activity_people_count_friend_single : 
+                                R.string.venue_activity_people_count_friend_plural,
+                                friendCount));
+		    	    } else if (friendCount > 0 && rest > 0) {
+		    	        // N friends are here with N other people
+		    	        if (friendCount == 1 && rest == 1) {
+		    	            tvPeopleText.setText(getString(R.string.venue_activity_people_count_friend_single_single,
+	                            friendCount, rest));
+		    	        } else if (friendCount == 1 && rest > 1) {
+                            tvPeopleText.setText(getString(R.string.venue_activity_people_count_friend_single_plural,
+                                friendCount, rest));
+		    	        } else if (friendCount > 1 && rest == 1) {
+                            tvPeopleText.setText(getString(R.string.venue_activity_people_count_friend_plural_single,
+                                friendCount, rest));
+                        } else {
+                            tvPeopleText.setText(getString(R.string.venue_activity_people_count_friend_plural_plural,
+                                friendCount, rest));
+                        }
+                    } else {
+		    	        // N people are here
+		    	        tvPeopleText.setText(getResources().getString(
+		    	            venue.getCheckins().size() == 1 ?
+                                R.string.venue_activity_people_count_single :
+                                R.string.venue_activity_people_count_plural, 
+                                venue.getCheckins().size()));
+		    	    }
+		    	    
 		    		psPeoplePhotos.setCheckinsAndRemoteResourcesManager(venue.getCheckins(), mRrm);
                     viewCheckins.setVisibility(View.VISIBLE);
                     setClickHandlerCheckins(viewCheckins);
@@ -247,13 +276,27 @@ public class VenueActivity extends Activity {
 		    	}
 		    	
 		    	if (venue.getTips() != null && venue.getTips().size() > 0) {
-		    		if (venue.getTips().size() == 1) {
-		    			tvTipsText.setText(getResources().getString(
-		    					R.string.venue_activity_tip_count_single, venue.getTips().size()));
-		    		} else {
-		    			tvTipsText.setText(getResources().getString(
-		    					R.string.venue_activity_tip_count_plural, venue.getTips().size()));
-		    		}
+		    	    int tipCountFriends = getTipCountFriendsAtVenue();
+		    	    if (tipCountFriends > 0) {
+		    	        tvTipsText.setText(
+		    	                getString(tipCountFriends == 1 ? 
+		    	                        R.string.venue_activity_tip_count_friend_single :
+		    	                        R.string.venue_activity_tip_count_friend_plural,
+		    	                        tipCountFriends));
+		    	        
+		    	        int rest = venue.getTips().size() - tipCountFriends;
+		    	        if (rest > 0) {
+    		    	        tvTipsTextExtra.setText(
+                                getString(R.string.venue_activity_tip_count_other_people, rest));
+    		    	        tvTipsTextExtra.setVisibility(View.VISIBLE);
+		    	        }
+		    	    } else {
+		    	        tvTipsText.setText(
+                            getString(venue.getTips().size() == 1 ? 
+                                R.string.venue_activity_tip_count_single :
+                                R.string.venue_activity_tip_count_plural,
+                                venue.getTips().size()));
+		    	    }
 		    		
 		    		ivTipsChevron.setVisibility(View.VISIBLE);
 		    		
@@ -595,6 +638,37 @@ public class VenueActivity extends Activity {
     	}
     }
 	
+    private int getFriendCountAtVenue() {
+        int count = 0;
+        
+        Venue venue = mStateHolder.getVenue();
+        if (venue.getCheckins() != null) {
+            for (Checkin it : venue.getCheckins()) {
+                User user = it.getUser();
+                if (UserUtils.isFriend(user)) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+    
+    private int getTipCountFriendsAtVenue() {
+        int count = 0;
+        
+        Venue venue = mStateHolder.getVenue();
+        if (venue.getTips() != null) {
+            for (Tip it : venue.getTips()) {
+                User user = it.getUser();
+                if (UserUtils.isFriend(user)) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
 
     private static class TaskVenue extends AsyncTask<String, Void, Venue> {
 
