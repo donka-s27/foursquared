@@ -97,6 +97,18 @@ public class UserUtils {
         }
     }
     
+    public static boolean isFollower(User user) {
+        if (user == null) {
+            return false;
+        } else if (TextUtils.isEmpty(user.getFriendstatus())) {
+            return false;
+        } else if (user.getFriendstatus().equals("pendingyou")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
     public static int getDrawableForMeTabByGender(String gender) {
         if (gender != null && gender.equals("female")) {
             return R.drawable.tab_main_nav_me_girl_selector;
