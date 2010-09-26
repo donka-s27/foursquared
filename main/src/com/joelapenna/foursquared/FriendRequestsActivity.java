@@ -157,7 +157,7 @@ public class FriendRequestsActivity extends ListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh_label).setIcon(
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh).setIcon(
                 R.drawable.ic_menu_refresh);
 
         return true;

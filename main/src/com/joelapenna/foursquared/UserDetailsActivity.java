@@ -26,11 +26,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextUtils;
+import android.text.style.CharacterStyle;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -244,9 +249,22 @@ public class UserDetailsActivity extends Activity {
                 tvTips.setText(String.valueOf(user.getTipCount()));
                 
                 if (user.getCheckin() != null && user.getCheckin().getVenue() != null) {
-                    tvLastSeen.setText(getResources().getString(
-                        R.string.user_details_activity_last_seen, 
-                        user.getCheckin().getVenue().getName()));
+                    String fixed = getResources().getString(R.string.user_details_activity_last_seen);
+                    String full = fixed + " " + user.getCheckin().getVenue().getName();
+                    CharacterStyle bold = new StyleSpan(Typeface.BOLD);
+                    SpannableString ss = new SpannableString(full);
+                    ss.setSpan(bold, fixed.length(), full.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+                    tvLastSeen.setText(ss);
+                    //tvLastSeen.setText(getResources().getString(
+                    //    R.string.user_details_activity_last_seen, 
+                    //    user.getCheckin().getVenue().getName()));
+                    
+                    tvLastSeen.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            startVenueActivity();
+                        }
+                    });
                 }
                 
                 if (mStateHolder.getIsLoggedInUser() || UserUtils.isFriend(user)) {
@@ -566,6 +584,16 @@ public class UserDetailsActivity extends Activity {
         Intent intent = new Intent(UserDetailsActivity.this, UserDetailsTipsActivity.class);
         intent.putExtra(UserDetailsTipsActivity.INTENT_EXTRA_USER_ID, mStateHolder.getUser().getId());
         startActivity(intent); 
+    }
+    
+    private void startVenueActivity() {
+        User user = mStateHolder.getUser();
+        if (user.getCheckin() != null && 
+            user.getCheckin().getVenue() != null) {
+            Intent intent = new Intent(this, VenueActivity.class);
+            intent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, user.getCheckin().getVenue());
+            startActivity(intent);
+        }
     }
     
     @Override

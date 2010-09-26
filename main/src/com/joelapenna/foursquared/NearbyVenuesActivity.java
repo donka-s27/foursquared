@@ -183,7 +183,7 @@ public class NearbyVenuesActivity extends LoadableListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh_label) //
+        menu.add(Menu.NONE, MENU_REFRESH, Menu.NONE, R.string.refresh) //
                 .setIcon(R.drawable.ic_menu_refresh);
         menu.add(Menu.NONE, MENU_SEARCH, Menu.NONE, R.string.search_label) //
                 .setIcon(R.drawable.ic_menu_search) //

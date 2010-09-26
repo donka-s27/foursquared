@@ -232,7 +232,7 @@
   <string name="user_details_activity_set_photo_success">Photo updated ok!</string>
   <string name="user_details_activity_set_photo_cancel">Set photo request cancelled.</string>
   
-  <string name="user_details_activity_last_seen">Last seen: %s</string>
+  <string name="user_details_activity_last_seen">Last seen:</string>
   <string name="user_details_activity_general_mayorships">MAYORSHIPS</string>
   <string name="user_details_activity_general_badges">BADGES</string>
   <string name="user_details_activity_general_tips">TIPS</string>
@@ -358,6 +358,15 @@
   <string name="venue_activity_tip_count_single">%d tip here</string>
   <string name="venue_activity_tip_count_plural">%d tips here</string>
   <string name="venue_activity_tip_count_none">No tips here</string>
+  <string name="venue_activity_tip_count_friend_single">%d tip from friends</string>
+  <string name="venue_activity_tip_count_friend_plural">%d tips from friends</string>
+  <string name="venue_activity_tip_count_other_people">%d left by other people</string>
+  <string name="venue_activity_people_count_friend_single">%d friend is here</string>
+  <string name="venue_activity_people_count_friend_plural">%d friends are here</string>
+  <string name="venue_activity_people_count_friend_single_single">%d friend is here with %d other person</string>
+  <string name="venue_activity_people_count_friend_single_plural">%d friend is here with %d other people</string>
+  <string name="venue_activity_people_count_friend_plural_single">%d friends are here with %d other person</string>
+  <string name="venue_activity_people_count_friend_plural_plural">%d friends are here with %d other people</string>
   <string name="venue_activity_more_info_title">More info</string>
   <string name="venue_activity_more_info_text">Map, contact and more</string>
   <string name="venue_activity_menu_add_tip">Leave Tip</string>
@@ -369,7 +378,9 @@
   <string name="venue_activity_todo_added_ok">To-Do added!</string>
   <string name="venue_activity_todo_here">You have a To-Do here!</string>
   <string name="venue_share_activity_title">Share</string>
-  <string name="venue_tips_activity_title">Tips left here (%d)</string>
+  <string name="venue_tips_activity_title">Foursquare Tips</string>
+  <string name="venue_tips_activity_section_all">Tips left here (%d)</string>
+  <string name="venue_tips_activity_section_friends">Tips from friends (%d)</string>
   <string name="add_tip_activity_text_hint">For example: Try the sea salt vanilla ice cream. Best dessert downtown!</string>
   <string name="add_tip_activity_text_button">Leave Tip</string>
   <string name="add_tip_todo_activity_progress_message">Adding...</string>
