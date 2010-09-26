@@ -231,6 +231,8 @@
   <string name="user_details_activity_set_photo_progress_message">Updating your photo...</string>
   <string name="user_details_activity_set_photo_success">Photo updated ok!</string>
   <string name="user_details_activity_set_photo_cancel">Set photo request cancelled.</string>
+  <string name="user_details_activity_friend_add">ADD AS FRIEND</string>
+  <string name="user_details_activity_friend_confirm">CONFIRM AS FRIEND</string>
   
   <string name="user_details_activity_last_seen">Last seen:</string>
   <string name="user_details_activity_general_mayorships">MAYORSHIPS</string>

@@ -73,6 +73,15 @@
     <item name="android:shadowDy">1</item>
   -->
   
+  <!-- Used in user details for adding or confirming a friend. -->
+  <style name="friendButton">
+    <item name="android:background">@drawable/friend_button_selector</item>
+    <item name="android:textAppearance">@android:style/TextAppearance.Small</item>
+    <item name="android:textColor">@android:color/white</item>
+    <item name="android:padding">5dip</item>
+    <item name="android:textStyle">bold</item>
+  </style>
+  
   <style
     name="sendInviteStyle">
     <item

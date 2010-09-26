@@ -58,10 +58,11 @@
         android:textAppearance="@style/TextViewStyleUserDetailsActivityLastSeen" />
         
       <Button
-        android:layout_width="wrap_content"
+        android:id="@+id/userDetailsActivityFriendButton" 
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Add as Friend"
-        android:layout_marginLeft="0dip"
+        android:text="ADD AS FRIEND"
+        style="@style/friendButton"
         />
           
     </LinearLayout>
