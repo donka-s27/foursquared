@@ -33,7 +33,7 @@ public class VenueMapActivity extends MapActivity {
     
     public static final String INTENT_EXTRA_VENUE = Foursquared.PACKAGE_NAME
             + ".VenueMapActivity.INTENT_EXTRA_VENUE";
-
+ 
     private MapView mMapView;
     private MapController mMapController;
     private VenueItemizedOverlay mOverlay = null;
