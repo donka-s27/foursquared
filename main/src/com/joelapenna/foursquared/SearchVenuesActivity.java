@@ -37,13 +37,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -353,10 +353,10 @@ public class SearchVenuesActivity extends TabActivity {
 
         mTabHost = getTabHost(); 
         
-        TabsUtil.addNativeLookingTab(this, mTabHost, "results", getString(R.string.search_venues_label), 
-                R.drawable.places_tab, R.id.listviewLayout);
-        TabsUtil.addNativeLookingTab(this, mTabHost, "map", getString(R.string.map_label), 
-                R.drawable.map_tab, new Intent(this, SearchVenuesMapActivity.class));
+        TabsUtil.addTab(mTabHost, getString(R.string.search_venues_label), R.drawable.places_tab, 
+                0, R.id.listviewLayout);
+        TabsUtil.addTab(mTabHost, getString(R.string.map_label), R.drawable.map_tab, 
+                1, new Intent(this, SearchVenuesMapActivity.class));
         
         mTabHost.setCurrentTab(0);
     }

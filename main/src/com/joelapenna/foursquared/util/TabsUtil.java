@@ -28,7 +28,7 @@ import android.widget.TabHost.TabSpec;
  */ 
 public abstract class TabsUtil {
 
-    public static void setTabIndicator(TabSpec spec, String title, Drawable drawable, View view) {
+    private static void setTabIndicator(TabSpec spec, String title, Drawable drawable, View view) {
         int sdk = new Integer(Build.VERSION.SDK).intValue();
         if (sdk < 4) {
             TabsUtil3.setTabIndicator(spec, title, drawable);
@@ -36,7 +36,7 @@ public abstract class TabsUtil {
             TabsUtil4.setTabIndicator(spec, view);
         }
     }
-    
+    /*
     private static TabHost.TabSpec addNativeLookingTab(Context context, final TabHost tabHost, String specName, 
             String label, int iconId) {
         View view = LayoutInflater.from(context).inflate(R.layout.fake_native_tab, null);
@@ -69,5 +69,32 @@ public abstract class TabsUtil {
         
         spec.setContent(intent);
         tabHost.addTab(spec);
+    }
+    */
+    
+    
+    public static void addTab(TabHost host, String title, int drawable, int index, int layout) {
+        TabHost.TabSpec spec = host.newTabSpec("tab" + index);
+        spec.setContent(layout);
+        View view = prepareTabView(host.getContext(), title, drawable);
+        TabsUtil.setTabIndicator(spec, title, host.getContext().getResources().getDrawable(drawable), view);
+        host.addTab(spec);
+    }
+    
+    public static void addTab(TabHost host, String title, int drawable, int index, Intent intent) {
+        TabHost.TabSpec spec = host.newTabSpec("tab" + index);
+        spec.setContent(intent);
+        View view = prepareTabView(host.getContext(), title, drawable);
+        TabsUtil.setTabIndicator(spec, title, host.getContext().getResources().getDrawable(drawable), view);
+        host.addTab(spec);
+    }
+    
+    private static View prepareTabView(Context context, String text, int drawable) {
+        View view = LayoutInflater.from(context).inflate(R.layout.tab_main_nav, null);
+        TextView tv = (TextView) view.findViewById(R.id.tvTitle);
+        tv.setText(text);
+        ImageView iv = (ImageView) view.findViewById(R.id.ivIcon);
+        iv.setImageResource(drawable);
+        return view;
     }
 }
