@@ -4,14 +4,6 @@
 
 package com.joelapenna.foursquared;
 
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -23,6 +15,9 @@ import com.joelapenna.foursquare.util.VenueUtils;
 import com.joelapenna.foursquared.maps.CrashFixMyLocationOverlay;
 import com.joelapenna.foursquared.maps.VenueItemizedOverlay;
 import com.joelapenna.foursquared.util.UiUtil;
+
+import android.os.Bundle;
+import android.util.Log;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -66,6 +61,7 @@ public class VenueMapActivity extends MapActivity {
     
     private void ensureUi() {
 
+        /*
         Button mapsButton = (Button) findViewById(R.id.mapsButton);
         mapsButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -81,6 +77,9 @@ public class VenueMapActivity extends MapActivity {
         if (FoursquaredSettings.SHOW_VENUE_MAP_BUTTON_MORE == false) {
             mapsButton.setVisibility(View.GONE);
         }
+        */
+        
+        setTitle(getString(R.string.venue_map_activity_title, mStateHolder.getVenue().getName()));
 
         mMapView = (MapView) findViewById(R.id.mapView);
         mMapView.setBuiltInZoomControls(true);
@@ -99,6 +98,8 @@ public class VenueMapActivity extends MapActivity {
             mOverlay.setGroup(venueGroup);
             mMapView.getOverlays().add(mOverlay);
         }
+        
+        updateMap();
     }
     
     @Override
@@ -123,14 +124,11 @@ public class VenueMapActivity extends MapActivity {
     }
 
     private void updateMap() {
-        GeoPoint center;
         if (mOverlay != null && mOverlay.size() > 0) {
-            center = mOverlay.getCenter();
-        } else {
-            return;
+            GeoPoint center = mOverlay.getCenter();
+            mMapController.animateTo(center);
+            mMapController.setZoom(17);
         }
-        mMapController.animateTo(center);
-        mMapController.setZoom(17);
     }
 
     private static class StateHolder {

@@ -38,6 +38,7 @@ import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquare.util.JSONUtils;
 import com.joelapenna.foursquared.util.Base64Coder;
 
 import org.apache.http.auth.AuthScope;
@@ -46,13 +47,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -690,7 +691,8 @@ class FoursquareHttpApiV1 {
         File file = new File(imagePathToJpg);
         FileInputStream fileInputStream = new FileInputStream(file);
         
-        HttpURLConnection conn = mHttpApi.createHttpURLConnectionPost(new URL(fullUrl(URL_API_USER_UPDATE)), BOUNDARY);
+        URL url = new URL(fullUrl(URL_API_USER_UPDATE));
+        HttpURLConnection conn = mHttpApi.createHttpURLConnectionPost(url, BOUNDARY);
         conn.setRequestProperty("Authorization", "Basic " +  Base64Coder.encodeString(username + ":" + password));
         
         // We are always saving the image to a jpg so we can use .jpg as the extension below.
@@ -720,17 +722,17 @@ class FoursquareHttpApiV1 {
         dos.flush(); 
         dos.close(); 
      
-        UserParser parser = new UserParser();
-        //InputStream is = conn.getInputStream();
-        //try {
-        //    return parser.parse(AbstractParser.createXmlPullParser(is));
-        //} finally {
-        //    is.close();
-        //}
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String responseLine = "";
+        while ((responseLine = in.readLine()) != null) {
+            response.append(responseLine);
+        }
+        in.close();
+
         try {
-            return parser.parse(new JSONObject(conn.getResponseMessage()));
-//            return parser.parse(AbstractParser.createXmlPullParser(is));
-        } catch (JSONException ex) {
+            return (User)JSONUtils.consume(new UserParser(), response.toString());
+        } catch (Exception ex) {
             throw new FoursquareParseException(
                     "Error parsing user photo upload response, invalid json.");
         }
