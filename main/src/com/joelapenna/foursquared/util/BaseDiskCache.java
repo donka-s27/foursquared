@@ -4,6 +4,8 @@
 
 package com.joelapenna.foursquared.util;
 
+import com.joelapenna.foursquared.FoursquaredSettings;
+
 import android.os.Environment;
 import android.util.Log;
 
@@ -21,7 +23,7 @@ import java.io.OutputStream;
  */
 public class BaseDiskCache implements DiskCache {
     private static final String TAG = "BaseDiskCache";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
     private static final String NOMEDIA = ".nomedia";
     private static final int MIN_FILE_SIZE_IN_BYTES = 100;

@@ -4,7 +4,6 @@
 
 package com.joelapenna.foursquare.parsers.json;
 
-import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.FoursquareType;
 import com.joelapenna.foursquare.types.Group;
 
@@ -14,7 +13,6 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Reference:
@@ -26,10 +24,6 @@ import java.util.logging.Logger;
  */
 public class GroupParser extends AbstractParser<Group> {
 
-    private static final String TAG = "GroupParser";
-    private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
-    private static final Logger LOG = Logger.getLogger(TipParser.class.getCanonicalName());
-    
     private Parser<? extends FoursquareType> mSubParser;
 
     public GroupParser(Parser<? extends FoursquareType> subParser) {
@@ -42,10 +36,6 @@ public class GroupParser extends AbstractParser<Group> {
      */
     public Group<FoursquareType> parse(JSONObject json) throws JSONException {
 
-        if (DEBUG) {
-            LOG.log(Level.FINE, "Parser: In " + TAG + ": with [" + json.toString() + "].");
-        }
-        
         Group<FoursquareType> group = new Group<FoursquareType>();
         
         Iterator<String> it = (Iterator<String>)json.keys();
@@ -71,11 +61,7 @@ public class GroupParser extends AbstractParser<Group> {
      */
     @Override
     public Group parse(JSONArray array) throws JSONException {
-        
-        if (DEBUG) {
-            LOG.log(Level.FINE, "Parser: In " + TAG + ": given [" + array.toString() + "].");
-        }
-        
+  
         Group<FoursquareType> group = new Group<FoursquareType>();
         parse(group, array);
         return group;

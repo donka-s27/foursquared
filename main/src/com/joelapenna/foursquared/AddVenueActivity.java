@@ -5,6 +5,7 @@
 package com.joelapenna.foursquared;
 
 import com.joelapenna.foursquare.Foursquare;
+import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.types.Category;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Response;
@@ -19,10 +20,10 @@ import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
@@ -36,8 +37,8 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -47,6 +48,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Allows the user to add a new venue. This activity can also be used to submit
@@ -320,17 +322,13 @@ public class AddVenueActivity extends Activity {
         startProgressBar(
                 getResources().getString(
                     mStateHolder.getVenueBeingEdited() == null ? 
-                            R.string.add_venue_progress_bar_title_add_venue :
-                            R.string.add_venue_progress_bar_title_edit_venue),
-                getResources().getString(
-                    mStateHolder.getVenueBeingEdited() == null ? 
                             R.string.add_venue_progress_bar_message_add_venue :
                             R.string.add_venue_progress_bar_message_edit_venue));
     }
     
-    private void startProgressBar(String title, String message) {
+    private void startProgressBar(String message) {
         if (mDlgProgress == null) {
-            mDlgProgress = ProgressDialog.show(this, title, message);
+            mDlgProgress = ProgressDialog.show(this, null, message);
         }
         mDlgProgress.show();
     }
@@ -371,17 +369,14 @@ public class AddVenueActivity extends Activity {
     
     private void ooGetAddressLookupTaskComplete(AddressLookup addressLookup, Exception ex) {
         mStateHolder.setIsRunningTaskAddressLookup(false);
-        try {
-            // We can prepopulate some of the fields for them now.
-            if (addressLookup != null) {
-                mStateHolder.setAddressLookup(addressLookup);
-                setFields(addressLookup);
-            } else {
-                NotificationsUtil.ToastReasonForFailure(this, ex);
-            }
-        } finally {
-        }
         stopIndeterminateProgressBar();
+        
+        if (addressLookup != null) {
+            mStateHolder.setAddressLookup(addressLookup);
+            setFields(addressLookup);
+        } else {
+            // Nothing to do on failure, don't need to report.
+        }
     }
 
     private void onAddOrEditVenueTaskComplete(Venue venue, String venueIdIfEditing, Exception ex) {
@@ -534,14 +529,19 @@ public class AddVenueActivity extends Activity {
             try {
                 Location location = ((Foursquared)mActivity.getApplication()).getLastKnownLocationOrThrow();
                 Geocoder geocoder = new Geocoder(mActivity);
-                return new AddressLookup(
-                    location,
-                    geocoder.getFromLocation(
-                        location.getLatitude(), 
-                        location.getLongitude(), 1).get(0));
+                
+                List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                if (addresses != null && addresses.size() > 0) {
+                    Log.i(TAG, "Address found: " + addresses.toString());
+                    return new AddressLookup(location, addresses.get(0));
+                } else {
+                    Log.i(TAG, "No address could be found for current location.");
+                    throw new FoursquareException("No address could be found for the current geolocation.");
+                }
 
-            } catch (Exception e) {
-                mReason = e;
+            } catch (Exception ex) {
+                Log.e(TAG, "Error during address lookup.", ex);
+                mReason = ex;
             }
             return null;
         }
