@@ -10,7 +10,8 @@
     android:id="@android:id/tabhost"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    style="@style/tabHostStyle">
+    style="@style/tabHostStyle"
+	android:background="#4d4d4d">
     <TabWidget
       android:id="@android:id/tabs"
       android:layout_width="fill_parent"
@@ -28,7 +29,8 @@
         <ListView
           android:id="@+id/list"
           android:layout_width="fill_parent"
-          android:layout_height="fill_parent" />
+          android:layout_height="fill_parent"
+          android:fadingEdgeLength="0dip" />
         <include
           android:id="@+id/empty"
           layout="@layout/empty_loading"

@@ -13,6 +13,7 @@ import com.joelapenna.foursquared.util.CheckinTimestampSort;
 import com.joelapenna.foursquared.util.Comparators;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.widget.CheckinListAdapter;
 import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
@@ -258,7 +259,7 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
         // to a wrap/wrap layout. Furthermore, sdk 3 crashes with the original layout using two
         // buttons in a horizontal LinearLayout.
         LayoutInflater inflater = LayoutInflater.from(this);
-        if (MainActivity.getAndroidVersion() > 3) {
+        if (UiUtil.sdkVersion() > 3) {
             mLayoutEmpty = (ScrollView)inflater.inflate(
                     R.layout.friends_activity_empty, null);
             

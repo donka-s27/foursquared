@@ -14,6 +14,7 @@ import com.joelapenna.foursquared.providers.VenueQuerySuggestionsProvider;
 import com.joelapenna.foursquared.util.Comparators;
 import com.joelapenna.foursquared.util.NotificationsUtil;
 import com.joelapenna.foursquared.util.TabsUtil;
+import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 import com.joelapenna.foursquared.widget.VenueListAdapter;
 
@@ -38,6 +39,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -353,12 +355,19 @@ public class SearchVenuesActivity extends TabActivity {
 
         mTabHost = getTabHost(); 
         
-        TabsUtil.addTab(mTabHost, getString(R.string.search_venues_label), R.drawable.places_tab, 
-                0, R.id.listviewLayout);
-        TabsUtil.addTab(mTabHost, getString(R.string.map_label), R.drawable.map_tab, 
+        TabsUtil.addTab(mTabHost, getString(R.string.tab_search_nav_venues), 
+                R.drawable.tab_search_nav_venues_selector, 0, R.id.listviewLayout);
+        TabsUtil.addTab(mTabHost, getString(R.string.tab_search_nav_map), 
+                R.drawable.tab_search_nav_map_selector, 
                 1, new Intent(this, SearchVenuesMapActivity.class));
         
         mTabHost.setCurrentTab(0);
+        
+        // Fix layout for 1.5.
+        if (UiUtil.sdkVersion() < 4) {
+            FrameLayout flTabContent = (FrameLayout)findViewById(android.R.id.tabcontent);
+            flTabContent.setPadding(0, 0, 0, 0);
+        }
     }
 
     private class SearchTask extends AsyncTask<Void, Void, Group<Group<Venue>>> {
