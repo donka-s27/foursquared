@@ -60,8 +60,9 @@ public class UserDetailsActivity extends Activity {
     private static final String TAG = "UserDetailsActivity";
     private static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
-    private static final int ACTIVITY_REQUEST_CODE_GALLERY = 815;
-    private static final int ACTIVITY_REQUEST_CODE_PINGS   = 816;
+    private static final int ACTIVITY_REQUEST_CODE_PINGS              = 815;
+    private static final int ACTIVITY_REQUEST_CODE_FETCH_IMAGE        = 816;
+    private static final int ACTIVITY_REQUEST_CODE_VIEW_AND_SET_IMAGE = 817;
 
     public static final String EXTRA_USER_PARCEL = Foursquared.PACKAGE_NAME
         + ".UserDetailsActivity.EXTRA_USER_PARCEL";
@@ -516,24 +517,24 @@ public class UserDetailsActivity extends Activity {
                 if (mStateHolder.getLoadType() == LOAD_TYPE_USER_FULL) {
                     User user = mStateHolder.getUser();
                     
-                    // If we're viewing our own page, clicking the thumbnail should let the
-                    // user choose a new photo from the camera gallery.
+                    // If "_thumbs" exists, remove it to get the url of the
+                    // full-size image.
+                    String photoUrl = user.getPhoto().replace("_thumbs", "");
+                    
+                    // If we're viewing our own page, clicking the thumbnail should send the user
+                    // to our built-in image viewer. Here we can give them the option of setting
+                    // a new photo for themselves.
+                    Intent intent = new Intent(UserDetailsActivity.this, FetchImageForViewIntent.class);
+                    intent.putExtra(FetchImageForViewIntent.IMAGE_URL, photoUrl);
+                    intent.putExtra(FetchImageForViewIntent.PROGRESS_BAR_TITLE, getResources()
+                            .getString(R.string.user_activity_fetch_full_image_title));
+                    intent.putExtra(FetchImageForViewIntent.PROGRESS_BAR_MESSAGE, getResources()
+                            .getString(R.string.user_activity_fetch_full_image_message));
+                    
                     if (mStateHolder.getIsLoggedInUser()) {
-//                        startGalleryIntent();
-                        // TODO: Start different activity for setting user photo.
-                    }
-                    else {
-                        // If "_thumbs" exists, remove it to get the url of the
-                        // full-size image.
-                        String photoUrl = user.getPhoto().replace("_thumbs", "");
-    
-                        Intent intent = new Intent();
-                        intent.setClass(UserDetailsActivity.this, FetchImageForViewIntent.class);
-                        intent.putExtra(FetchImageForViewIntent.IMAGE_URL, photoUrl);
-                        intent.putExtra(FetchImageForViewIntent.PROGRESS_BAR_TITLE, getResources()
-                                .getString(R.string.user_activity_fetch_full_image_title));
-                        intent.putExtra(FetchImageForViewIntent.PROGRESS_BAR_MESSAGE, getResources()
-                                .getString(R.string.user_activity_fetch_full_image_message));
+                        intent.putExtra(FetchImageForViewIntent.LAUNCH_VIEW_INTENT_ON_COMPLETION, false);
+                        startActivityForResult(intent, ACTIVITY_REQUEST_CODE_FETCH_IMAGE);
+                    } else {
                         startActivity(intent);
                     }
                 }
@@ -706,15 +707,31 @@ public class UserDetailsActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)  {
         switch (requestCode) {
-            case ACTIVITY_REQUEST_CODE_GALLERY:
-                if (resultCode == Activity.RESULT_OK) { 
-                }
-                break;
             case ACTIVITY_REQUEST_CODE_PINGS:
                 if (resultCode == Activity.RESULT_OK) {
                     User user = (User)data.getParcelableExtra(UserDetailsPingsActivity.EXTRA_USER_RETURNED);
                     if (user != null) {
                         mStateHolder.getUser().getSettings().setGetPings(user.getSettings().getGetPings());
+                    }
+                }
+                break;
+            case ACTIVITY_REQUEST_CODE_FETCH_IMAGE:
+                if (resultCode == Activity.RESULT_OK) {
+                    String imagePath = data.getStringExtra(FetchImageForViewIntent.EXTRA_SAVED_IMAGE_PATH_RETURNED);
+                    if (mStateHolder.getIsLoggedInUser() && !TextUtils.isEmpty(imagePath)) {
+                        Intent intent = new Intent(this, FullSizeImageActivity.class);
+                        intent.putExtra(FullSizeImageActivity.INTENT_EXTRA_IMAGE_PATH, imagePath);
+                        intent.putExtra(FullSizeImageActivity.INTENT_EXTRA_ALLOW_SET_NEW_PHOTO, true);
+                        startActivityForResult(intent, ACTIVITY_REQUEST_CODE_VIEW_AND_SET_IMAGE);
+                    }
+                }
+                break;
+            case ACTIVITY_REQUEST_CODE_VIEW_AND_SET_IMAGE:
+                if (resultCode == Activity.RESULT_OK) {
+                    String imagePathNew = data.getStringExtra(FullSizeImageActivity.INTENT_RETURN_NEW_PHOTO_URL);
+                    if (!TextUtils.isEmpty(imagePathNew)) {
+                        mStateHolder.getUser().setPhoto(imagePathNew);
+                        ensureUi();
                     }
                 }
                 break;

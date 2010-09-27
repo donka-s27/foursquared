@@ -49,6 +49,10 @@ import java.net.URLConnection;
  * during download.</li>
  * </ul>
  * 
+ * When the download is complete, the activity will return the path of the 
+ * saved image on disk. The calling activity can then choose to launch an
+ * intent to view the image.
+ * 
  * @date February 25, 2010
  * @author Mark Wyszomierski (markww@gmail.com), foursquare.
  */
@@ -67,6 +71,12 @@ public class FetchImageForViewIntent extends Activity {
             + ".FetchImageForViewIntent.PROGRESS_BAR_TITLE";
     public static final String PROGRESS_BAR_MESSAGE = Foursquared.PACKAGE_NAME
             + ".FetchImageForViewIntent.PROGRESS_BAR_MESSAGE";
+    public static final String LAUNCH_VIEW_INTENT_ON_COMPLETION = Foursquared.PACKAGE_NAME
+            + ".FetchImageForViewIntent.LAUNCH_VIEW_INTENT_ON_COMPLETION";
+    
+
+    public static final String EXTRA_SAVED_IMAGE_PATH_RETURNED = Foursquared.PACKAGE_NAME
+            + ".FetchImageForViewIntent.EXTRA_SAVED_IMAGE_PATH_RETURNED";
 
     private StateHolder mStateHolder;
     private ProgressDialog mDlgProgress;
@@ -122,6 +132,8 @@ public class FetchImageForViewIntent extends Activity {
             }
             
             mStateHolder = new StateHolder();
+            mStateHolder.setLaunchViewIntentOnCompletion(
+                    getIntent().getBooleanExtra(LAUNCH_VIEW_INTENT_ON_COMPLETION, true));
             mStateHolder.startTask(
                 FetchImageForViewIntent.this, 
                 url, 
@@ -191,7 +203,15 @@ public class FetchImageForViewIntent extends Activity {
                 // If the image can't be loaded or an intent can't be found to
                 // view it, launchViewIntent() will create a toast with an error
                 // message.
-                launchViewIntent(path, extension);
+                if (mStateHolder.getLaunchViewIntentOnCompletion()) {
+                    launchViewIntent(path, extension);
+                } else {
+                    // We'll finish now by handing the save image path back to the
+                    // calling activity.
+                    Intent intent = new Intent();
+                    intent.putExtra(EXTRA_SAVED_IMAGE_PATH_RETURNED, path);
+                    setResult(Activity.RESULT_OK, intent);
+                }
             } else {
                 NotificationsUtil.ToastReasonForFailure(FetchImageForViewIntent.this, ex);
             }
@@ -343,9 +363,11 @@ public class FetchImageForViewIntent extends Activity {
         boolean mIsRunning;
         String mProgressTitle;
         String mProgressMessage;
+        boolean mLaunchViewIntentOnCompletion;
 
         public StateHolder() {
             mIsRunning = false;
+            mLaunchViewIntentOnCompletion = true;
         }
 
         public void startTask(FetchImageForViewIntent activity, String url, String extension,
@@ -386,6 +408,14 @@ public class FetchImageForViewIntent extends Activity {
                 mTaskFetchImage.cancel(true);
                 mIsRunning = false;
             }
+        }
+        
+        public boolean getLaunchViewIntentOnCompletion() {
+            return mLaunchViewIntentOnCompletion;
+        }
+        
+        public void setLaunchViewIntentOnCompletion(boolean launchViewIntentOnCompletion) {
+            mLaunchViewIntentOnCompletion = launchViewIntentOnCompletion;
         }
     }
 }
