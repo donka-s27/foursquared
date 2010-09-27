@@ -18,18 +18,10 @@ import java.util.logging.Logger;
  * @author Mark Wyszomierski (markww@gmail.com)
  */
 public class UserParser extends AbstractParser<User> {
-    
-    private static final String TAG = "UserParser";
-    private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
-    private static final Logger LOG = Logger.getLogger(TipParser.class.getCanonicalName());
-    
+
     @Override
     public User parse(JSONObject json) throws JSONException {
-        
-//        if (DEBUG) {
-            LOG.log(Level.FINE, "Parser: In " + TAG + ": " + json.toString());
- //       }
-        
+
         User user = new User();
         if (json.has("badges")) {
             user.setBadges(

@@ -4,25 +4,30 @@
 
 package com.joelapenna.foursquare.util;
 
+import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.error.FoursquareCredentialsException;
 import com.joelapenna.foursquare.error.FoursquareException;
 import com.joelapenna.foursquare.error.FoursquareParseException;
 import com.joelapenna.foursquare.parsers.json.Parser;
+import com.joelapenna.foursquare.parsers.json.TipParser;
 import com.joelapenna.foursquare.types.FoursquareType;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
 
 public class JSONUtils {
+    
+    private static final boolean DEBUG = Foursquare.DEBUG;
+    private static final Logger LOG = Logger.getLogger(TipParser.class.getCanonicalName());
     
     /**
      * Takes a parser, a json string, and returns a foursquare type.
@@ -30,8 +35,8 @@ public class JSONUtils {
     public static FoursquareType consume(Parser<? extends FoursquareType> parser, String content)
         throws FoursquareCredentialsException, FoursquareParseException, FoursquareException, IOException {
         
-        if (true) {
-            Log.e("HTTP RESPONSE", content);
+        if (DEBUG) {
+            LOG.log(Level.FINE, "http response: " + content);
         }
         
         try {

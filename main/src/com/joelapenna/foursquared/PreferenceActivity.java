@@ -63,10 +63,9 @@ public class PreferenceActivity extends android.preference.PreferenceActivity {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
 
-        this.addPreferencesFromResource(R.xml.preferences);
+        addPreferencesFromResource(R.xml.preferences);
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-this.getListView().setDividerHeight(0);
-
+        
         Preference advanceSettingsPreference = getPreferenceScreen().findPreference(
                 Preferences.PREFERENCE_ADVANCED_SETTINGS);
         advanceSettingsPreference.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {

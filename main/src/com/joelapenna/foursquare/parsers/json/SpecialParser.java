@@ -3,14 +3,10 @@
  */
 package com.joelapenna.foursquare.parsers.json;
 
-import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Special;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /**
@@ -20,16 +16,8 @@ import java.util.logging.Logger;
  */
 public class SpecialParser extends AbstractParser<Special> {
 
-    private static final String TAG = "SpecialParser";
-    private static final boolean DEBUG = Foursquare.PARSER_DEBUG;
-    private static final Logger LOG = Logger.getLogger(TipParser.class.getCanonicalName());
-    
     @Override
     public Special parse(JSONObject json) throws JSONException {
-        
-        if (DEBUG) {
-            LOG.log(Level.FINE, "Parser: In " + TAG + ": " + json.toString());
-        }
         
         Special obj = new Special();
         if (json.has("id")) {

@@ -45,8 +45,6 @@
     <color 
         name="color_bright_green">#a6da00</color>
     <color
-        name="listview_item">#ffebebeb</color>
-    <color
         name="tip_detail_actions_background">#c7c7c7</color>
     <color
         name="user_details_activity_general">#FF555555</color>
