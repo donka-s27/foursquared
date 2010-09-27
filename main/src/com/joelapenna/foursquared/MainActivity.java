@@ -19,13 +19,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TabHost;
-import android.widget.TextView;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -89,21 +85,21 @@ public class MainActivity extends TabActivity {
         Intent intent = new Intent(this, NearbyVenuesActivity.class);
         
         if (startupTab.equals(startupTabValues[0])) {
-            addTab(getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector, 
+            TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector, 
                     1, new Intent(this, FriendsActivity.class));
-            addTab(getString(R.string.tab_main_nav_nearby), R.drawable.tab_main_nav_nearby_selector, 
+            TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_nearby), R.drawable.tab_main_nav_nearby_selector, 
                     2, intent);
         } else {
             intent.putExtra(NearbyVenuesActivity.INTENT_EXTRA_STARTUP_GEOLOC_DELAY, 4000L);
-            addTab(getString(R.string.tab_main_nav_nearby), R.drawable.tab_main_nav_nearby_selector, 
+            TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_nearby), R.drawable.tab_main_nav_nearby_selector, 
                     1, intent);
-            addTab(getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector,
+            TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_friends), R.drawable.tab_main_nav_friends_selector,
                     2, new Intent(this, FriendsActivity.class));
         }
 
-        addTab(getString(R.string.tab_main_nav_tips), R.drawable.tab_main_nav_tips_selector, 
+        TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_tips), R.drawable.tab_main_nav_tips_selector, 
                 3, new Intent(this, TipsActivity.class));
-        addTab(getString(R.string.tab_main_nav_todos), R.drawable.tab_main_nav_todos_selector, 
+        TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_todos), R.drawable.tab_main_nav_todos_selector, 
                 4, new Intent(this, TodosActivity.class));
         
         // 'Me' tab, just shows our own info. At this point we should have a
@@ -115,7 +111,7 @@ public class MainActivity extends TabActivity {
         Intent intentTabMe = new Intent(this, UserDetailsActivity.class);
         intentTabMe.putExtra(UserDetailsActivity.EXTRA_USER_ID, userId == null ? "unknown"
                 : userId);
-        addTab(getString(R.string.tab_main_nav_me), 
+        TabsUtil.addTab(mTabHost, getString(R.string.tab_main_nav_me), 
                 UserUtils.getDrawableForMeTabByGender(userGender), 5, intentTabMe);
         
         // Fix layout for 1.5.
@@ -124,24 +120,7 @@ public class MainActivity extends TabActivity {
             flTabContent.setPadding(0, 0, 0, 0);
         }
     }
-    
-    private void addTab(String title, int drawable, int index, Intent intent) {
-        TabHost.TabSpec spec = mTabHost.newTabSpec("tab" + index);
-        spec.setContent(intent);
-        View view = prepareTabView(title, drawable);
-        TabsUtil.setTabIndicator(spec, title, getResources().getDrawable(drawable), view);
-        mTabHost.addTab(spec);
-    }
-    
-    private View prepareTabView(String text, int drawable) {
-        View view = LayoutInflater.from(this).inflate(R.layout.tab_main_nav, null);
-        TextView tv = (TextView) view.findViewById(R.id.tvTitle);
-        tv.setText(text);
-        ImageView iv = (ImageView) view.findViewById(R.id.ivIcon);
-        iv.setImageResource(drawable);
-        return view;
-    }
-    
+
     private void redirectToLoginActivity() {
         setVisible(false);
         Intent intent = new Intent(this, LoginActivity.class);
