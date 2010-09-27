@@ -134,8 +134,10 @@ public class FullSizeImageActivity extends Activity {
         
         if (mStateHolder.getIsRunningTaskSetPhoto()) {
             setProgressBarIndeterminateVisibility(true);
+            btnSetPhoto.setEnabled(false);
         } else {
             setProgressBarIndeterminateVisibility(false);
+            btnSetPhoto.setEnabled(true);
         }
     }
     
@@ -269,9 +271,9 @@ public class FullSizeImageActivity extends Activity {
             try {
                 return ((Foursquared) mActivity.getApplication()).getFoursquare().userUpdate(
                         params[0], params[1], params[2]);
-            } catch (Exception e) {
-                Log.e(TAG, "Error submitting new profile photo.", e);
-                mReason = e;
+            } catch (Exception ex) {
+                Log.e(TAG, "Error submitting new profile photo.", ex);
+                mReason = ex;
             }
             return null;
         }

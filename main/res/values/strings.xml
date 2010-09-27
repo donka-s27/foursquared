@@ -404,4 +404,6 @@
   <string name="user_details_pings_activity_description_off">You are not getting pings from %s</string>
   <string name="user_details_pings_activity_pings_on">Turn pings on</string>
   <string name="user_details_pings_activity_pings_off">Turn pings off</string>
+  
+  <string name="venue_map_activity_title">Foursquare %s</string>
 </resources>

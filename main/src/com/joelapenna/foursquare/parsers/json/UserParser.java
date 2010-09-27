@@ -26,9 +26,9 @@ public class UserParser extends AbstractParser<User> {
     @Override
     public User parse(JSONObject json) throws JSONException {
         
-        if (DEBUG) {
+//        if (DEBUG) {
             LOG.log(Level.FINE, "Parser: In " + TAG + ": " + json.toString());
-        }
+ //       }
         
         User user = new User();
         if (json.has("badges")) {

@@ -728,10 +728,10 @@ public class UserDetailsActivity extends Activity {
                 break;
             case ACTIVITY_REQUEST_CODE_VIEW_AND_SET_IMAGE:
                 if (resultCode == Activity.RESULT_OK) {
-                    String imagePathNew = data.getStringExtra(FullSizeImageActivity.INTENT_RETURN_NEW_PHOTO_URL);
-                    if (!TextUtils.isEmpty(imagePathNew)) {
-                        mStateHolder.getUser().setPhoto(imagePathNew);
-                        ensureUi();
+                    String imageUrl = data.getStringExtra(FullSizeImageActivity.INTENT_RETURN_NEW_PHOTO_URL);
+                    if (!TextUtils.isEmpty(imageUrl)) {
+                        mStateHolder.getUser().setPhoto(imageUrl);
+                        ensureUiPhoto(mStateHolder.getUser());
                     }
                 }
                 break;
