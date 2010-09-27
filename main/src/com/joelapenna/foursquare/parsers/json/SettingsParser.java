@@ -23,7 +23,7 @@ public class SettingsParser extends AbstractParser<Settings> {
             obj.setFeedsKey(json.getString("feeds_key"));
         } 
         if (json.has("get_pings")) {
-            obj.setGetPings(json.getString("get_pings"));
+            obj.setGetPings(json.getBoolean("get_pings"));
         } 
         if (json.has("pings")) {
             obj.setPings(json.getString("pings"));

@@ -252,6 +252,7 @@
   <string name="user_details_activity_friends_in_common_text_plural">" (%d friends in common)""</string>
   <string name="user_details_activity_add_friends">Add Friends</string>
   <string name="user_details_activity_friends_menu_contact">Contact</string>
+  <string name="user_details_activity_friends_menu_pings">Pings</string>
     
   <string name="checkin_execute_activity_progress_bar_message">Checking-in...</string>
   <string name="shout_execute_activity_progress_bar_message">Posting shout...</string>
@@ -398,4 +399,9 @@
   <string name="user_details_friends_followers_activity_followers">FOLLOWERS</string>
   <string name="user_details_friends_followers_activity_friends">ALL FRIENDS</string>
   <string name="refresh">Refresh</string>
+  <string name="user_details_pings_activity_title">Pings</string>
+  <string name="user_details_pings_activity_description_on">You are currently getting pings from %s</string>
+  <string name="user_details_pings_activity_description_off">You are not getting pings from %s</string>
+  <string name="user_details_pings_activity_pings_on">Turn pings on</string>
+  <string name="user_details_pings_activity_pings_off">Turn pings off</string>
 </resources>

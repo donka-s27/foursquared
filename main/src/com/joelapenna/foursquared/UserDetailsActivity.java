@@ -59,7 +59,9 @@ import java.util.Observer;
 public class UserDetailsActivity extends Activity {
     private static final String TAG = "UserDetailsActivity";
     private static final boolean DEBUG = FoursquaredSettings.DEBUG;
-    private static final int ACTIVITY_REQUEST_CODE_GALLERY = 814;
+    
+    private static final int ACTIVITY_REQUEST_CODE_GALLERY = 815;
+    private static final int ACTIVITY_REQUEST_CODE_PINGS   = 816;
 
     public static final String EXTRA_USER_PARCEL = Foursquared.PACKAGE_NAME
         + ".UserDetailsActivity.EXTRA_USER_PARCEL";
@@ -77,6 +79,7 @@ public class UserDetailsActivity extends Activity {
     
     private static final int MENU_REFRESH   = 0;
     private static final int MENU_CONTACT   = 1;
+    private static final int MENU_PINGS     = 2;
     
     private static final int DIALOG_CONTACTS = 0;
     
@@ -640,6 +643,11 @@ public class UserDetailsActivity extends Activity {
         } else {
             menu.add(Menu.NONE, MENU_CONTACT, Menu.NONE, R.string.user_details_activity_friends_menu_contact)
                 .setIcon(R.drawable.ic_menu_venue_contact);
+            
+            if (UserUtils.isFriend(mStateHolder.getUser())) {
+                menu.add(Menu.NONE, MENU_PINGS, Menu.NONE, R.string.user_details_activity_friends_menu_pings)
+                    .setIcon(R.drawable.ic_menu_venue_contact);
+            }
         }
         return true;
     }
@@ -650,6 +658,7 @@ public class UserDetailsActivity extends Activity {
         
         MenuItem refresh = menu.findItem(MENU_REFRESH);
         MenuItem contact = menu.findItem(MENU_CONTACT);
+        MenuItem pings   = menu.findItem(MENU_PINGS);
         if (!mStateHolder.getIsRunningUserDetailsTask()) {
             refresh.setEnabled(true);
             if (contact != null) {
@@ -660,10 +669,16 @@ public class UserDetailsActivity extends Activity {
                     !TextUtils.isEmpty(user.getPhone());
                 contact.setEnabled(contactEnabled);
             }
+            if (pings != null) {
+                pings.setEnabled(true);
+            }
         } else {
             refresh.setEnabled(false);
             if (contact != null) {
                 contact.setEnabled(false);
+            }
+            if (pings != null) {
+                pings.setEnabled(false);
             }
         }
         
@@ -679,6 +694,11 @@ public class UserDetailsActivity extends Activity {
             case MENU_CONTACT:
                 showDialog(DIALOG_CONTACTS);
                 return true;
+            case MENU_PINGS:
+                Intent intentPings = new Intent(this, UserDetailsPingsActivity.class);
+                intentPings.putExtra(UserDetailsPingsActivity.EXTRA_USER_PARCEL, mStateHolder.getUser());
+                startActivityForResult(intentPings, ACTIVITY_REQUEST_CODE_PINGS);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -688,6 +708,14 @@ public class UserDetailsActivity extends Activity {
         switch (requestCode) {
             case ACTIVITY_REQUEST_CODE_GALLERY:
                 if (resultCode == Activity.RESULT_OK) { 
+                }
+                break;
+            case ACTIVITY_REQUEST_CODE_PINGS:
+                if (resultCode == Activity.RESULT_OK) {
+                    User user = (User)data.getParcelableExtra(UserDetailsPingsActivity.EXTRA_USER_RETURNED);
+                    if (user != null) {
+                        mStateHolder.getUser().getSettings().setGetPings(user.getSettings().getGetPings());
+                    }
                 }
                 break;
         }
