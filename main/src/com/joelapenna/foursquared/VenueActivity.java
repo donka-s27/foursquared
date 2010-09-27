@@ -226,12 +226,13 @@ public class VenueActivity extends Activity {
 		            	mRrm.request(uriPhoto);
 		            }
 		    		ivMayorChevron.setVisibility(View.VISIBLE);
+	                setClickHandlerMayor(viewMayor);
 		    	} else {
 		    		tvMayorTitle.setText(getResources().getString(R.string.venue_activity_mayor_name_none));
 		    		tvMayorText.setText(getResources().getString(R.string.venue_activity_mayor_text_none));
+                    ivMayorChevron.setVisibility(View.INVISIBLE);
 		    	}
                 viewMayor.setVisibility(View.VISIBLE);
-                setClickHandlerMayor(viewMayor);
 		    	
 		    	if (venue.getCheckins() != null && venue.getCheckins().size() > 0) {
 		    	    int friendCount = getFriendCountAtVenue();
@@ -299,14 +300,13 @@ public class VenueActivity extends Activity {
 		    	    }
 		    		
 		    		ivTipsChevron.setVisibility(View.VISIBLE);
-		    		
+	                setClickHandlerTips(viewTips);
 		    	} else {
 	    			tvTipsText.setText(getResources().getString(R.string.venue_activity_tip_count_none));
 		    		ivTipsChevron.setVisibility(View.INVISIBLE);
 	    			viewTips.setTag(null);
 		    	}
                 viewTips.setVisibility(View.VISIBLE);
-                setClickHandlerTips(viewTips);
 
                 viewMoreInfo.setVisibility(View.VISIBLE);
                 setClickHandlerMoreInfo(viewMoreInfo);

@@ -648,7 +648,7 @@ public class UserDetailsActivity extends Activity {
             
             if (UserUtils.isFriend(mStateHolder.getUser())) {
                 menu.add(Menu.NONE, MENU_PINGS, Menu.NONE, R.string.user_details_activity_friends_menu_pings)
-                    .setIcon(R.drawable.ic_menu_user_contact);
+                    .setIcon(android.R.drawable.ic_menu_rotate);
             }
         }
         return true;
