@@ -35,7 +35,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ScrollView;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -64,7 +63,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     private StateHolder mStateHolder;
     private TodosListAdapter mListAdapter;
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
-    private ScrollView mLayoutEmpty;
+    private View mLayoutEmpty;
     
     private static final int MENU_REFRESH = 0;
 
@@ -133,7 +132,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
         
         setTitle(getString(R.string.todos_activity_title, ""));
         
-        mLayoutEmpty = (ScrollView)inflater.inflate(
+        mLayoutEmpty = inflater.inflate(
                 R.layout.todos_activity_empty, null);     
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
@@ -331,7 +330,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
                     buttons.getSelectedButtonIndex() == 1) {
                 setEmptyView(mLayoutEmpty);
             }
-        }
+        } 
         
         if (update) {
             mListAdapter.notifyDataSetChanged();

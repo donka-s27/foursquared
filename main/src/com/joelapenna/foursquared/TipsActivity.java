@@ -33,7 +33,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ScrollView;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -53,7 +52,7 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     private StateHolder mStateHolder;
     private TipsListAdapter mListAdapter;
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
-    private ScrollView mLayoutEmpty;
+    private View mLayoutEmpty;
     
     private static final int MENU_REFRESH = 0;
 
@@ -117,7 +116,7 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
     private void ensureUi() {
         LayoutInflater inflater = LayoutInflater.from(this);
         
-        mLayoutEmpty = (ScrollView)inflater.inflate(R.layout.tips_activity_empty, null);     
+        mLayoutEmpty = inflater.inflate(R.layout.tips_activity_empty, null);     
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
         
