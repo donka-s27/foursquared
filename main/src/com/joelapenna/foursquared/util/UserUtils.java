@@ -119,6 +119,11 @@ public class UserUtils {
         user.getFriendstatus().equals("pendingthem");
     }
     
+    public static boolean isFriendStatusFollowingThem(User user) {
+        return user != null && user.getFriendstatus() != null &&
+        user.getFriendstatus().equals("followingthem");
+    }
+    
     public static int getDrawableForMeTabByGender(String gender) {
         if (gender != null && gender.equals("female")) {
             return R.drawable.tab_main_nav_me_girl_selector;

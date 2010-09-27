@@ -253,7 +253,8 @@ public class UserDetailsActivity extends Activity {
             
             if (mStateHolder.getIsLoggedInUser() || 
                UserUtils.isFriend(user) || 
-               UserUtils.isFriendStatusPendingThem(user)) {
+               UserUtils.isFriendStatusPendingThem(user) ||
+               UserUtils.isFriendStatusFollowingThem(user)) {
                 btnFriend.setVisibility(View.INVISIBLE);
             } else if (UserUtils.isFriendStatusPendingYou(user)) {
                 btnFriend.setVisibility(View.VISIBLE);
@@ -262,7 +263,7 @@ public class UserDetailsActivity extends Activity {
                     @Override
                     public void onClick(View view) {
                         mStateHolder.startTaskFriend(UserDetailsActivity.this, StateHolder.TASK_FRIEND_ACCEPT);
-                    }                   
+                    }
                 });
             } else {
                 btnFriend.setVisibility(View.VISIBLE);
@@ -643,11 +644,11 @@ public class UserDetailsActivity extends Activity {
             MenuUtils.addPreferencesToMenu(this, menu);
         } else {
             menu.add(Menu.NONE, MENU_CONTACT, Menu.NONE, R.string.user_details_activity_friends_menu_contact)
-                .setIcon(R.drawable.ic_menu_venue_contact);
+                .setIcon(R.drawable.ic_menu_user_contact);
             
             if (UserUtils.isFriend(mStateHolder.getUser())) {
                 menu.add(Menu.NONE, MENU_PINGS, Menu.NONE, R.string.user_details_activity_friends_menu_pings)
-                    .setIcon(R.drawable.ic_menu_venue_contact);
+                    .setIcon(R.drawable.ic_menu_user_contact);
             }
         }
         return true;
