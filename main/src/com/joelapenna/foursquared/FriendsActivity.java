@@ -206,31 +206,36 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
         } else {
             buttons.setPushedButtonIndex(1);
         }
-
+        
         buttons.setOnClickListener(new OnClickListenerSegmentedButton() {
             @Override
             public void onClick(int index) {
-            	mListAdapter.removeObserver();
-                mListAdapter.clear();
-                mListAdapter = new SeparatedListAdapter(FriendsActivity.this);
-            	
                 if (index == 0) {
                     mStateHolder.setSortMethod(SORT_METHOD_RECENT);
-                    sortCheckinsRecent(mStateHolder.getCheckins(), mListAdapter);
                 } else {
                     mStateHolder.setSortMethod(SORT_METHOD_NEARBY);
-                    sortCheckinsDistance(mStateHolder.getCheckins(), mListAdapter);
                 }
-                getListView().setAdapter(mListAdapter);
-
-        		if (mStateHolder.getCheckins().size() == 0) {
-            		setEmptyView(mLayoutEmpty);
-            	}
+                
+                ensureUiListView();
             }
         });
         
+        mMenuMoreSubitems = new LinkedHashMap<Integer, String>();
+        mMenuMoreSubitems.put(MENU_MORE_MAP, getResources().getString(
+                R.string.friendsactivity_menu_map));
+        mMenuMoreSubitems.put(MENU_MORE_LEADERBOARD, getResources().getString(
+                R.string.friendsactivity_menu_leaderboard));
         
+        ensureUiListView();
+    }
+    
+    private void ensureUiListView() {
         mListAdapter = new SeparatedListAdapter(this);
+        if (mStateHolder.getSortMethod() == SORT_METHOD_RECENT) {
+            sortCheckinsRecent(mStateHolder.getCheckins(), mListAdapter);
+        } else {
+            sortCheckinsDistance(mStateHolder.getCheckins(), mListAdapter);
+        }
         
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
@@ -245,12 +250,6 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
                     intent.putExtra(UserDetailsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS, true);
                     startActivity(intent);
                 }
-            }
-        });
-        listView.setOnLongClickListener(new OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View arg0) {
-                return false;
             }
         });
 
@@ -291,17 +290,18 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
         mLayoutEmpty.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
         
-        if (mStateHolder.getIsRunningTask()) {
-        	setLoadingView();
-        } else if (mStateHolder.getCheckins().size() == 0) {
-        	setEmptyView(mLayoutEmpty);
+        if (mListAdapter.getCount() == 0) {
+            setEmptyView(mLayoutEmpty);
         }
         
-        mMenuMoreSubitems = new LinkedHashMap<Integer, String>();
-        mMenuMoreSubitems.put(MENU_MORE_MAP, getResources().getString(
-                R.string.friendsactivity_menu_map));
-        mMenuMoreSubitems.put(MENU_MORE_LEADERBOARD, getResources().getString(
-                R.string.friendsactivity_menu_leaderboard));
+        if (mStateHolder.getIsRunningTask()) {
+            setProgressBarIndeterminateVisibility(true);
+            if (!mStateHolder.getRanOnce()) {
+                setLoadingView();
+            }
+        } else {
+            setProgressBarIndeterminateVisibility(false);
+        }
     }
 
     private void sortCheckinsRecent(Group<Checkin> checkins, SeparatedListAdapter listAdapter) {
