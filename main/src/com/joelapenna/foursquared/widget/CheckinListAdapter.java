@@ -14,6 +14,7 @@ import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.CheckinTimestampSort;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
+import com.joelapenna.foursquared.util.UiUtil;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -64,7 +65,7 @@ public class CheckinListAdapter extends BaseCheckinAdapter implements Observable
 
         mRrm.addObserver(mResourcesObserver);
         
-        mIsSdk3 = MainActivity.getAndroidVersion() == 3;
+        mIsSdk3 = UiUtil.sdkVersion() == 3;
     }
     
     public void removeObserver() {

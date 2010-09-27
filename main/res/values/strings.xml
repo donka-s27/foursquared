@@ -353,6 +353,8 @@
   <string name="tab_main_nav_tips">Tips</string>
   <string name="tab_main_nav_todos">To-Do</string>
   <string name="tab_main_nav_me">Me</string>
+  <string name="tab_search_nav_venues">Venues</string>
+  <string name="tab_search_nav_map">Map</string>
   <string name="venue_activity_mayor_name_none">This place has no mayor</string>
   <string name="venue_activity_mayor_text">is the mayor</string>
   <string name="venue_activity_mayor_text_none">Check in here and it could be you</string>

@@ -6,6 +6,7 @@ package com.joelapenna.foursquared;
 
 import com.joelapenna.foursquared.preferences.Preferences;
 import com.joelapenna.foursquared.util.TabsUtil;
+import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.util.UserUtils;
 
 import android.app.Activity;
@@ -15,7 +16,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -115,7 +115,7 @@ public class MainActivity extends TabActivity {
                 UserUtils.getDrawableForMeTabByGender(userGender), 5, intentTabMe);
         
         // Fix layout for 1.5.
-        if (getAndroidVersion() < 4) {
+        if (UiUtil.sdkVersion() < 4) {
             FrameLayout flTabContent = (FrameLayout)findViewById(android.R.id.tabcontent);
             flTabContent.setPadding(0, 0, 0, 0);
         }
@@ -131,9 +131,5 @@ public class MainActivity extends TabActivity {
             Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
-    }
-    
-    public static final int getAndroidVersion() {
-        return (new Integer(Build.VERSION.SDK)).intValue();
     }
 }
