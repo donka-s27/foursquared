@@ -130,29 +130,26 @@
             android:paddingLeft="2dip"
             android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralTitle"  />
             
-	        <LinearLayout 
-              android:layout_width="wrap_content" 
-              android:layout_height="wrap_content"
-              android:orientation="horizontal"
-              android:paddingLeft="2dip"
-	          android:layout_below="@id/userDetailsActivityGeneralMayorshipsTitle" >
-              
-              <ImageView
-	            android:layout_width="16dip"
-	            android:layout_height="12dip"
-	            android:scaleType="fitXY" 
-	            android:layout_gravity="center_vertical"
-	            android:layout_marginRight="4dip"
-	            android:src="@drawable/crown_small"  />
+          <ImageView
+            android:id="@+id/userDetailsActivityGeneralMayorshipsIcon"
+	        android:layout_width="16dip"
+	        android:layout_height="12dip"
+	        android:scaleType="fitXY" 
+	        android:layout_gravity="center_vertical"
+	        android:layout_marginRight="4dip"
+	        android:layout_marginTop="7dip" 
+	        android:src="@drawable/crown_small"
+	        android:layout_below="@id/userDetailsActivityGeneralMayorshipsTitle"
+	        android:layout_alignParentLeft="true"  />
         
-	          <TextView 
-	            android:id="@+id/userDetailsActivityGeneralMayorshipsValue"
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content"
-                android:text="4"
-                android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralValue" />
-                
-            </LinearLayout>
+	      <TextView 
+	        android:id="@+id/userDetailsActivityGeneralMayorshipsValue"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:text="4"
+            android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralValue"
+	        android:layout_below="@id/userDetailsActivityGeneralMayorshipsTitle"
+	        android:layout_toRightOf="@id/userDetailsActivityGeneralMayorshipsIcon"  />
              
           <ImageView
 	        android:id="@+id/userDetailsActivityGeneralMayorshipsChevron"
@@ -188,30 +185,27 @@
             android:paddingLeft="2dip"
             android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralTitle"  />
             
-	        <LinearLayout 
-              android:layout_width="wrap_content" 
-              android:layout_height="wrap_content"
-              android:orientation="horizontal"
-              android:paddingLeft="2dip"
-	          android:layout_below="@id/userDetailsActivityGeneralBadgesTitle" >
-              
-              <ImageView
-	            android:layout_width="17dip"
-	            android:layout_height="20dip"
-	            android:scaleType="fitXY" 
-	            android:layout_gravity="center_vertical"
-	            android:layout_marginRight="4dip"
-	            android:src="@drawable/badge"  />
+          <ImageView
+            android:id="@+id/userDetailsActivityGeneralBadgesIcon"
+	        android:layout_width="17dip"
+	        android:layout_height="20dip"
+	        android:scaleType="fitXY" 
+	        android:layout_gravity="center_vertical"
+	        android:layout_marginRight="4dip"
+	        android:layout_marginTop="3dip" 
+	        android:src="@drawable/badge"
+	        android:layout_below="@id/userDetailsActivityGeneralBadgesTitle"
+	        android:layout_alignParentLeft="true"   />
         
-	          <TextView 
-	            android:id="@+id/userDetailsActivityGeneralBadgesValue"
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content"
-                android:text="4"
-                android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralValue" />
+	      <TextView 
+	        android:id="@+id/userDetailsActivityGeneralBadgesValue"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:text="4"
+            android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralValue"
+	        android:layout_below="@id/userDetailsActivityGeneralBadgesTitle"
+	        android:layout_toRightOf="@id/userDetailsActivityGeneralBadgesIcon" />
                 
-            </LinearLayout>
-             
           <ImageView
 	        android:id="@+id/userDetailsActivityGeneralBadgesChevron"
 	        android:layout_width="9dip"
@@ -245,30 +239,27 @@
             android:paddingLeft="2dip"
             android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralTitle"  />
             
-	        <LinearLayout 
-              android:layout_width="wrap_content" 
-              android:layout_height="wrap_content"
-              android:orientation="horizontal"
-              android:paddingLeft="2dip"
-	          android:layout_below="@id/userDetailsActivityGeneralTipsTitle" >
-              
-              <ImageView
-	            android:layout_width="13dip"
-	            android:layout_height="19dip"
-	            android:scaleType="fitXY" 
-	            android:layout_gravity="center_vertical"
-	            android:layout_marginRight="4dip"
-	            android:src="@drawable/tip"  />
+          <ImageView
+            android:id="@+id/userDetailsActivityGeneralTipsIcon"
+	        android:layout_width="13dip"
+	        android:layout_height="19dip"
+	        android:scaleType="fitXY" 
+	        android:layout_gravity="center_vertical"
+	        android:layout_marginRight="4dip"
+	        android:layout_marginTop="3dip" 
+	        android:src="@drawable/tip"
+	        android:layout_below="@id/userDetailsActivityGeneralTipsTitle"
+	        android:layout_alignParentLeft="true"  />
         
-	          <TextView 
-	            android:id="@+id/userDetailsActivityGeneralTipsValue"
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content"
-                android:text="4"
-                android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralValue" />
-                
-            </LinearLayout>
-             
+	      <TextView 
+	        android:id="@+id/userDetailsActivityGeneralTipsValue"
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content"
+            android:text="4"
+            android:textAppearance="@style/TextViewStyleUserDetailsActivityGeneralValue"
+	        android:layout_below="@id/userDetailsActivityGeneralTipsTitle"
+	        android:layout_toRightOf="@id/userDetailsActivityGeneralTipsIcon" />
+              
           <ImageView
 	        android:id="@+id/userDetailsActivityGeneralTipsChevron"
 	        android:layout_width="9dip"
