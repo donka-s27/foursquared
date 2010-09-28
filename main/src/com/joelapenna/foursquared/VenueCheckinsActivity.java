@@ -4,6 +4,15 @@
 
 package com.joelapenna.foursquared;
 
+import com.joelapenna.foursquare.types.Checkin;
+import com.joelapenna.foursquare.types.Group;
+import com.joelapenna.foursquare.types.User;
+import com.joelapenna.foursquare.types.Venue;
+import com.joelapenna.foursquared.app.LoadableListActivity;
+import com.joelapenna.foursquared.util.UserUtils;
+import com.joelapenna.foursquared.widget.CheckinListAdapter;
+import com.joelapenna.foursquared.widget.SeparatedListAdapter;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,13 +23,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-
-import com.joelapenna.foursquare.types.Checkin;
-import com.joelapenna.foursquare.types.Group;
-import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.app.LoadableListActivity;
-import com.joelapenna.foursquared.widget.CheckinListAdapter;
-import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 
 /**
  * @author Joe LaPenna (joe@joelapenna.com)
@@ -56,9 +58,10 @@ public class VenueCheckinsActivity extends LoadableListActivity {
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
         } else {
-            mStateHolder = new StateHolder();
             if (getIntent().hasExtra(INTENT_EXTRA_VENUE)) {
-            	mStateHolder.setVenue((Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_VENUE));
+                mStateHolder = new StateHolder(
+            	    (Venue)getIntent().getExtras().getParcelable(INTENT_EXTRA_VENUE),
+            	    ((Foursquared) getApplication()).getUserId());
             } else {
                 Log.e(TAG, "VenueCheckinsActivity requires a venue parcel its intent extras.");
                 finish();
@@ -86,21 +89,45 @@ public class VenueCheckinsActivity extends LoadableListActivity {
 
     private void ensureUi() {
     	
-    	Group<Checkin> checkins = mStateHolder.getVenue().getCheckins();
-
-    	CheckinListAdapter groupAdapter = new CheckinListAdapter(this,
-                ((Foursquared) getApplication()).getRemoteResourceManager());
-        groupAdapter.setGroup(checkins);
-        
-        String title = "";
-        if (checkins.size() == 1) {
-		    title = getResources().getString(R.string.venue_activity_people_count_single, checkins.size());
-		} else {
-		    title = getResources().getString(R.string.venue_activity_people_count_plural, checkins.size());
-		}
-        
     	mListAdapter = new SeparatedListAdapter(this);
-        mListAdapter.addSection(title, groupAdapter);
+    	
+    	if (mStateHolder.getCheckinsYou().size() > 0) {
+    	    String title = getResources().getString(R.string.venue_activity_people_count_you);
+    	    
+            CheckinListAdapter adapter = new CheckinListAdapter(this,
+                    ((Foursquared) getApplication()).getRemoteResourceManager());
+            adapter.setGroup(mStateHolder.getCheckinsYou());
+            mListAdapter.addSection(title, adapter);
+    	}
+    	if (mStateHolder.getCheckinsFriends().size() > 0) {
+    	    String title = getResources().getString(
+                mStateHolder.getCheckinsOthers().size() == 1 ?
+                    R.string.venue_activity_checkins_count_friends_single :
+                    R.string.venue_activity_checkins_count_friends_plural, 
+                    mStateHolder.getCheckinsOthers().size());
+    	    
+            CheckinListAdapter adapter = new CheckinListAdapter(this,
+                    ((Foursquared) getApplication()).getRemoteResourceManager());
+            adapter.setGroup(mStateHolder.getCheckinsFriends());
+            mListAdapter.addSection(title, adapter);
+        } 
+    	if (mStateHolder.getCheckinsOthers().size() > 0) {
+    	    boolean others = mStateHolder.getCheckinsYou().size() + 
+    	        mStateHolder.getCheckinsFriends().size() > 0;
+    	    
+    	    String title = getResources().getString(
+    	        mStateHolder.getCheckinsOthers().size() == 1 ?
+    	            (others ? R.string.venue_activity_checkins_count_others_single :
+    	                R.string.venue_activity_checkins_count_others_alone_single) :
+                    (others ? R.string.venue_activity_checkins_count_others_plural : 
+                        R.string.venue_activity_checkins_count_others_alone_plural), 
+                    mStateHolder.getCheckinsOthers().size());
+    	    
+            CheckinListAdapter adapter = new CheckinListAdapter(this,
+                    ((Foursquared) getApplication()).getRemoteResourceManager());
+            adapter.setGroup(mStateHolder.getCheckinsOthers());
+            mListAdapter.addSection(title, adapter);
+        }
         
         ListView listView = getListView();
         listView.setAdapter(mListAdapter);
@@ -120,17 +147,40 @@ public class VenueCheckinsActivity extends LoadableListActivity {
     
     private static class StateHolder {
         
-        private Venue mVenue;
+        private Group<Checkin> mYou;
+        private Group<Checkin> mFriends;
+        private Group<Checkin> mOthers;
         
-        public StateHolder() {
+        public StateHolder(Venue venue, String loggedInUserId) {
+            mYou = new Group<Checkin>();
+            mFriends = new Group<Checkin>();
+            mOthers = new Group<Checkin>();
+            
+            mYou.clear();
+            mFriends.clear();
+            mOthers.clear();
+            for (Checkin it : venue.getCheckins()) {
+                User user = it.getUser();
+                if (UserUtils.isFriend(user)) {
+                    mFriends.add(it);
+                } else if (loggedInUserId.equals(user.getId())) {
+                    mYou.add(it);
+                } else {
+                    mOthers.add(it);
+                }
+            }
         }
  
-        public Venue getVenue() {
-            return mVenue;
+        public Group<Checkin> getCheckinsYou() {
+            return mYou;
+        }
+
+        public Group<Checkin> getCheckinsFriends() {
+            return mFriends;
         }
         
-        public void setVenue(Venue venue) {
-        	mVenue = venue;
+        public Group<Checkin> getCheckinsOthers() {
+            return mOthers;
         }
     }
 }
