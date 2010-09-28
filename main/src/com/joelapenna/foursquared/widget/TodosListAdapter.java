@@ -13,6 +13,7 @@ import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
 import com.joelapenna.foursquared.util.TipUtils;
+import com.joelapenna.foursquared.util.UiUtil;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -53,6 +54,7 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
     private int mLoadedPhotoIndex;
     private Map<String, String> mCachedTimestamps;
     private boolean mDisplayVenueTitles;
+    private int mSdk;
 
     
     public TodosListAdapter(Context context, RemoteResourceManager rrm) {
@@ -65,6 +67,7 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
         mLoadedPhotoIndex = 0;
         mCachedTimestamps = new HashMap<String, String>();
         mDisplayVenueTitles = true;
+        mSdk = UiUtil.sdkVersion();
         
         mRrm.addObserver(mResourcesObserver);
     }
@@ -138,7 +141,12 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
             holder.body.setText(tip.getText());
             holder.body.setVisibility(View.VISIBLE);
         } else {
-            holder.body.setVisibility(View.GONE);
+            if (mSdk > 3) {
+                holder.body.setVisibility(View.GONE);
+            } else {
+                holder.body.setText("");
+                holder.body.setVisibility(View.INVISIBLE);
+            }
         }
         
         
