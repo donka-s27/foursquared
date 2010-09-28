@@ -77,7 +77,8 @@
       android:id="@+id/venueActivityDetailsProgress"
       android:layout_width="fill_parent" 
       android:layout_height="fill_parent"
-      android:gravity="center" >
+      android:gravity="center"
+      android:visibility="gone" >
     
       <ProgressBar
         android:layout_width="wrap_content"
@@ -87,15 +88,14 @@
         
     <ScrollView
       android:layout_width="fill_parent"
-      android:layout_height="fill_parent" >
+      android:layout_height="0dip"
+      android:layout_weight="1" >
       
       <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical" >
 
-
-    
         <RelativeLayout 
           android:id="@+id/venueActivityMayor"
           android:layout_width="fill_parent" 
@@ -299,8 +299,7 @@
       android:layout_width="fill_parent" 
       android:layout_height="wrap_content"
       android:layout_gravity="bottom"
-      android:background="@color/color_bright_green"
-      android:visibility="gone" >
+      android:background="@color/color_bright_green" >
       
       <TextView 
         android:layout_width="wrap_content" 
