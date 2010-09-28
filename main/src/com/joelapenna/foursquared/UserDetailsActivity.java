@@ -176,6 +176,8 @@ public class UserDetailsActivity extends Activity {
 
     private void ensureUi() {
         
+        int sdk = UiUtil.sdkVersion();
+        
         View viewProgressBar = findViewById(R.id.venueActivityDetailsProgress);
         TextView tvUsername = (TextView)findViewById(R.id.userDetailsActivityUsername);
         TextView tvLastSeen = (TextView)findViewById(R.id.userDetailsActivityHometownOrLastSeen);
@@ -307,7 +309,9 @@ public class UserDetailsActivity extends Activity {
                         }
                     });
                     viewMayorships.setFocusable(true);
-                    ivMayorshipsChevron.setVisibility(View.VISIBLE);
+                    if (sdk > 3) {
+                        ivMayorshipsChevron.setVisibility(View.VISIBLE);
+                    }
                 }
                 
                 if (user.getBadges() != null && user.getBadges().size() > 0) {
@@ -318,7 +322,9 @@ public class UserDetailsActivity extends Activity {
                         }
                     });
                     viewBadges.setFocusable(true);
-                    ivBadgesChevron.setVisibility(View.VISIBLE);
+                    if (sdk > 3) {
+                        ivBadgesChevron.setVisibility(View.VISIBLE);
+                    }
                 }
                 
                 if (user.getTipCount() > 0) {
@@ -329,7 +335,9 @@ public class UserDetailsActivity extends Activity {
                         }
                     });
                     viewTips.setFocusable(true);
-                    ivTipsChevron.setVisibility(View.VISIBLE);
+                    if (sdk > 3) {
+                        ivTipsChevron.setVisibility(View.VISIBLE);
+                    }
                 }
                 
                 // The rest of the items depend on if we're viewing ourselves or not.
