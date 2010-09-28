@@ -26,6 +26,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -193,6 +194,7 @@ public class VenueActivity extends Activity {
     	ImageView ivTipsChevron = (ImageView)findViewById(R.id.venueActivityTipsChevron);
 
         View viewMoreInfo = findViewById(R.id.venueActivityMoreInfo);
+        TextView tvMoreInfoText = (TextView)findViewById(R.id.venueActivityMoreTitle);
 
     	Venue venue = mStateHolder.getVenue();
     	if (mStateHolder.getLoadType() == StateHolder.LOAD_TYPE_VENUE_FULL || 
@@ -297,16 +299,22 @@ public class VenueActivity extends Activity {
                                 R.string.venue_activity_tip_count_single :
                                 R.string.venue_activity_tip_count_plural,
                                 venue.getTips().size()));
+	                    tvTipsTextExtra.setVisibility(View.GONE);
 		    	    }
-		    		
+
 		    		ivTipsChevron.setVisibility(View.VISIBLE);
 	                setClickHandlerTips(viewTips);
 		    	} else {
-	    			tvTipsText.setText(getResources().getString(R.string.venue_activity_tip_count_none));
+                    tvTipsText.setText(getResources().getString(R.string.venue_activity_tip_count_none));
+                    tvTipsTextExtra.setVisibility(View.GONE);
 		    		ivTipsChevron.setVisibility(View.INVISIBLE);
-	    			viewTips.setTag(null);
 		    	}
                 viewTips.setVisibility(View.VISIBLE);
+                
+                if (tvTipsTextExtra.getVisibility() != View.VISIBLE) {
+                    tvTipsText.setPadding(tvTipsText.getPaddingLeft(), tvMoreInfoText.getPaddingTop(), 
+                            tvTipsText.getPaddingRight(), tvMoreInfoText.getPaddingBottom());
+                }
 
                 viewMoreInfo.setVisibility(View.VISIBLE);
                 setClickHandlerMoreInfo(viewMoreInfo);
@@ -343,7 +351,13 @@ public class VenueActivity extends Activity {
         		btnCheckin.setOnClickListener(new OnClickListener() {
     				@Override
     				public void onClick(View v) {
-    					startCheckin();
+    				    SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(
+    	                        VenueActivity.this);
+    	                if (settings.getBoolean(Preferences.PREFERENCE_IMMEDIATE_CHECKIN, false)) {
+    	                    startCheckinQuick();
+    	                } else {
+    	                    startCheckin();   
+    	                }
     				}
         		});
     		}
@@ -599,6 +613,21 @@ public class VenueActivity extends Activity {
         intent.putExtra(CheckinOrShoutGatherInfoActivity.INTENT_EXTRA_IS_CHECKIN, true);
         intent.putExtra(CheckinOrShoutGatherInfoActivity.INTENT_EXTRA_VENUE_ID, mStateHolder.getVenue().getId());
         intent.putExtra(CheckinOrShoutGatherInfoActivity.INTENT_EXTRA_VENUE_NAME, mStateHolder.getVenue().getName());
+        startActivityForResult(intent, RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE);
+    }
+    
+    private void startCheckinQuick() {
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean tellFriends = settings.getBoolean(Preferences.PREFERENCE_SHARE_CHECKIN, true);
+        boolean tellTwitter = settings.getBoolean(Preferences.PREFERENCE_TWITTER_CHECKIN, false);
+        boolean tellFacebook = settings.getBoolean(Preferences.PREFERENCE_FACEBOOK_CHECKIN, false);
+        
+        Intent intent = new Intent(VenueActivity.this, CheckinExecuteActivity.class);
+        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_VENUE_ID, mStateHolder.getVenue().getId());
+        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_SHOUT, "");
+        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_TELL_FRIENDS, tellFriends);
+        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_TELL_TWITTER, tellTwitter);
+        intent.putExtra(CheckinExecuteActivity.INTENT_EXTRA_TELL_FACEBOOK, tellFacebook);
         startActivityForResult(intent, RESULT_CODE_ACTIVITY_CHECKIN_EXECUTE);
     }
     
