@@ -25,7 +25,8 @@
         android:id="@+id/listviewLayout"
         android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:background="@drawable/listview_item_manual">
         <ListView
           android:id="@+id/list"
           android:layout_width="fill_parent"
