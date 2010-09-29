@@ -123,9 +123,6 @@ public class FetchImageForViewIntent extends Activity {
             }
 
             String progressBarTitle = getIntent().getStringExtra(PROGRESS_BAR_TITLE);
-            if (progressBarTitle == null) {
-                progressBarTitle = "Fetching Image";
-            }
             String progressBarMessage = getIntent().getStringExtra(PROGRESS_BAR_MESSAGE);
             if (progressBarMessage == null) {
                 progressBarMessage = "Fetching image...";

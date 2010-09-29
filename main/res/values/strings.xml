@@ -373,7 +373,7 @@
   <string name="venue_activity_people_count_friend_single_plural">%d friend is here with %d other people</string>
   <string name="venue_activity_people_count_friend_plural_single">%d friends are here with %d other person</string>
   <string name="venue_activity_people_count_friend_plural_plural">%d friends are here with %d other people</string>
-  <string name="venue_activity_more_info_title">View on a map</string>
+  <string name="venue_activity_more_info_title">Map view</string>
   <string name="venue_activity_more_info_text">Map, contact and more</string>
   <string name="venue_activity_menu_add_tip">Leave Tip</string>
   <string name="venue_activity_menu_add_todo">Add To-Do</string>
