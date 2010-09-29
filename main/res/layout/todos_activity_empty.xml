@@ -11,11 +11,11 @@
   android:gravity="center"
   android:background="@drawable/listview_item_manual" > 
     
-  <ImageView
-    android:id="@+id/todosActivityEmptyImageView"
-    android:layout_width="170dip"
-	android:layout_height="155dip"
-    android:src="@drawable/sadface"
-    android:scaleType="fitXY" />
+  <TextView
+    android:id="@+id/todosActivityEmptyTextView"
+    android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:text="No to-do's available"
+	/>
     
 </LinearLayout>

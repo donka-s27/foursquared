@@ -49,7 +49,7 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
     
     public static final String INTENT_EXTRA_USER_ID = Foursquared.PACKAGE_NAME
         + ".UserDetailsFriendsFollowersActivity.INTENT_EXTRA_USER_ID";
-
+    
     private StateHolder mStateHolder;
     private FriendActionableListAdapter mListAdapter;
     private ScrollView mLayoutEmpty;
@@ -243,6 +243,23 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
 
         return super.onOptionsItemSelected(item);
     }
+    
+    /*
+     * Leaving this out for now as it may be very costly for users with very large
+     * friend networks.
+    private void prepareResultIntent() {
+        Group<User> followers = mStateHolder.getFollowers();
+        Group<User> friends = mStateHolder.getFollowers();
+        
+        User[] followersArr = (User[])followers.toArray(new User[followers.size()]);
+        User[] friendsArr = (User[])friends.toArray(new User[friends.size()]);
+
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_FOLLOWERS_RETURNED, followersArr);
+        intent.putExtra(EXTRA_FRIENDS_RETURNED, friendsArr);
+        setResult(CODE, intent);
+    }
+    */
     
     private void updateFollowerStatus(User user, boolean approve) {
         mStateHolder.startTaskUpdateFollower(this, user, approve);
@@ -634,9 +651,7 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         }
         
         public void removeTaskUpdateFollower(TaskUpdateFollower task) {
-            Log.i(TAG, "Cleaning up followers tasks... " + mTasksUpdateFollowers.size());
             mTasksUpdateFollowers.remove(task);
-            Log.i(TAG, "   Cleanup s1 complete... " + mTasksUpdateFollowers.size());
             
             // Try to cleanup anyone we missed, this could happen for a brief period
             // during rotation.
@@ -645,7 +660,6 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
                     mTasksUpdateFollowers.remove(i);
                 }
             }
-            Log.i(TAG, "   Cleanup s2 complete... " + mTasksUpdateFollowers.size());
         }
     }
 }
