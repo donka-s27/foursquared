@@ -245,10 +245,10 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
         // of the target tip.
         if (requestCode == ACTIVITY_TIP && resultCode == Activity.RESULT_OK) {
             if (data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
-                Log.d(TAG, "onActivityResult(), return tip intent extra found, processing.");
+                Log.i(TAG, "onActivityResult(), return tip intent extra found, processing.");
                 updateTip((Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED));
             } else {
-                Log.d(TAG, "onActivityResult(), no return tip intent extra found.");
+                Log.i(TAG, "onActivityResult(), no return tip intent extra found.");
             }
         }
     }
@@ -375,6 +375,7 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
                 return foursquare.tips(
                         LocationUtils.createFoursquareLocation(loc), 
                         mUserId,
+                        null,
                         mRecentOnly ? "recent" : "popular",
                         30);
             } catch (Exception e) {

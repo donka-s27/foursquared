@@ -366,6 +366,7 @@ public class TipsActivity extends LoadableListActivityWithViewAndHeader {
                         LocationUtils.createFoursquareLocation(loc), 
                         null,
                         mFriendsOnly ? "friends" : "nearby",
+                        null,
                         30);
             } catch (Exception e) {
                 mReason = e;

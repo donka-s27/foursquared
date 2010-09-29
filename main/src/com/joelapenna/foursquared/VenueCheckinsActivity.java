@@ -104,7 +104,7 @@ public class VenueCheckinsActivity extends LoadableListActivity {
                 mStateHolder.getCheckinsOthers().size() == 1 ?
                     R.string.venue_activity_checkins_count_friends_single :
                     R.string.venue_activity_checkins_count_friends_plural, 
-                    mStateHolder.getCheckinsOthers().size());
+                    mStateHolder.getCheckinsFriends().size());
     	    
             CheckinListAdapter adapter = new CheckinListAdapter(this,
                     ((Foursquared) getApplication()).getRemoteResourceManager());
