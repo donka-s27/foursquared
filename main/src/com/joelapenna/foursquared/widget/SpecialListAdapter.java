@@ -4,23 +4,19 @@
 
 package com.joelapenna.foursquared.widget;
 
+import com.joelapenna.foursquare.types.Special;
+import com.joelapenna.foursquared.R;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.joelapenna.foursquare.types.Special;
-import com.joelapenna.foursquared.FoursquaredSettings;
-import com.joelapenna.foursquared.R;
-
 /**
  * @author avolovoy
  */
 public class SpecialListAdapter extends BaseGroupAdapter<Special> {
-
-    private static final String TAG = "SpecialListAdapter";
-    private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
     private LayoutInflater mInflater;
     private int mLayoutToInflate;
