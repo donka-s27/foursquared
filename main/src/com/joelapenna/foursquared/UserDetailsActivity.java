@@ -570,8 +570,7 @@ public class UserDetailsActivity extends Activity {
             Intent intent = new Intent(UserDetailsActivity.this, BadgesActivity.class);
             intent.putParcelableArrayListExtra(BadgesActivity.EXTRA_BADGE_ARRAY_LIST_PARCEL,
                     mStateHolder.getUser().getBadges());
-            intent.putExtra(BadgesActivity.EXTRA_USER_NAME, 
-                    StringFormatters.getUserFullName(mStateHolder.getUser()));
+            intent.putExtra(BadgesActivity.EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
             startActivity(intent);
         }
     }
@@ -580,16 +579,14 @@ public class UserDetailsActivity extends Activity {
         if (mStateHolder.getUser() != null) {
             Intent intent = new Intent(UserDetailsActivity.this, UserMayorshipsActivity.class);
             intent.putExtra(UserMayorshipsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
-            intent.putExtra(UserMayorshipsActivity.EXTRA_USER_NAME, 
-                    StringFormatters.getUserFullName(mStateHolder.getUser()));
+            intent.putExtra(UserMayorshipsActivity.EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
             startActivity(intent); 
         }
     }
     
     private void startCheckinsActivity() {
         Intent intent = new Intent(UserDetailsActivity.this, UserHistoryActivity.class);
-        intent.putExtra(UserHistoryActivity.EXTRA_USER_NAME, 
-                StringFormatters.getUserFullName(mStateHolder.getUser()));
+        intent.putExtra(UserHistoryActivity.EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
         startActivity(intent); 
     }
     
@@ -599,13 +596,11 @@ public class UserDetailsActivity extends Activity {
         Intent intent = null;
         if (user.getFollowerCount() > 0) {
             intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsFollowersActivity.class);
-            intent.putExtra(UserDetailsFriendsFollowersActivity.EXTRA_USER_NAME, 
-                    StringFormatters.getUserFullName(mStateHolder.getUser()));
+            intent.putExtra(UserDetailsFriendsFollowersActivity.EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
         } else {
             intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsActivity.class);
             intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
-            intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_NAME, 
-                    StringFormatters.getUserFullName(mStateHolder.getUser()));
+            intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
         }
         startActivity(intent); 
     }
@@ -625,8 +620,7 @@ public class UserDetailsActivity extends Activity {
         } else {
             intent = new Intent(UserDetailsActivity.this, UserDetailsFriendsActivity.class);
             intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_ID, mStateHolder.getUser().getId());
-            intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_NAME, 
-                    StringFormatters.getUserFullName(mStateHolder.getUser()));
+            intent.putExtra(UserDetailsFriendsActivity.EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
         }
         startActivity(intent); 
     }
@@ -634,16 +628,14 @@ public class UserDetailsActivity extends Activity {
     private void startTodosActivity() {
         Intent intent = new Intent(UserDetailsActivity.this, TodosActivity.class);
         intent.putExtra(TodosActivity.INTENT_EXTRA_USER_ID, mStateHolder.getUser().getId());
-        intent.putExtra(TodosActivity.INTENT_EXTRA_USER_NAME, StringFormatters.getUserFullName(
-                mStateHolder.getUser()));
+        intent.putExtra(TodosActivity.INTENT_EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
         startActivity(intent); 
     }
     
     private void startTipsActivity() {
         Intent intent = new Intent(UserDetailsActivity.this, UserDetailsTipsActivity.class);
         intent.putExtra(UserDetailsTipsActivity.INTENT_EXTRA_USER_ID, mStateHolder.getUser().getId());
-        intent.putExtra(UserDetailsTipsActivity.INTENT_EXTRA_USER_NAME, StringFormatters.getUserFullName(
-                mStateHolder.getUser()));
+        intent.putExtra(UserDetailsTipsActivity.INTENT_EXTRA_USER_NAME, mStateHolder.getUser().getFirstname());
         startActivity(intent); 
     }
     
