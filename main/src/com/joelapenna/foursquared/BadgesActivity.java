@@ -43,6 +43,8 @@ public class BadgesActivity extends Activity {
 
     public static final String EXTRA_BADGE_ARRAY_LIST_PARCEL = Foursquared.PACKAGE_NAME
         + ".BadgesActivity.EXTRA_BADGE_ARRAY_LIST_PARCEL";
+    public static final String EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+        + ".BadgesActivity.EXTRA_USER_NAME";
     
     private static final int DIALOG_ID_INFO = 1;
 
@@ -70,9 +72,9 @@ public class BadgesActivity extends Activity {
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
         } else {
-            mStateHolder = new StateHolder();
-            if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(
-                    EXTRA_BADGE_ARRAY_LIST_PARCEL)) {
+            if (getIntent().hasExtra(EXTRA_BADGE_ARRAY_LIST_PARCEL) && getIntent().hasExtra(EXTRA_USER_NAME)) {
+
+                mStateHolder = new StateHolder(getIntent().getStringExtra(EXTRA_USER_NAME));
                 
                 // Can't jump from ArrayList to Group, argh.
                 ArrayList<Badge> badges = getIntent().getExtras().getParcelableArrayList(
@@ -120,6 +122,8 @@ public class BadgesActivity extends Activity {
                 showDialogInfo(badge.getName(), badge.getDescription(), badge.getIcon());
             }
         });
+        
+        setTitle(getString(R.string.badges_activity_title, mStateHolder.getUsername()));
     }
     
     private void showDialogInfo(String title, String message, String badgeIconUrl) {
@@ -156,21 +160,27 @@ public class BadgesActivity extends Activity {
     }
     
     private static class StateHolder {
+        private String mUsername;
         private Group<Badge> mBadges;
         private String mDlgInfoTitle;
         private String mDlgInfoMessage;
         private String mDlgInfoBadgeIconUrl;
         
-        public StateHolder() {
+        public StateHolder(String username) {
+            mUsername = username;
             mBadges = new Group<Badge>();
+        }
+        
+        public String getUsername() {
+            return mUsername;
+        }
+
+        public Group<Badge> getBadges() {
+            return mBadges;
         }
         
         public void setBadges(Group<Badge> badges) { 
             mBadges = badges;
-        }
-        
-        public Group<Badge> getBadges() {
-            return mBadges;
         }
         
         public String getDlgInfoTitle() {

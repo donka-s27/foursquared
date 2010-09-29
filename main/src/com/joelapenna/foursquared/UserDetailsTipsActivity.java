@@ -49,7 +49,9 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
     public static final String INTENT_EXTRA_USER_ID = Foursquared.PACKAGE_NAME
-            + ".TipsActivity.INTENT_EXTRA_USER_ID";
+            + ".UserDetailsTipsActivity.INTENT_EXTRA_USER_ID";
+    public static final String INTENT_EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+            + ".UserDetailsTipsActivity.INTENT_EXTRA_USER_NAME";
     
     private static final int ACTIVITY_TIP = 500;
     
@@ -73,18 +75,19 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.user_details_tips_activity_title));
         
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivity(this);
         } else {
-            if (getIntent().hasExtra(INTENT_EXTRA_USER_ID)) {
-                mStateHolder = new StateHolder(getIntent().getStringExtra(INTENT_EXTRA_USER_ID));
+            if (getIntent().hasExtra(INTENT_EXTRA_USER_ID) && getIntent().hasExtra(INTENT_EXTRA_USER_NAME)) {
+                mStateHolder = new StateHolder(
+                        getIntent().getStringExtra(INTENT_EXTRA_USER_ID),
+                        getIntent().getStringExtra(INTENT_EXTRA_USER_NAME));
                 mStateHolder.setRecentOnly(true);
             } else {
-                Log.e(TAG, TAG + " requires user ID in intent extras.");
+                Log.e(TAG, TAG + " requires user ID and name in intent extras.");
                 finish();
                 return;
             }
@@ -215,6 +218,8 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
         } else {
             setProgressBarIndeterminateVisibility(false);
         }
+
+        setTitle(getString(R.string.user_details_tips_activity_title, mStateHolder.getUsername()));
     }
     
     @Override
@@ -375,7 +380,7 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
                 return foursquare.tips(
                         LocationUtils.createFoursquareLocation(loc), 
                         mUserId,
-                        null,
+                        "nearby",
                         mRecentOnly ? "recent" : "popular",
                         30);
             } catch (Exception e) {
@@ -407,6 +412,7 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
     private static class StateHolder {
         
         private String mUserId;
+        private String mUsername;
         private Group<Tip> mTipsRecent;
         private Group<Tip> mTipsPopular;
         private TaskTips mTaskTipsRecent;
@@ -418,8 +424,9 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
         private boolean mRanOnceTipsPopular;
         
         
-        public StateHolder(String userId) {
+        public StateHolder(String userId, String username) {
             mUserId = userId;
+            mUsername = username;
             mIsRunningTaskTipsRecent = false;
             mIsRunningTaskTipsPopular = false;
             mRanOnceTipsRecent = false;
@@ -427,6 +434,10 @@ public class UserDetailsTipsActivity extends LoadableListActivityWithViewAndHead
             mTipsRecent = new Group<Tip>();
             mTipsPopular = new Group<Tip>();
             mRecentOnly = true;
+        }
+        
+        public String getUsername() {
+            return mUsername;
         }
         
         public Group<Tip> getTipsRecent() {

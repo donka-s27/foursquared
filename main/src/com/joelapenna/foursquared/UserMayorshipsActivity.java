@@ -23,8 +23,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
 import java.util.ArrayList;
 
@@ -42,6 +42,8 @@ public class UserMayorshipsActivity extends LoadableListActivity {
 
     public static final String EXTRA_USER_ID = Foursquared.PACKAGE_NAME
         + ".UserMayorshipsActivity.EXTRA_USER_ID";
+    public static final String EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+        + ".UserMayorshipsActivity.EXTRA_USER_NAME";
 
     public static final String EXTRA_VENUE_LIST_PARCEL = Foursquared.PACKAGE_NAME
         + ".UserMayorshipsActivity.EXTRA_VENUE_LIST_PARCEL";
@@ -62,7 +64,6 @@ public class UserMayorshipsActivity extends LoadableListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.user_mayorships_activity_title));
 
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
@@ -70,13 +71,15 @@ public class UserMayorshipsActivity extends LoadableListActivity {
             mStateHolder.setActivityForTaskVenues(this);
         } else {
 
-            mStateHolder = new StateHolder();
-            if (getIntent().getExtras().containsKey(EXTRA_USER_ID) == false) {
+            if (getIntent().hasExtra(EXTRA_USER_ID) && getIntent().hasExtra(EXTRA_USER_NAME)) {
+                mStateHolder = new StateHolder(
+                        getIntent().getStringExtra(EXTRA_USER_ID),
+                        getIntent().getStringExtra(EXTRA_USER_NAME));
+            } else {
                 Log.e(TAG, "UserMayorships requires a userid in its intent extras.");
                 finish();
                 return;
             }
-            mStateHolder.setUserId(getIntent().getExtras().getString(EXTRA_USER_ID));
             
             if (getIntent().getExtras().containsKey(EXTRA_VENUE_LIST_PARCEL)) {
                 // Can't jump from ArrayList to Group, argh.
@@ -89,7 +92,7 @@ public class UserMayorshipsActivity extends LoadableListActivity {
                 mStateHolder.setVenues(group);
                 
             } else {
-                mStateHolder.startTaskVenues(this, mStateHolder.getUserId());
+                mStateHolder.startTaskVenues(this);
             }
         }
         
@@ -145,6 +148,8 @@ public class UserMayorshipsActivity extends LoadableListActivity {
         } else if (mStateHolder.getFetchedVenuesOnce() && mStateHolder.getVenues().size() == 0) {
             setEmptyView();
         }
+
+        setTitle(getString(R.string.user_mayorships_activity_title, mStateHolder.getUsername()));
     }
 
     private void onVenuesTaskComplete(User user, Exception ex) {
@@ -235,10 +240,8 @@ public class UserMayorshipsActivity extends LoadableListActivity {
     
     private static class StateHolder {
         
-        /** User id. */
         private String mUserId;
-        
-        /** Friends of the current user. */
+        private String mUsername;
         private Group<Venue> mVenues;
         
         private VenuesTask mTaskVenues;
@@ -246,18 +249,16 @@ public class UserMayorshipsActivity extends LoadableListActivity {
         private boolean mFetchedVenuesOnce;
         
         
-        public StateHolder() {
+        public StateHolder(String userId, String username) {
+            mUserId = userId;
+            mUsername = username;
             mIsRunningVenuesTask = false;
             mFetchedVenuesOnce = false;
             mVenues = new Group<Venue>();
         }
- 
-        public String getUserId() {
-            return mUserId;
-        }
         
-        public void setUserId(String userId) {
-            mUserId = userId;
+        public String getUsername() {
+            return mUsername;
         }
         
         public Group<Venue> getVenues() {
@@ -268,11 +269,10 @@ public class UserMayorshipsActivity extends LoadableListActivity {
             mVenues = venues;
         }
         
-        public void startTaskVenues(UserMayorshipsActivity activity,
-                                    String userId) {
+        public void startTaskVenues(UserMayorshipsActivity activity) {
             mIsRunningVenuesTask = true;
             mTaskVenues = new VenuesTask(activity);
-            mTaskVenues.execute(userId);
+            mTaskVenues.execute(mUserId);
         }
 
         public void setActivityForTaskVenues(UserMayorshipsActivity activity) {

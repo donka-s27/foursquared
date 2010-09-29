@@ -47,8 +47,8 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
     static final String TAG = "UserDetailsFriendsFollowersActivity";
     static final boolean DEBUG = FoursquaredSettings.DEBUG;
     
-    public static final String INTENT_EXTRA_USER_ID = Foursquared.PACKAGE_NAME
-        + ".UserDetailsFriendsFollowersActivity.INTENT_EXTRA_USER_ID";
+    public static final String EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+        + ".UserDetailsFriendsFollowersActivity.EXTRA_USER_NAME";
     
     private StateHolder mStateHolder;
     private FriendActionableListAdapter mListAdapter;
@@ -69,15 +69,20 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.user_details_friends_followers_activity_title));
         
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivity(this);
         } else {
-            mStateHolder = new StateHolder();
-            mStateHolder.setFollowersOnly(true);
+            if (getIntent().hasExtra(EXTRA_USER_NAME)) {
+                mStateHolder = new StateHolder(getIntent().getStringExtra(EXTRA_USER_NAME));
+                mStateHolder.setFollowersOnly(true);
+            } else {
+                Log.e(TAG, TAG + " requires user name in intent extras.");
+                finish();
+                return;
+            }
         }
 
         ensureUi();
@@ -203,6 +208,9 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         } else {
             setProgressBarIndeterminateVisibility(false);
         }
+        
+        setTitle(getString(R.string.user_details_friends_followers_activity_title,
+                mStateHolder.getUsername()));
     }
     
     private FriendActionableListAdapter.ButtonRowClickHandler mButtonRowClickHandler = 
@@ -492,6 +500,7 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
     }
     
     private static class StateHolder {
+        private String mUsername;
         private Group<User> mFollowers;
         private Group<User> mFriends;
         
@@ -506,7 +515,8 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
         private List<TaskUpdateFollower> mTasksUpdateFollowers;
         
         
-        public StateHolder() {
+        public StateHolder(String username) {
+            mUsername = username;
             mIsRunningTaskFollowers = false;
             mIsRunningTaskFriends = false;
             mRanOnceFriends = false;
@@ -515,6 +525,10 @@ public class UserDetailsFriendsFollowersActivity extends LoadableListActivityWit
             mFriends = new Group<User>();
             mFollowersOnly = true;
             mTasksUpdateFollowers = new ArrayList<TaskUpdateFollower>();
+        }
+        
+        public String getUsername() {
+            return mUsername;
         }
         
         public Group<User> getFollowers() {

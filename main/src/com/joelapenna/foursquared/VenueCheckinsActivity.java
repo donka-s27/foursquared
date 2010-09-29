@@ -143,15 +143,19 @@ public class VenueCheckinsActivity extends LoadableListActivity {
                 startActivity(intent);
             }
         });
+        
+        setTitle(getString(R.string.venue_checkins_activity_title, mStateHolder.getVenueName()));
     }
     
     private static class StateHolder {
         
+        private String mVenueName;
         private Group<Checkin> mYou;
         private Group<Checkin> mFriends;
         private Group<Checkin> mOthers;
         
         public StateHolder(Venue venue, String loggedInUserId) {
+            mVenueName = venue.getName();
             mYou = new Group<Checkin>();
             mFriends = new Group<Checkin>();
             mOthers = new Group<Checkin>();
@@ -169,6 +173,10 @@ public class VenueCheckinsActivity extends LoadableListActivity {
                     mOthers.add(it);
                 }
             }
+        }
+        
+        public String getVenueName() {
+            return mVenueName;
         }
  
         public Group<Checkin> getCheckinsYou() {

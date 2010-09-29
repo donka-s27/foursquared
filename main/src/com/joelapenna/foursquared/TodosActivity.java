@@ -57,6 +57,8 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
 
     public static final String INTENT_EXTRA_USER_ID = Foursquared.PACKAGE_NAME
             + ".TodosActivity.INTENT_EXTRA_USER_ID";
+    public static final String INTENT_EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+            + ".TodosActivity.INTENT_EXTRA_USER_NAME";
     
     private static final int ACTIVITY_TIP = 500;
     
@@ -86,8 +88,11 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivity(this);
         } else {
-            // Optional user id, if not present, will be null and default to logged-in user.
-            mStateHolder = new StateHolder(getIntent().getStringExtra(INTENT_EXTRA_USER_ID));
+            // Optional user id and username, if not present, will be null and default to 
+            // logged-in user.
+            mStateHolder = new StateHolder(
+                    getIntent().getStringExtra(INTENT_EXTRA_USER_ID),
+                    getIntent().getStringExtra(INTENT_EXTRA_USER_NAME));
             mStateHolder.setRecentOnly(false);
         }
         
@@ -130,7 +135,7 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
     private void ensureUi() {
         LayoutInflater inflater = LayoutInflater.from(this);
         
-        setTitle(getString(R.string.todos_activity_title, ""));
+        setTitle(getString(R.string.todos_activity_title, mStateHolder.getUsername()));
         
         mLayoutEmpty = inflater.inflate(
                 R.layout.todos_activity_empty, null);     
@@ -423,9 +428,10 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
         private TaskTodos mTaskTodosRecent;
         private TaskTodos mTaskTodosNearby;
         private String mUserId;
+        private String mUsername;
         
         
-        public StateHolder(String userId) {
+        public StateHolder(String userId, String username) {
             mIsRunningTaskTodosRecent = false;
             mIsRunningTaskTodosNearby = false;
             mRanOnceTodosRecent = false;
@@ -434,6 +440,11 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
             mTodosNearby = new Group<Todo>();
             mRecentOnly = false;
             mUserId = userId;
+            mUsername = username;
+        }
+        
+        public String getUsername() {
+            return mUsername;
         }
         
         public Group<Todo> getTodosRecent() {
