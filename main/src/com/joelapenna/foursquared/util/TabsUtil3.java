@@ -22,10 +22,10 @@ public class TabsUtil3 {
     }
     
     public static void setTabIndicator(TabSpec spec, String title, Drawable drawable) {
-        if (drawable != null) {
-            spec.setIndicator(title, drawable);
-        } else {
+  //      if (drawable != null) {
+  //          spec.setIndicator(title, drawable);
+  //      } else {
             spec.setIndicator(title);
-        }
+  //      }
     }
 }
