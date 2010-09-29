@@ -67,7 +67,6 @@ public class VenueTipsActivity extends LoadableListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.venue_tips_activity_title));
 
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
@@ -156,6 +155,8 @@ public class VenueTipsActivity extends LoadableListActivity {
                 startActivityForResult(intent, ACTIVITY_TIP);
             }
         });
+
+        setTitle(getString(R.string.venue_tips_activity_title, mStateHolder.getVenue().getName()));
     }
     
     @Override

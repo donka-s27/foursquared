@@ -555,7 +555,6 @@ public class VenueActivity extends Activity {
                 }
                 break;
             case RESULT_CODE_ACTIVITY_ADD_TIP:
-            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_ADD_TIP...");
             	if (resultCode == Activity.RESULT_OK) {
             		Tip tip = data.getParcelableExtra(AddTipActivity.EXTRA_TIP_RETURNED);
             		VenueUtils.addTip(mStateHolder.getVenue(), tip);
@@ -566,7 +565,6 @@ public class VenueActivity extends Activity {
             	}
             	break;
             case RESULT_CODE_ACTIVITY_ADD_TODO:
-            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_ADD_TODO...");
             	if (resultCode == Activity.RESULT_OK) {
             		Todo todo = data.getParcelableExtra(AddTodoActivity.EXTRA_TODO_RETURNED);
             		VenueUtils.addTodo(mStateHolder.getVenue(), todo.getTip(), todo);
@@ -578,7 +576,6 @@ public class VenueActivity extends Activity {
             	break;
             case RESULT_CODE_ACTIVITY_TIP:
             case RESULT_CODE_ACTIVITY_TODO:
-            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_TIP or RESULT_CODE_ACTIVITY_TODO...");
             	if (resultCode == Activity.RESULT_OK && data.hasExtra(TipActivity.EXTRA_TIP_RETURNED)) {
     	    		Tip tip = (Tip)data.getParcelableExtra(TipActivity.EXTRA_TIP_RETURNED);
     	    		Todo todo = data.hasExtra(TipActivity.EXTRA_TODO_RETURNED) ? 
@@ -589,7 +586,6 @@ public class VenueActivity extends Activity {
                 }
             	break;
             case RESULT_CODE_ACTIVITY_TIPS:
-            	Log.e(TAG, "ActivityResult(): RESULT_CODE_ACTIVITY_TIPS...");
             	if (resultCode == Activity.RESULT_OK && data.hasExtra(VenueTipsActivity.INTENT_EXTRA_RETURN_VENUE)) {
             		Venue venue = (Venue)data.getParcelableExtra(VenueTipsActivity.INTENT_EXTRA_RETURN_VENUE);
         			VenueUtils.replaceTipsAndTodos(mStateHolder.getVenue(), venue);

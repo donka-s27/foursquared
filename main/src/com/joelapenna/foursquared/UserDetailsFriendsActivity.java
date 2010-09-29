@@ -36,6 +36,8 @@ public class UserDetailsFriendsActivity extends LoadableListActivity {
     
     public static final String EXTRA_USER_ID = Foursquared.PACKAGE_NAME
         + ".UserDetailsFriendsActivity.EXTRA_USER_ID";
+    public static final String EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+        + ".UserDetailsFriendsActivity.EXTRA_USER_NAME";
 
     public static final String EXTRA_SHOW_ADD_FRIEND_OPTIONS = Foursquared.PACKAGE_NAME
         + ".UserDetailsFriendsActivity.EXTRA_SHOW_ADD_FRIEND_OPTIONS";
@@ -56,23 +58,23 @@ public class UserDetailsFriendsActivity extends LoadableListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.user_friends_activity_title));
 
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivityForTaskFriends(this);
         } else {
-
-            mStateHolder = new StateHolder();
-            if (getIntent().getExtras().containsKey(EXTRA_USER_ID) == false) {
-                Log.e(TAG, "UserFriendsActivity requires a userid in its intent extras.");
+            if (getIntent().hasExtra(EXTRA_USER_ID) && getIntent().hasExtra(EXTRA_USER_NAME)) {
+                mStateHolder = new StateHolder(
+                        getIntent().getStringExtra(EXTRA_USER_ID),
+                        getIntent().getStringExtra(EXTRA_USER_NAME));
+            } else {
+                Log.e(TAG, TAG + " requires a userid and username in its intent extras.");
                 finish();
                 return;
             }
             
-            mStateHolder.setUserId(getIntent().getExtras().getString(EXTRA_USER_ID));
-            mStateHolder.startTaskFriends(this, mStateHolder.getUserId());
+            mStateHolder.startTaskFriends(this);
         }
         
         ensureUi();
@@ -124,6 +126,8 @@ public class UserDetailsFriendsActivity extends LoadableListActivity {
         } else if (mStateHolder.getFetchedFriendsOnce() && mStateHolder.getFriends().size() == 0) {
             setEmptyView();
         }
+        
+        setTitle(getString(R.string.user_details_friends_activity_title, mStateHolder.getUsername()));
     }
 
     private void onFriendsTaskComplete(Group<User> group, Exception ex) {
@@ -203,10 +207,8 @@ public class UserDetailsFriendsActivity extends LoadableListActivity {
     
     private static class StateHolder {
         
-        /** User id. */
         private String mUserId;
-        
-        /** Friends of the current user. */
+        private String mUsername;
         private Group<User> mFriends;
         
         private FriendsTask mTaskFriends;
@@ -214,18 +216,16 @@ public class UserDetailsFriendsActivity extends LoadableListActivity {
         private boolean mFetchedFriendsOnce;
         
         
-        public StateHolder() {
+        public StateHolder(String userId, String username) {
+            mUserId = userId;
+            mUsername = username;
             mIsRunningFriendsTask = false;
             mFetchedFriendsOnce = false;
             mFriends = new Group<User>();
         }
  
-        public String getUserId() {
-            return mUserId;
-        }
-        
-        public void setUserId(String userId) {
-            mUserId = userId;
+        public String getUsername() {
+            return mUsername;
         }
         
         public Group<User> getFriends() {
@@ -236,11 +236,10 @@ public class UserDetailsFriendsActivity extends LoadableListActivity {
             mFriends = friends;
         }
         
-        public void startTaskFriends(UserDetailsFriendsActivity activity,
-                                     String userId) {
+        public void startTaskFriends(UserDetailsFriendsActivity activity) {
             mIsRunningFriendsTask = true;
             mTaskFriends = new FriendsTask(activity);
-            mTaskFriends.execute(userId);
+            mTaskFriends.execute(mUserId);
         }
 
         public void setActivityForTaskFriends(UserDetailsFriendsActivity activity) {

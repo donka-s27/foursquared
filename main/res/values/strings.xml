@@ -21,6 +21,7 @@
   <string name="add_venue_activity_error_no_venue_state">Please supply a venue state.</string>
   <string name="address">Address</string> 
   <string name="app_name">Foursquare</string>
+  <string name="badges_activity_title">Foursquare Badges - %s</string>
   <string name="badges_header">Badges</string>
   <string name="checkin_action_label">Check-in!</string>
   <string name="checkin_badges">You\'ve just unlocked</string>
@@ -32,8 +33,6 @@
   <string name="checkin_title_checking_in">Checking in @%s</string>
   <string name="checkin_totals">Total:</string>
   <string name="checkin_title_result">Checked in!</string>
-  <string name="checkins_activity_label">Foursquare Friends</string>
-  <string name="checkins_label">Friends</string>
   <string name="city">City</string>
   <string name="cross_street">Cross Street</string>
   <string name="feedback_error">Couldn\'t find configured email client.</string>
@@ -158,13 +157,11 @@
   <string name="title_search_finished_noquery">Nearby - Foursquare</string>
   <string name="title_search_inprogress">Searching "%s" - Foursquare</string>
   <string name="title_search_inprogress_noquery">Searching Nearby - Foursquare</string>
-  <string name="venue_checkin_activity_label">Foursquare Venue Check-In</string>
   <string name="venue_checkins_tab">Checkins</string>
   <string name="venue_info_activity_label">Foursquare Venue</string>
   <string name="venue_info_tab">Tips</string>
   <string name="venue_name">Venue Name</string>
   <string name="venue_search_activity_label">Foursquare Venues</string>
-  <string name="venue_tips_activity_label">Foursquare Tips</string>
   <string name="venues_search_hint">Type a venue name or tag</string>
   <string name="venues_search_label">Venue Search</string>
   <string name="zip_code">Zip Code</string>
@@ -215,10 +212,9 @@
   <string name="user_actions_activity_action_twitter">Twitter</string>
   <string name="user_actions_activity_action_facebook">Facebook</string>
   <string name="user_actions_activity_label_Last_seen_at">Last seen at %s</string>
-  <string name="user_history_activity_title">Foursquare Check-in History</string>
+  <string name="user_history_activity_title">Foursquare History - %s</string>
   <string name="user_history_activity_no_info">No history available.</string>
-  <string name="user_friends_activity_title">Foursquare Friends</string>
-  <string name="user_mayorships_activity_title">Foursquare Mayorships</string>
+  <string name="user_mayorships_activity_title">Foursquare Mayorships - %s</string>
 
   <string name="user_details_activity_title_mayorships">MAYORSHIPS</string>
   <string name="user_details_activity_title_badges">BADGES</string>
@@ -233,7 +229,6 @@
   <string name="user_details_activity_set_photo_cancel">Set photo request cancelled.</string>
   <string name="user_details_activity_friend_add">ADD AS FRIEND</string>
   <string name="user_details_activity_friend_confirm">CONFIRM AS FRIEND</string>
-  
   <string name="user_details_activity_last_seen">Last seen:</string>
   <string name="user_details_activity_general_mayorships">MAYORSHIPS</string>
   <string name="user_details_activity_general_badges">BADGES</string>
@@ -253,6 +248,8 @@
   <string name="user_details_activity_add_friends">Add Friends</string>
   <string name="user_details_activity_friends_menu_contact">Contact</string>
   <string name="user_details_activity_friends_menu_pings">Pings</string>
+  
+  <string name="user_details_friends_activity_title">Foursquare Friends - %s</string>
     
   <string name="checkin_execute_activity_progress_bar_message">Checking-in...</string>
   <string name="shout_execute_activity_progress_bar_message">Posting shout...</string>
@@ -266,8 +263,6 @@
   <string name="venue_activity_checkin_button">Check In Here</string>
   <string name="venue_activity_checkin_button_quick">QUICK CHECK-IN HERE</string>
   <string name="venue_activity_tip_add_result">Added Tip #%s %s</string>
-  <string name="venue_checkins_activity_label_recent_checkins">Recent Checkins</string>
-  <string name="venue_checkins_activity_label_mayor">Mayor</string>
   <string name="send_invite_button">Invite</string>
   <string name="prelaunch_text"></string>
   <string name="prelaunch_button"></string>
@@ -343,10 +338,9 @@
   <string name="tip_activity_btn_tip_2">I\'VE DONE THIS</string>
   <string name="tip_activity_btn_tip_3">UNDO THIS</string>
   <string name="tip_activity_btn_tip_4">CONGRATS! YOU\'VE DONE THIS</string>
-  <string name="todos_activity_title">Foursquare To-Do List %s</string>
+  <string name="todos_activity_title">Foursquare To-Do List - %s</string>
   <string name="todos_activity_btn_recent">RECENT</string>
   <string name="todos_activity_btn_nearby">NEARBY</string>
-  <string name="todos_activity_no_todos">No To-Dos Here!</string>
   <string name="todo_added_date">"added %s"</string>
   <string name="tab_main_nav_friends">Friends</string>
   <string name="tab_main_nav_nearby">Places</string>
@@ -390,7 +384,7 @@
   <string name="venue_activity_todo_added_ok">To-Do added!</string>
   <string name="venue_activity_todo_here">You have a To-Do here!</string>
   <string name="venue_share_activity_title">Share</string>
-  <string name="venue_tips_activity_title">Foursquare Tips</string>
+  <string name="venue_tips_activity_title">Foursquare Tips - %s</string>
   <string name="venue_tips_activity_section_all">Tips left here (%d)</string>
   <string name="venue_tips_activity_section_friends">Tips from friends (%d)</string>
   <string name="add_tip_activity_text_hint">For example: Try the sea salt vanilla ice cream. Best dessert downtown!</string>
@@ -398,13 +392,13 @@
   <string name="add_tip_todo_activity_progress_message">Adding...</string>
   <string name="add_todo_activity_text_hint">Add a note (optional)</string>
   <string name="add_todo_activity_text_button">Add to my to-do list</string>
-  <string name="user_details_tips_activity_title">Foursquare Tips</string>
+  <string name="user_details_tips_activity_title">Foursquare Tips - %s</string>
   <string name="user_details_tips_activity_btn_recent">RECENT</string>
   <string name="user_details_tips_activity_btn_popular">POPULAR</string>
-  <string name="user_details_friends_in_common_title">Foursquare Friends</string>
+  <string name="user_details_friends_in_common_title">Foursquare Friends - %s</string>
   <string name="user_details_friends_in_common_common_friends">FRIENDS IN COMMON</string>
   <string name="user_details_friends_in_common_all_friends">ALL FRIENDS</string>
-  <string name="user_details_friends_followers_activity_title">Foursquare Friends</string>
+  <string name="user_details_friends_followers_activity_title">Foursquare Friends - %s</string>
   <string name="user_details_friends_followers_activity_followers">FOLLOWERS</string>
   <string name="user_details_friends_followers_activity_friends">ALL FRIENDS</string>
   <string name="refresh">Refresh</string>
@@ -414,7 +408,7 @@
   <string name="user_details_pings_activity_pings_on">Turn pings on</string>
   <string name="user_details_pings_activity_pings_off">Turn pings off</string>
   <string name="no_tips">There are no tips here</string>
-  <string name="no_todos">There are no To-Do\'s here</string>
-  
-  <string name="venue_map_activity_title">Foursquare %s</string>
+  <string name="no_todos">There are no To-Do items here</string>
+  <string name="venue_map_activity_title">Foursquare - %s</string>
+  <string name="venue_checkins_activity_title">Foursquare Checkins - %s</string>
 </resources>

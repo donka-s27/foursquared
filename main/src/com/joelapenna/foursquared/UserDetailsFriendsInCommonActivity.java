@@ -10,6 +10,7 @@ import com.joelapenna.foursquare.types.User;
 import com.joelapenna.foursquared.app.LoadableListActivityWithViewAndHeader;
 import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
+import com.joelapenna.foursquared.util.StringFormatters;
 import com.joelapenna.foursquared.widget.FriendListAdapter;
 import com.joelapenna.foursquared.widget.SegmentedButton;
 import com.joelapenna.foursquared.widget.SegmentedButton.OnClickListenerSegmentedButton;
@@ -70,7 +71,6 @@ public class UserDetailsFriendsInCommonActivity extends LoadableListActivityWith
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.user_details_friends_in_common_title));
         
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
@@ -195,6 +195,9 @@ public class UserDetailsFriendsInCommonActivity extends LoadableListActivityWith
         } else {
             setProgressBarIndeterminateVisibility(false);
         }
+
+        setTitle(getString(R.string.user_details_friends_in_common_title,
+                StringFormatters.getUserFullName(mStateHolder.getUser())));
     }
     
     @Override

@@ -33,7 +33,9 @@ import android.widget.ListView;
  */
 public class UserHistoryActivity extends LoadableListActivity {
     static final String TAG = "UserHistoryActivity";
-    static final boolean DEBUG = FoursquaredSettings.DEBUG;
+
+    public static final String EXTRA_USER_NAME = Foursquared.PACKAGE_NAME
+            + ".UserHistoryActivity.EXTRA_USER_NAME";
     
     private StateHolder mStateHolder;
     private HistoryListAdapter mListAdapter;
@@ -42,7 +44,6 @@ public class UserHistoryActivity extends LoadableListActivity {
     private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (DEBUG) Log.d(TAG, "onReceive: " + intent);
             finish();
         }
     };
@@ -51,15 +52,20 @@ public class UserHistoryActivity extends LoadableListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
-        setTitle(getString(R.string.user_history_activity_title));
 
         Object retained = getLastNonConfigurationInstance();
         if (retained != null && retained instanceof StateHolder) {
             mStateHolder = (StateHolder) retained;
             mStateHolder.setActivityForTaskFriends(this);
         } else {
-            mStateHolder = new StateHolder();
-            mStateHolder.startTaskHistory(this);
+            if (getIntent().hasExtra(EXTRA_USER_NAME)) {
+                mStateHolder = new StateHolder(getIntent().getStringExtra(EXTRA_USER_NAME));
+                mStateHolder.startTaskHistory(this);
+            } else {
+                Log.e(TAG, TAG + " requires username as intent extra.");
+                finish();
+                return;
+            }
         }
         
         ensureUi();
@@ -104,6 +110,8 @@ public class UserHistoryActivity extends LoadableListActivity {
         } else if (mStateHolder.getFetchedOnce() && mStateHolder.getHistory().size() == 0) {
             setEmptyView();
         }
+
+        setTitle(getString(R.string.user_history_activity_title, mStateHolder.getUsername()));
     }
     
     @Override
@@ -136,7 +144,6 @@ public class UserHistoryActivity extends LoadableListActivity {
     }
     
     private void startVenueActivity(Checkin checkin) {
-        // TODO: Perform some action when user is clicking on a shout history item.
         if (checkin != null) {
             if (checkin.getVenue() != null && !TextUtils.isEmpty(checkin.getVenue().getId())) {
                 Venue venue = checkin.getVenue();
@@ -210,18 +217,21 @@ public class UserHistoryActivity extends LoadableListActivity {
     
     
     private static class StateHolder {
-        
-        /** History of the logged in user. */
+        private String mUsername;
         private Group<Checkin> mHistory;
-        
         private HistoryTask mTaskHistory;
         private boolean mIsRunningHistoryTask;
         private boolean mFetchedOnce;
         
-        public StateHolder() {
+        public StateHolder(String username) {
+            mUsername = username;
             mIsRunningHistoryTask = false;
             mFetchedOnce = false;
             mHistory = new Group<Checkin>();
+        }
+        
+        public String getUsername() {
+            return mUsername;
         }
         
         public Group<Checkin> getHistory() {
