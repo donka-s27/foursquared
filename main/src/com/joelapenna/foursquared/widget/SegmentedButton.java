@@ -19,6 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A multi-button control which can only have one pressed button at
+ * any given time. Its functionality is quite similar to a tab control.
+ * Tabs can't be skinned in android 1.5, and our main frame is a tab
+ * host - which causes some different android problems, thus this control
+ * was created.
+ * 
+ * @date September 15, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  */
 public class SegmentedButton extends LinearLayout {
