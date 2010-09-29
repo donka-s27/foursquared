@@ -535,8 +535,6 @@ public class UserDetailsActivity extends Activity {
                     // a new photo for themselves.
                     Intent intent = new Intent(UserDetailsActivity.this, FetchImageForViewIntent.class);
                     intent.putExtra(FetchImageForViewIntent.IMAGE_URL, photoUrl);
-                    intent.putExtra(FetchImageForViewIntent.PROGRESS_BAR_TITLE, getResources()
-                            .getString(R.string.user_activity_fetch_full_image_title));
                     intent.putExtra(FetchImageForViewIntent.PROGRESS_BAR_MESSAGE, getResources()
                             .getString(R.string.user_activity_fetch_full_image_message));
                     
@@ -777,7 +775,8 @@ public class UserDetailsActivity extends Activity {
                                   UiUtil.startDialer(UserDetailsActivity.this, mStateHolder.getUser().getPhone());
                                   break;
                               case UserContactAdapter.Action.ACTION_ID_TWITTER:
-                                  UiUtil.startWebIntent(UserDetailsActivity.this, "http://www.twitter.com/" +
+                                  //UiUtil.startWebIntent(UserDetailsActivity.this, "http://www.twitter.com/" +
+                                  UiUtil.startWebIntent(UserDetailsActivity.this, "http://m.twitter.com/" +
                                       mStateHolder.getUser().getTwitter());
                                   break;
                               case UserContactAdapter.Action.ACTION_ID_FACEBOOK:
