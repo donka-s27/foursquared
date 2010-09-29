@@ -107,8 +107,11 @@ public class FriendsActivity extends LoadableListActivityWithViewAndHeader {
 
         ensureUi();
         
-        if (!mStateHolder.getRanOnce()) {
-        	mStateHolder.startTask(this);
+        Foursquared foursquared = (Foursquared)getApplication();
+        if (foursquared.isReady()) {
+            if (!mStateHolder.getRanOnce()) {
+                mStateHolder.startTask(this);
+            }
         }
     }
     
