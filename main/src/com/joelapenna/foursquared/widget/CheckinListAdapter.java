@@ -68,6 +68,7 @@ public class CheckinListAdapter extends BaseCheckinAdapter implements Observable
     }
     
     public void removeObserver() {
+        mHandler.removeCallbacks(mUpdatePhotos);
         mRrm.deleteObserver(mResourcesObserver);
     }
 
@@ -164,15 +165,16 @@ public class CheckinListAdapter extends BaseCheckinAdapter implements Observable
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-            if (DEBUG) Log.d(TAG, "Fetcher got: " + data);
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    notifyDataSetChanged();
-                }
-            });
+            mHandler.post(mUpdatePhotos);
         }
     }
+    
+    private Runnable mUpdatePhotos = new Runnable() {
+        @Override
+        public void run() {
+            notifyDataSetChanged();
+        }
+    };
 
     private static class ViewHolder {
         ImageView photo;
