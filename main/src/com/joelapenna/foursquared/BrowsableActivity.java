@@ -35,6 +35,7 @@ public class BrowsableActivity extends Activity {
     public static String PARAM_SHOUT_TEXT = "shout";
     public static String PARAM_SEARCH_QUERY = "q";
     public static String PARAM_SEARCH_IMMEDIATE= "immediate";
+    public static String PARAM_USER_ID= "uid";
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     static {
@@ -105,7 +106,10 @@ public class BrowsableActivity extends Activity {
             case URI_PATH_USER:
                 if (DEBUG) Log.d(TAG, "Matched: URI_PATH_USER");
                 intent = new Intent(this, UserDetailsActivity.class);
-                intent.putExtra(UserDetailsActivity.EXTRA_USER_ID, uri.getQueryParameter("uid"));
+                if (!TextUtils.isEmpty(uri.getQueryParameter(PARAM_USER_ID))) {
+                    intent.putExtra(UserDetailsActivity.EXTRA_USER_ID, 
+                            uri.getQueryParameter(PARAM_USER_ID));
+                }
                 startActivity(intent);
                 break;
             case URI_PATH_VENUE:

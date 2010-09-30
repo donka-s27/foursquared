@@ -5,9 +5,7 @@
 package com.joelapenna.foursquared.widget;
 
 import com.joelapenna.foursquare.Foursquare;
-import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 
@@ -16,7 +14,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,8 +21,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 
 /**
  * @date March 8, 2010
@@ -34,16 +33,13 @@ import java.util.Observer;
 public class FriendListAdapter extends BaseGroupAdapter<User> 
     implements ObservableAdapter {
 
-    private static final String TAG = "";
-    private static final boolean DEBUG = FoursquaredSettings.DEBUG;
-
     private LayoutInflater mInflater;
     private int mLayoutToInflate;
     private RemoteResourceManager mRrm;
     private RemoteResourceManagerObserver mResourcesObserver;
     private Handler mHandler = new Handler();
-    private int mLoadedPhotoIndex;
 
+    private Set<String> mLaunchedPhotoFetches;
     
     public FriendListAdapter(Context context, RemoteResourceManager rrm) {
         super(context);
@@ -51,13 +47,13 @@ public class FriendListAdapter extends BaseGroupAdapter<User>
         mLayoutToInflate = R.layout.friend_list_item;
         mRrm = rrm;
         mResourcesObserver = new RemoteResourceManagerObserver();
-        mLoadedPhotoIndex = 0;
+        mLaunchedPhotoFetches = new HashSet<String>();
 
         mRrm.addObserver(mResourcesObserver);
     }
     
     public void removeObserver() {
-        mHandler.removeCallbacks(mRunnableLoadPhotos);
+        mHandler.removeCallbacks(mUpdatePhoto);
         mRrm.deleteObserver(mResourcesObserver);
     }
 
@@ -103,6 +99,11 @@ public class FriendListAdapter extends BaseGroupAdapter<User>
             } else {
                 holder.photo.setImageResource(R.drawable.blank_girl);
             }
+            
+            if (!mLaunchedPhotoFetches.contains(user.getId())) {
+                mLaunchedPhotoFetches.add(user.getId());
+                mRrm.request(photoUri);
+            }
         }
 
         holder.name.setText(user.getFirstname() + " "
@@ -116,45 +117,17 @@ public class FriendListAdapter extends BaseGroupAdapter<User>
         notifyDataSetInvalidated();
     }
     
-    @Override
-    public void setGroup(Group<User> g) {
-        super.setGroup(g);
-        mLoadedPhotoIndex = 0;
-        
-        mHandler.postDelayed(mRunnableLoadPhotos, 10L);
-        
-//        for (int i = 0; i < g.size(); i++) {
-//            Uri photoUri = Uri.parse(g.get(i).getPhoto());
-//            if (!mRrm.exists(photoUri)) {
-//                mRrm.request(photoUri);
-//            }
-//        }
-    }
-
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-            if (DEBUG) Log.d(TAG, "Fetcher got: " + data);
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    notifyDataSetChanged();
-                }
-            });
+            mHandler.post(mUpdatePhoto);
         }
     }
     
-    private Runnable mRunnableLoadPhotos = new Runnable() {
-        @Override
+    private Runnable mUpdatePhoto = new Runnable() {
+        @Override 
         public void run() {
-            if (mLoadedPhotoIndex < getCount()) {
-                User user = (User)getItem(mLoadedPhotoIndex++);
-                Uri photoUri = Uri.parse(user.getPhoto());
-                if (!mRrm.exists(photoUri)) {
-                    mRrm.request(photoUri);
-                }
-                mHandler.postDelayed(mRunnableLoadPhotos, 200L);
-            }
+            notifyDataSetChanged();
         }
     };
 

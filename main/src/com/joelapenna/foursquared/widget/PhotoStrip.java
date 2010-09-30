@@ -20,6 +20,8 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -41,6 +43,7 @@ public class PhotoStrip extends View
     private int mPhotoBorderStrokeColor;
     
     private Group<User> mTypes;
+    private Map<String, Bitmap> mCachedBitmaps = new HashMap<String, Bitmap>();
 
     private RemoteResourceManager mRrm;
     private RemoteResourceManagerObserver mResourcesObserver;
@@ -112,29 +115,26 @@ public class PhotoStrip extends View
         		break;
         	}
         	
-        	FoursquareType type = mTypes.get(index);
-        	Bitmap bmp = fetchBitmapForUser(type);
-        	if (bmp != null) {
-	        	Rect rcSrc = new Rect(0, 0, bmp.getWidth(), bmp.getHeight());
-	        	Rect rcDst = new Rect(
-	        			index * (mPhotoSize + mPhotoSpacing),
-	        			0,
-	        			index * (mPhotoSize + mPhotoSpacing) + mPhotoSize,
-	        			mPhotoSize);
+        	Rect rcDst = new Rect(
+                    index * (mPhotoSize + mPhotoSpacing),
+                    0,
+                    index * (mPhotoSize + mPhotoSpacing) + mPhotoSize,
+                    mPhotoSize);
+        	paint.setColor(mPhotoBorderStrokeColor);
+            canvas.drawRect(rcDst, paint);
+            rcDst.inset(mPhotoBorderStroke, mPhotoBorderStroke);
+            paint.setColor(mPhotoBorderColor);
+            canvas.drawRect(rcDst, paint);
+            rcDst.inset(mPhotoBorder, mPhotoBorder);
 
-	        	paint.setColor(mPhotoBorderStrokeColor);
-	        	canvas.drawRect(rcDst, paint);
-	        	rcDst.inset(mPhotoBorderStroke, mPhotoBorderStroke);
-	        	paint.setColor(mPhotoBorderColor);
-	        	canvas.drawRect(rcDst, paint);
-	        	
-	        	rcDst.inset(mPhotoBorder, mPhotoBorder);
-	        	
-	        	canvas.drawBitmap(bmp, rcSrc, rcDst, paint);
-	        	
-	        	sum += (mPhotoSize + mPhotoSpacing);
-	        	index++;
-        	}
+            FoursquareType type = mTypes.get(index);
+            Bitmap bmp = fetchBitmapForUser(type);
+       	    if (bmp != null) {
+	            Rect rcSrc = new Rect(0, 0, bmp.getWidth(), bmp.getHeight());
+	            canvas.drawBitmap(bmp, rcSrc, rcDst, paint);
+            }
+            sum += (mPhotoSize + mPhotoSpacing);
+            index++;
         }
     }
     
@@ -153,10 +153,15 @@ public class PhotoStrip extends View
         }
         
     	String photoUrl = user.getPhoto();
+    	if (mCachedBitmaps.containsKey(photoUrl)) {
+    	    return mCachedBitmaps.get(photoUrl);
+    	}
+    	
     	Uri uriPhoto = Uri.parse(photoUrl);
         if (mRrm.exists(uriPhoto)) {
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(Uri.parse(photoUrl)));
+                mCachedBitmaps.put(photoUrl, bitmap);
                 return bitmap;
             } catch (IOException e) {
             }
