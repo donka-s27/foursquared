@@ -109,64 +109,71 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
 
         Todo todo = (Todo)getItem(position);
         Tip tip = todo.getTip();
-
-        if (mDisplayVenueTitles && tip.getVenue() != null) {
-            holder.title.setText("@ " + tip.getVenue().getName());
-            holder.title.setVisibility(View.VISIBLE);
-        } else {
-            holder.title.setVisibility(View.GONE);
-            
-            holder.body.setPadding(
-            	holder.body.getPaddingLeft(), holder.title.getPaddingTop(),
-            	holder.body.getPaddingRight(), holder.body.getPaddingBottom());
-        }
-
-        if (tip.getVenue() != null && tip.getVenue().getCategory() != null) {
-            Uri photoUri = Uri.parse(tip.getVenue().getCategory().getIconUrl());
-            try {
-                Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
-                holder.photo.setImageBitmap(bitmap);
-            } catch (IOException e) {
+        if (tip != null) {
+            if (mDisplayVenueTitles && tip.getVenue() != null) {
+                holder.title.setText("@ " + tip.getVenue().getName());
+                holder.title.setVisibility(View.VISIBLE);
+            } else {
+                holder.title.setVisibility(View.GONE);
+                
+                holder.body.setPadding(
+                	holder.body.getPaddingLeft(), holder.title.getPaddingTop(),
+                	holder.body.getPaddingRight(), holder.body.getPaddingBottom());
+            }
+    
+            if (tip.getVenue() != null && tip.getVenue().getCategory() != null) {
+                Uri photoUri = Uri.parse(tip.getVenue().getCategory().getIconUrl());
+                try {
+                    Bitmap bitmap = BitmapFactory.decodeStream(mRrm.getInputStream(photoUri));
+                    holder.photo.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                    holder.photo.setImageResource(R.drawable.category_none);
+                }
+            } else {
                 holder.photo.setImageResource(R.drawable.category_none);
             }
+            
+            if (!TextUtils.isEmpty(tip.getText())) {
+                holder.body.setText(tip.getText());
+                holder.body.setVisibility(View.VISIBLE);
+            } else {
+                if (mSdk > 3) {
+                    holder.body.setVisibility(View.GONE);
+                } else {
+                    holder.body.setText("");
+                    holder.body.setVisibility(View.INVISIBLE);
+                }
+            }
+            
+            if (tip.getUser() != null) {
+                holder.dateAndAuthor.setText(
+                    holder.dateAndAuthor.getText() +
+                        mResources.getString(
+                            R.string.tip_age_via, 
+                            StringFormatters.getUserFullName(tip.getUser())));
+            }
+            
+            if (TipUtils.isDone(tip)) {
+                holder.corner.setVisibility(View.VISIBLE);
+                holder.corner.setImageResource(R.drawable.tip_list_item_corner_done);
+            } else if (TipUtils.isTodo(tip)) {
+                holder.corner.setVisibility(View.VISIBLE);
+                holder.corner.setImageResource(R.drawable.tip_list_item_corner_todo);
+            } else {
+                holder.corner.setVisibility(View.GONE);
+            }
         } else {
+            holder.title.setText("");
+            holder.body.setText("");
+            holder.corner.setVisibility(View.VISIBLE);
+            holder.corner.setImageResource(R.drawable.tip_list_item_corner_todo);
             holder.photo.setImageResource(R.drawable.category_none);
         }
-        
-        if (!TextUtils.isEmpty(tip.getText())) {
-            holder.body.setText(tip.getText());
-            holder.body.setVisibility(View.VISIBLE);
-        } else {
-            if (mSdk > 3) {
-                holder.body.setVisibility(View.GONE);
-            } else {
-                holder.body.setText("");
-                holder.body.setVisibility(View.INVISIBLE);
-            }
-        }
-        
         
         holder.dateAndAuthor.setText(mResources.getString(
                 R.string.todo_added_date,
                 mCachedTimestamps.get(todo.getId())));
-        if (tip.getUser() != null) {
-            holder.dateAndAuthor.setText(
-                    holder.dateAndAuthor.getText() +
-                    mResources.getString(
-                            R.string.tip_age_via, 
-                            StringFormatters.getUserFullName(tip.getUser())));
-        }
         
-        if (TipUtils.isDone(tip)) {
-            holder.corner.setVisibility(View.VISIBLE);
-            holder.corner.setImageResource(R.drawable.tip_list_item_corner_done);
-        } else if (TipUtils.isTodo(tip)) {
-            holder.corner.setVisibility(View.VISIBLE);
-            holder.corner.setImageResource(R.drawable.tip_list_item_corner_todo);
-        } else {
-            holder.corner.setVisibility(View.GONE);
-        }
-
         return convertView;
     }
 

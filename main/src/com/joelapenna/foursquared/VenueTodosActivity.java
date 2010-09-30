@@ -115,12 +115,14 @@ public class VenueTodosActivity extends LoadableListActivity {
             	venue.setCrossstreet(mStateHolder.getVenue().getCrossstreet());
             	
             	Todo todo = (Todo) parent.getAdapter().getItem(position);
-            	todo.getTip().setVenue(venue);
-            	
-                Intent intent = new Intent(VenueTodosActivity.this, TipActivity.class);
-                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
-                intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
-                startActivityForResult(intent, ACTIVITY_TIP);
+            	if (todo.getTip() != null) {
+                	todo.getTip().setVenue(venue);
+                	
+                    Intent intent = new Intent(VenueTodosActivity.this, TipActivity.class);
+                    intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
+                    intent.putExtra(TipActivity.EXTRA_VENUE_CLICKABLE, false);
+                    startActivityForResult(intent, ACTIVITY_TIP);
+            	}
             }
         });
     }
