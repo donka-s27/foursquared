@@ -8,7 +8,6 @@ import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Checkin;
 import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.User;
-import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.CheckinTimestampSort;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
@@ -21,7 +20,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,9 +40,6 @@ import java.util.Observer;
  *    apps are using.
  */
 public class CheckinListAdapter extends BaseCheckinAdapter implements ObservableAdapter {
-
-    private static final String TAG = "CheckinListAdapter";
-    private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
     private LayoutInflater mInflater;
 

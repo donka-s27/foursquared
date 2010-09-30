@@ -65,6 +65,7 @@ public class FriendActionableListAdapter extends BaseGroupAdapter<User>
 
     public void removeObserver() {
         mHandler.removeCallbacks(mRunnableLoadPhotos);
+        mHandler.removeCallbacks(mUpdatePhotos);
         mRrm.deleteObserver(mResourcesObserver);
     }
 
@@ -155,14 +156,16 @@ public class FriendActionableListAdapter extends BaseGroupAdapter<User>
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    notifyDataSetChanged();
-                }
-            });
+            mHandler.post(mUpdatePhotos);
         }
     }
+    
+    private Runnable mUpdatePhotos = new Runnable() {
+        @Override
+        public void run() {
+            notifyDataSetChanged();
+        }
+    };
     
     private Runnable mRunnableLoadPhotos = new Runnable() {
         @Override
