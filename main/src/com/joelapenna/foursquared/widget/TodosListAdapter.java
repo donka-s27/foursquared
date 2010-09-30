@@ -8,7 +8,6 @@ import com.joelapenna.foursquare.types.Group;
 import com.joelapenna.foursquare.types.Tip;
 import com.joelapenna.foursquare.types.Todo;
 import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.FoursquaredSettings;
 import com.joelapenna.foursquared.R;
 import com.joelapenna.foursquared.util.RemoteResourceManager;
 import com.joelapenna.foursquared.util.StringFormatters;
@@ -22,7 +21,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,9 +39,6 @@ import java.util.Observer;
  */
 public class TodosListAdapter extends BaseGroupAdapter<Todo> 
     implements ObservableAdapter {
-
-    private static final String TAG = "";
-    private static final boolean DEBUG = FoursquaredSettings.DEBUG;
 
     private LayoutInflater mInflater;
     private int mLayoutToInflate;
@@ -73,6 +68,7 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
     }
     
     public void removeObserver() {
+        mHandler.removeCallbacks(mUpdatePhotos);
         mHandler.removeCallbacks(mRunnableLoadPhotos);
         mRrm.deleteObserver(mResourcesObserver);
     }
@@ -200,15 +196,16 @@ public class TodosListAdapter extends BaseGroupAdapter<Todo>
     private class RemoteResourceManagerObserver implements Observer {
         @Override
         public void update(Observable observable, Object data) {
-            if (DEBUG) Log.d(TAG, "Fetcher got: " + data);
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    notifyDataSetChanged();
-                }
-            });
+            mHandler.post(mUpdatePhotos);
         }
     }
+    
+    private Runnable mUpdatePhotos = new Runnable() {
+        @Override
+        public void run() {
+            notifyDataSetChanged();
+        }
+    };
     
     private Runnable mRunnableLoadPhotos = new Runnable() {
         @Override
