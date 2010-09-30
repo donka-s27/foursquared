@@ -14,7 +14,6 @@ import com.joelapenna.foursquared.location.LocationUtils;
 import com.joelapenna.foursquared.preferences.Preferences;
 import com.joelapenna.foursquared.util.MenuUtils;
 import com.joelapenna.foursquared.util.NotificationsUtil;
-import com.joelapenna.foursquared.util.UserUtils;
 import com.joelapenna.foursquared.util.VenueUtils;
 import com.joelapenna.foursquared.widget.SeparatedListAdapter;
 import com.joelapenna.foursquared.widget.VenueListAdapter;
@@ -30,7 +29,6 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -65,11 +63,10 @@ public class NearbyVenuesActivity extends LoadableListActivity {
     public static final String INTENT_EXTRA_STARTUP_GEOLOC_DELAY = Foursquared.PACKAGE_NAME
             + ".NearbyVenuesActivity.INTENT_EXTRA_STARTUP_GEOLOC_DELAY";
  
-    private static final int MENU_REFRESH = 0;
+    private static final int MENU_REFRESH   = 0;
     private static final int MENU_ADD_VENUE = 1;
-    private static final int MENU_SEARCH = 2;
-    private static final int MENU_MYINFO = 3;
-    private static final int MENU_MAP = 4;
+    private static final int MENU_SEARCH    = 2;
+    private static final int MENU_MAP       = 3;
     
     private static final int RESULT_CODE_ACTIVITY_VENUE = 1;
 
@@ -191,14 +188,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         menu.add(Menu.NONE, MENU_ADD_VENUE, Menu.NONE, R.string.nearby_menu_add_venue) //
                 .setIcon(R.drawable.ic_menu_add);
 
-        int sdk = new Integer(Build.VERSION.SDK).intValue();
-        if (sdk < 4) {
-            int menuIcon = UserUtils.getDrawableForMeMenuItemByGender(
-                ((Foursquared) getApplication()).getUserGender());
-            menu.add(Menu.NONE, MENU_MYINFO, Menu.NONE, R.string.myinfo_label) //
-                    .setIcon(menuIcon);
-        }
-        
         // Shows a map of all nearby venues, works but not going into this version.
         //menu.add(Menu.NONE, MENU_MAP, Menu.NONE, "Map")
         //    .setIcon(R.drawable.ic_menu_places);
@@ -223,12 +212,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
                 return true;
             case MENU_ADD_VENUE:
                 startActivity(new Intent(NearbyVenuesActivity.this, AddVenueActivity.class));
-                return true;
-            case MENU_MYINFO:
-                Intent intentUser = new Intent(NearbyVenuesActivity.this, UserDetailsActivity.class);
-                intentUser.putExtra(UserDetailsActivity.EXTRA_USER_ID,
-                        ((Foursquared) getApplication()).getUserId());
-                startActivity(intentUser);
                 return true;
             case MENU_MAP:
                 startActivity(new Intent(NearbyVenuesActivity.this, NearbyVenuesMapActivity.class));

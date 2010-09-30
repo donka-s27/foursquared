@@ -113,31 +113,29 @@ public class UserDetailsActivity extends Activity {
         } else {
 
             mStateHolder = new StateHolder();
-            if (getIntent().getExtras() != null) {
-                if (getIntent().getExtras().containsKey(EXTRA_USER_PARCEL)) {
-                    User user = getIntent().getExtras().getParcelable(EXTRA_USER_PARCEL);
-                    mStateHolder.setUser(user);
-                    mStateHolder.setLoadType(LOAD_TYPE_USER_PARTIAL);
-                } else if (getIntent().getExtras().containsKey(EXTRA_USER_ID)) {
-                    User user = new User();
-                    user.setId(getIntent().getExtras().getString(EXTRA_USER_ID));
-                    mStateHolder.setUser(user);
-                    mStateHolder.setLoadType(LOAD_TYPE_USER_ID);
-                } else {
-                    Log.e(TAG, "UserDetailsActivity requires a userid in its intent extras.");
-                    finish();
-                    return;
-                }
-                
-                mStateHolder.setIsLoggedInUser(
-                  mStateHolder.getUser().getId().equals(
-                      ((Foursquared) getApplication()).getUserId()));
-                
+            if (getIntent().hasExtra(EXTRA_USER_PARCEL)) {
+                Log.i(TAG, "Starting " + TAG + " with full user parcel.");
+                User user = getIntent().getExtras().getParcelable(EXTRA_USER_PARCEL);
+                mStateHolder.setUser(user);
+                mStateHolder.setLoadType(LOAD_TYPE_USER_PARTIAL);
+            } else if (getIntent().hasExtra(EXTRA_USER_ID)) {
+                Log.i(TAG, "Starting " + TAG + " with user ID.");
+                User user = new User();
+                user.setId(getIntent().getExtras().getString(EXTRA_USER_ID));
+                mStateHolder.setUser(user);
+                mStateHolder.setLoadType(LOAD_TYPE_USER_ID);
             } else {
-                Log.e(TAG, "UserDetailsActivity requires a userid in its intent extras.");
-                finish();
-                return;
+                Log.i(TAG, "Starting " + TAG + " as logged-in user.");
+                User user = new User();
+                user.setId(null);
+                mStateHolder.setUser(user);
+                mStateHolder.setLoadType(LOAD_TYPE_USER_ID);
             }
+                
+            mStateHolder.setIsLoggedInUser(
+              mStateHolder.getUser().getId() == null ||
+              mStateHolder.getUser().getId().equals(
+                  ((Foursquared) getApplication()).getUserId()));
         }
         
         mHandler = new Handler();
@@ -775,8 +773,7 @@ public class UserDetailsActivity extends Activity {
                                   UiUtil.startDialer(UserDetailsActivity.this, mStateHolder.getUser().getPhone());
                                   break;
                               case UserContactAdapter.Action.ACTION_ID_TWITTER:
-                                  //UiUtil.startWebIntent(UserDetailsActivity.this, "http://www.twitter.com/" +
-                                  UiUtil.startWebIntent(UserDetailsActivity.this, "http://m.twitter.com/" +
+                                  UiUtil.startWebIntent(UserDetailsActivity.this, "http://www.twitter.com/" +
                                       mStateHolder.getUser().getTwitter());
                                   break;
                               case UserContactAdapter.Action.ACTION_ID_FACEBOOK:
