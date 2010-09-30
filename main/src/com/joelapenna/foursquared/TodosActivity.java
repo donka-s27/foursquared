@@ -216,9 +216,11 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Todo todo = (Todo) parent.getAdapter().getItem(position);
-                Intent intent = new Intent(TodosActivity.this, TipActivity.class);
-                intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
-                startActivityForResult(intent, ACTIVITY_TIP);
+                if (todo.getTip() != null) {
+                    Intent intent = new Intent(TodosActivity.this, TipActivity.class);
+                    intent.putExtra(TipActivity.EXTRA_TIP_PARCEL, todo.getTip());
+                    startActivityForResult(intent, ACTIVITY_TIP);
+                }
             }
         });
         
