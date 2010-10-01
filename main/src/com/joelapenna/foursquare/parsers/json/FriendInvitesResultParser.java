@@ -29,9 +29,14 @@ public class FriendInvitesResultParser extends AbstractParser<FriendInvitesResul
         } 
         if (json.has("emails")) {
             Emails emails = new Emails();
-            JSONArray array = json.getJSONArray("emails");
-            for (int i = 0; i < array.length(); i++) {
-                emails.add(emails.get(i));
+            if (json.optJSONObject("emails") != null) {
+                JSONObject emailsAsObject = json.getJSONObject("emails");
+                emails.add(emailsAsObject.getString("email"));
+            } else if (json.optJSONArray("emails") != null) {
+                JSONArray emailsAsArray = json.getJSONArray("emails");
+                for (int i = 0; i < emailsAsArray.length(); i++) {
+                    emails.add(emailsAsArray.getString(i));
+                }
             }
             obj.setContactEmailsOnNotOnFoursquare(emails);
         }
@@ -39,7 +44,7 @@ public class FriendInvitesResultParser extends AbstractParser<FriendInvitesResul
             Emails emails = new Emails();
             JSONArray array = json.getJSONArray("invited");
             for (int i = 0; i < array.length(); i++) {
-                emails.add(emails.get(i));
+                emails.add(array.getString(i));
             }
             obj.setContactEmailsOnNotOnFoursquareAlreadyInvited(emails);
         }
