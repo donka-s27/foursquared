@@ -82,13 +82,22 @@
     android:orientation="vertical" 
     >
     
+    <!-- When supplying textAppearance, all links from linkify are invisible. -->
     <TextView 
       android:id="@+id/tipActivityBody"
       android:layout_width="wrap_content" 
       android:layout_height="wrap_content"
-      android:textAppearance="@style/TextViewStyleTipActivityBody"
       android:text="Tip Body"  
+      android:autoLink="all"
+      android:textSize="16dip"
       />
+      <!-- 
+      android:textAppearance="@style/TextViewStyleTipActivityBody" 
+      <style name="TextViewStyleTipActivityBody">
+        <item name="android:textSize">16dip</item>
+        <item name="android:textColor">#4c4c4c</item>
+      </style>
+      -->
       
     <LinearLayout 
       android:layout_width="fill_parent" 

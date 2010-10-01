@@ -60,7 +60,7 @@
       android:id="@+id/userDetailsPingsActivityDescription"
       android:layout_width="wrap_content" 
       android:layout_height="wrap_content"
-      android:textAppearance="@style/TextViewStyleTipActivityBody"
+      android:textAppearance="@style/TextViewStylePingsActivityBody"
       android:text="Pings are currently on for ..."  
       android:layout_marginBottom="20dip"
       />
