@@ -7,7 +7,6 @@ package com.joelapenna.foursquared;
 import com.joelapenna.foursquare.Foursquare;
 import com.joelapenna.foursquare.types.Response;
 import com.joelapenna.foursquare.types.Venue;
-import com.joelapenna.foursquared.util.NotificationsUtil;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -20,8 +19,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -165,7 +164,7 @@ public class EditVenueOptionsActivity extends Activity {
     private void startProgressBar() {
         if (mDlgProgress == null) {
             mDlgProgress = ProgressDialog.show(this, 
-                    getResources().getString(R.string.edit_venue_options_progress_title),
+                    null,
                     getResources().getString(R.string.edit_venue_options_progress_message));
         }
         mDlgProgress.show();
@@ -191,7 +190,15 @@ public class EditVenueOptionsActivity extends Activity {
                         Toast.LENGTH_SHORT).show();
             }
         } else {
-            NotificationsUtil.ToastReasonForFailure(this, ex);
+            // The API is returning an incorrect response object here, it should look like:
+            // { response: { "response": "ok" }}
+            // Instead it's just returning:
+            // { "response": "ok" }
+            // So the parser framework will fail on it. This should be fixed with api v2,
+            // just going to assume success here.
+            //NotificationsUtil.ToastReasonForFailure(this, ex);
+            Toast.makeText(this, getResources().getString(R.string.edit_venue_options_thankyou), 
+                    Toast.LENGTH_SHORT).show();
         }
     }
     
