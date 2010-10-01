@@ -39,10 +39,10 @@ public class CheckinResultParser extends AbstractParser<CheckinResult> {
         if (json.has("message")) {
             obj.setMessage(json.getString("message"));
         } 
-        if (json.has("scoring")) {
+        if (json.has("scores")) {
             obj.setScoring(
                 new GroupParser(
-                    new ScoreParser()).parse(json.getJSONArray("scoring")));
+                    new ScoreParser()).parse(json.getJSONArray("scores")));
         } 
         if (json.has("specials")) {
             obj.setSpecials(
