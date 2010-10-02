@@ -552,19 +552,21 @@ public class TodosActivity extends LoadableListActivityWithViewAndHeader {
         private void updateTodoFromArray(Tip tip, Group<Todo> target) {
             for (int i = 0, m = target.size(); i < m; i++) {
                 Todo todo = target.get(i);
-                if (todo.getTip().getId().equals(tip.getId())) {
-                    if (mUserId == null) {
-                        // Activity is operating on logged-in user, only removing todos
-                        // from the list, don't have to worry about updating states.
-                        if (!TipUtils.isTodo(tip)) {
-                            target.remove(todo);
+                if (todo.getTip() != null) { // Fix for old garbage todos/tips from the API.
+                    if (todo.getTip().getId().equals(tip.getId())) {
+                        if (mUserId == null) {
+                            // Activity is operating on logged-in user, only removing todos
+                            // from the list, don't have to worry about updating states.
+                            if (!TipUtils.isTodo(tip)) {
+                                target.remove(todo);
+                            }
+                        } else {
+                            // Activity is operating on another user, so just update the status
+                            // of the tip within the todo.
+                            todo.getTip().setStatus(tip.getStatus());
                         }
-                    } else {
-                        // Activity is operating on another user, so just update the status
-                        // of the tip within the todo.
-                        todo.getTip().setStatus(tip.getStatus());
+                        break;
                     }
-                    break;
                 }
             }
         }
