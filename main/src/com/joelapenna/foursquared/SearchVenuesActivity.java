@@ -77,6 +77,8 @@ public class SearchVenuesActivity extends TabActivity {
     private TabHost mTabHost;
     private SeparatedListAdapter mListAdapter;
 
+    private boolean mIsShortcutPicker;
+
     private BroadcastReceiver mLoggedOutReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -85,7 +87,6 @@ public class SearchVenuesActivity extends TabActivity {
         }
     };
 
-    private boolean mIsShortcutPicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +103,7 @@ public class SearchVenuesActivity extends TabActivity {
 
         // Watch to see if we've been called as a shortcut intent.
         mIsShortcutPicker = Intent.ACTION_CREATE_SHORTCUT.equals(getIntent().getAction());
-
+        
         if (getLastNonConfigurationInstance() != null) {
             if (DEBUG) Log.d(TAG, "Restoring state.");
             SearchHolder holder = (SearchHolder) getLastNonConfigurationInstance();
@@ -187,7 +188,7 @@ public class SearchVenuesActivity extends TabActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
+    
     @Override
     public void onNewIntent(Intent intent) {
         
@@ -195,21 +196,26 @@ public class SearchVenuesActivity extends TabActivity {
             String action = intent.getAction();
             String query = intent.getStringExtra(SearchManager.QUERY);
             
-            if (DEBUG) Log.d(TAG, "New Intent: " + action + ", " + query);
+            Log.i(TAG, "New Intent: action[" + action + "].");
             
-            if (TextUtils.isEmpty(action) || Intent.ACTION_VIEW.equals(action) && query != null) {
-                startSearch(query, false, null, false);
-            } else if (Intent.ACTION_SEARCH.equals(action) && query != null) {
-                if (DEBUG) Log.d(TAG, "onNewIntent received search intent and saving.");
-                SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
-                        VenueQuerySuggestionsProvider.AUTHORITY, VenueQuerySuggestionsProvider.MODE);
-                suggestions.saveRecentQuery(query, null);
-                executeSearchTask(query);
-            } else {
-                onSearchRequested();
+            if (!TextUtils.isEmpty(action)) {
+                if (action.equals(Intent.ACTION_CREATE_SHORTCUT)) {
+                    Log.i(TAG, "   action = create shortcut, user can click one of the current venues.");
+                } else if (action.equals(Intent.ACTION_VIEW)) {
+                    if (!TextUtils.isEmpty(query)) {
+                        Log.i(TAG, "   action = view, query term provided, prepopulating search.");
+                        startSearch(query, false, null, false);
+                    } else {
+                        Log.i(TAG, "   action = view, but no query term provided, doing nothing.");
+                    }
+                } else if (action.equals(Intent.ACTION_SEARCH) && !TextUtils.isEmpty(query)) {
+                    Log.i(TAG, "   action = search, query term provided, executing search immediately.");
+                    SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                            VenueQuerySuggestionsProvider.AUTHORITY, VenueQuerySuggestionsProvider.MODE);
+                    suggestions.saveRecentQuery(query, null);
+                    executeSearchTask(query);
+                }
             }
-        } else {
-            executeSearchTask("");
         }
     }
 
@@ -309,7 +315,7 @@ public class SearchVenuesActivity extends TabActivity {
 
         mListView.setAdapter(mListAdapter);
         mListView.setOnItemClickListener(new OnItemClickListener() {
-            @Override
+            @Override 
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Venue venue = (Venue) parent.getAdapter().getItem(position);
                 if (mIsShortcutPicker) {
@@ -318,22 +324,20 @@ public class SearchVenuesActivity extends TabActivity {
                 } else {
                     startItemActivity(venue);
                 }
+                finish();
             }
         });
     }
 
     protected void setupShortcut(Venue venue) {
         // First, set up the shortcut intent. For this example, we simply create
-        // an intent that
-        // will bring us directly back to this activity. A more typical
-        // implementation would use a
-        // data Uri in order to display a more specific result, or a custom
-        // action in order to
-        // launch a specific operation.
+        // an intent that will bring us directly back to this activity. A more 
+        // typical implementation would use a data Uri in order to display a more 
+        // specific result, or a custom action in order to launch a specific operation.
 
         Intent shortcutIntent = new Intent(Intent.ACTION_MAIN);
         shortcutIntent.setClassName(this, VenueActivity.class.getName());
-        shortcutIntent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_PARTIAL, venue);
+        shortcutIntent.putExtra(VenueActivity.INTENT_EXTRA_VENUE_ID, venue.getId());
 
         // Then, set up the container intent (the response to the caller)
         Intent intent = new Intent();
@@ -344,7 +348,6 @@ public class SearchVenuesActivity extends TabActivity {
         intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, iconResource);
 
         // Now, return the result to the launcher
-
         setResult(RESULT_OK, intent);
     }
 
