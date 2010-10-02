@@ -73,8 +73,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
     private StateHolder mStateHolder = new StateHolder();
     private SearchLocationObserver mSearchLocationObserver = new SearchLocationObserver();
     
-    public static SearchResultsObservable searchResultsObservable; 
-
     private ListView mListView;
     private SeparatedListAdapter mListAdapter;
     private LinearLayout mFooterView;
@@ -96,8 +94,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         setDefaultKeyMode(Activity.DEFAULT_KEYS_SEARCH_LOCAL);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
         
-        searchResultsObservable = new SearchResultsObservable();
-
         mHandler = new Handler();
         mListView = getListView();
         mListAdapter = new SeparatedListAdapter(this);
@@ -299,19 +295,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         }
     }
 
-    class SearchResultsObservable extends Observable {
-
-        @Override
-        public void notifyObservers(Object data) {
-            setChanged();
-            super.notifyObservers(data);
-        }
-
-        public Group<Group<Venue>> getSearchResults() {
-            return mStateHolder.getResults();
-        }
-    }
-
     /** If location changes, auto-start a nearby venues search. */
     private class SearchLocationObserver implements Observer {
 
@@ -365,7 +348,6 @@ public class NearbyVenuesActivity extends LoadableListActivity {
         putSearchResultsInAdapter(mStateHolder.getResults());
         setProgressBarIndeterminateVisibility(false);
         ensureTitle(true);
-        searchResultsObservable.notifyObservers();
         
         mStateHolder.cancelAllTasks();
     }
