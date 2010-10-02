@@ -123,6 +123,8 @@ public class VenueActivity extends Activity {
         setContentView(R.layout.venue_activity);
         registerReceiver(mLoggedOutReceiver, new IntentFilter(Foursquared.INTENT_ACTION_LOGGED_OUT));
 
+        mHandler = new Handler();
+        
         StateHolder holder = (StateHolder) getLastNonConfigurationInstance();
         if (holder != null) {
         	mStateHolder = holder;
@@ -148,7 +150,6 @@ public class VenueActivity extends Activity {
     	    }
         }
 
-        mHandler = new Handler();
         mRrm = ((Foursquared) getApplication()).getRemoteResourceManager();
         mResourcesObserver = new RemoteResourceManagerObserver();
         mRrm.addObserver(mResourcesObserver);
@@ -162,7 +163,9 @@ public class VenueActivity extends Activity {
         unregisterReceiver(mLoggedOutReceiver);
         
         mHandler.removeCallbacks(mRunnableMayorPhoto);
-        mRrm.deleteObserver(mResourcesObserver);
+        if (mRrm != null) {
+            mRrm.deleteObserver(mResourcesObserver);
+        }
     }
     
     @Override 
