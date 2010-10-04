@@ -16,46 +16,80 @@ import com.joelapenna.foursquared.maps.CrashFixMyLocationOverlay;
 import com.joelapenna.foursquared.maps.VenueItemizedOverlayWithIcons;
 import com.joelapenna.foursquared.maps.VenueItemizedOverlayWithIcons.VenueItemizedOverlayTapListener;
 import com.joelapenna.foursquared.util.GeoUtils;
+import com.joelapenna.foursquared.util.UiUtil;
 import com.joelapenna.foursquared.widget.MapCalloutView;
 
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Observable;
-import java.util.Observer;
 
 /**
+ * Takes an array of venues and shows them on a map.
+ * 
  * @date June 30, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
  */
 public class NearbyVenuesMapActivity extends MapActivity {
-    public static final String TAG = "PlacesMapActivity";
+    public static final String TAG = "NearbyVenuesMapActivity";
     public static final boolean DEBUG = FoursquaredSettings.DEBUG;
-
-    private String mTappedVenueId;
-
-    //private Observer mSearchResultsObserver;
-    private MapCalloutView mCallout;
     
+    public static final String INTENT_EXTRA_VENUES = Foursquared.PACKAGE_NAME
+            + ".NearbyVenuesMapActivity.INTENT_EXTRA_VENUES";
+
+    private StateHolder mStateHolder;
+    
+    private String mTappedVenueId;
+    private MapCalloutView mCallout;
     private MapView mMapView;
     private MapController mMapController;
     private ArrayList<VenueItemizedOverlayWithIcons> mVenueGroupOverlays = 
         new ArrayList<VenueItemizedOverlayWithIcons>();
     private MyLocationOverlay mMyLocationOverlay;
-    private boolean mConstructedPinsOnce;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_map_activity);
         
-        mConstructedPinsOnce = false;
+        Object retained = getLastNonConfigurationInstance();
+        if (retained != null && retained instanceof StateHolder) {
+            mStateHolder = (StateHolder) retained;
+        } else {
+            if (getIntent().hasExtra(INTENT_EXTRA_VENUES)) {
+                Parcelable[] parcelables = getIntent().getParcelableArrayExtra(
+                        INTENT_EXTRA_VENUES);
+                
+                Group<Venue> venues = new Group<Venue>();
+                for (int i = 0; i < parcelables.length; i++) {
+                    venues.add((Venue)parcelables[i]);
+                }
+                
+                mStateHolder = new StateHolder(venues);
+            } else {
+                Log.e(TAG, TAG + " requires venue array in intent extras.");
+                finish();
+                return;
+            }
+        }
+        
+        ensureUi();
+    }
+    
+    private void ensureUi() {
+        
+        mMapView = (MapView) findViewById(R.id.mapView);
+        mMapView.setBuiltInZoomControls(true);
+        mMapController = mMapView.getController();
+
+        mMyLocationOverlay = new CrashFixMyLocationOverlay(this, mMapView);
+        mMapView.getOverlays().add(mMyLocationOverlay);
 
         mCallout = (MapCalloutView) findViewById(R.id.map_callout);
         mCallout.setVisibility(View.GONE);
@@ -69,49 +103,43 @@ public class NearbyVenuesMapActivity extends MapActivity {
             }
         });
         
-        initMap();
+        // One CheckinItemizedOverlay per group!
+        VenueItemizedOverlayWithIcons mappableVenuesOverlay = createMappableVenuesOverlay(
+                mStateHolder.getVenues());
 
-        /*
-        mSearchResultsObserver = new Observer() {
-            @Override
-            public void update(Observable observable, Object data) {
-                if (DEBUG) Log.d(TAG, "Observed search results change.");
-                clearMap();
-                loadSearchResults(NearbyVenuesActivity.searchResultsObservable.getSearchResults());
-                recenterMap();
-            } 
-        };
-        */
+        if (mappableVenuesOverlay != null) {
+            mVenueGroupOverlays.add(mappableVenuesOverlay);
+        }
+        
+        if (mVenueGroupOverlays.size() > 0) {
+            mMapView.getOverlays().addAll(mVenueGroupOverlays);
+            
+            recenterMap();
+        } else {
+            Toast.makeText(this, getResources().getString(
+                    R.string.friendsmapactivity_no_checkins), Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (DEBUG) Log.d(TAG, "onResume()");
+        
         mMyLocationOverlay.enableMyLocation();
-        //mMyLocationOverlay.enableCompass(); // Disabled due to a sdk 1.5
-        // emulator bug
-         
-        // If this is the first time we're showing the activity, try generating the overlay
-        // immediately. If the results are already loaded, the observer would not be called.
-        if (!mConstructedPinsOnce) {
-            clearMap();
-            //loadSearchResults(NearbyVenuesActivity.searchResultsObservable.getSearchResults());
-            recenterMap(); 
-            mConstructedPinsOnce = true;
+        if (UiUtil.sdkVersion() > 3) {
+            mMyLocationOverlay.enableCompass();
         }
-
-        //NearbyVenuesActivity.
-        //NearbyVenuesActivity.searchResultsObservable.addObserver(mSearchResultsObserver);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (DEBUG) Log.d(TAG, "onPause()");
+        
         mMyLocationOverlay.disableMyLocation();
-        mMyLocationOverlay.disableCompass();
-        //NearbyVenuesActivity.searchResultsObservable.deleteObserver(mSearchResultsObserver);
+        if (UiUtil.sdkVersion() > 3) {
+            mMyLocationOverlay.disableCompass();
+        }
     }
 
     @Override
@@ -119,57 +147,15 @@ public class NearbyVenuesMapActivity extends MapActivity {
         return false;
     }
 
-    private void initMap() {
-        mMapView = (MapView) findViewById(R.id.mapView);
-        mMapView.setBuiltInZoomControls(true);
-        mMapController = mMapView.getController();
-
-        mMyLocationOverlay = new CrashFixMyLocationOverlay(this, mMapView);
-        mMapView.getOverlays().add(mMyLocationOverlay);
-    }
-
-    private void loadSearchResults(Group<Group<Venue>> venues) {
-        if (venues == null) {
-            if (DEBUG) Log.d(TAG, "no search results. Not loading.");
-            return;
-        }
-        if (DEBUG) Log.d(TAG, "Loading search results");
-
-        // One CheckinItemizedOverlay per group!
-        VenueItemizedOverlayWithIcons mappableVenuesOverlay = createMappableVenuesOverlay(venues);
-
-        if (mappableVenuesOverlay != null) {
-            mVenueGroupOverlays.add(mappableVenuesOverlay);
-        }
-        // Only add the list of checkin group overlays if it contains any
-        // overlays.
-        if (mVenueGroupOverlays.size() > 0) {
-            mMapView.getOverlays().addAll(mVenueGroupOverlays);
-        } else {
-            Toast.makeText(this, getResources().getString(
-                    R.string.friendsmapactivity_no_checkins), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void clearMap() {
-        if (DEBUG) Log.d(TAG, "clearMap()");
-        mVenueGroupOverlays.clear();
-        mMapView.getOverlays().clear();
-        mMapView.getOverlays().add(mMyLocationOverlay);
-        mMapView.postInvalidate();
-    }
-
     /**
      * We can do something more fun here like create an overlay per category, so the user
      * can hide parks and show only bars, for example.
      */
-    private VenueItemizedOverlayWithIcons createMappableVenuesOverlay(Group<Group<Venue>> group) {
+    private VenueItemizedOverlayWithIcons createMappableVenuesOverlay(Group<Venue> venues) {
         
         Group<Venue> mappableVenues = new Group<Venue>();
-        for (Group<Venue> it : group) {
-            for (Venue jt : it) {
-                mappableVenues.add(jt);
-            }
+        for (Venue it : venues) {
+            mappableVenues.add(it);
         }
         
         if (mappableVenues.size() > 0) {
@@ -190,26 +176,29 @@ public class NearbyVenuesMapActivity extends MapActivity {
         // so falling back to zoom at a fixed level.
         GeoPoint center = mMyLocationOverlay.getMyLocation();
         if (center != null) {
-            if (DEBUG) Log.d(TAG, "Using MyLocaionOverlay as center point for recenterMap().");
             mMapController.animateTo(center);
-            mMapController.setZoom(16);
+            mMapController.setZoom(14);
         } else {
             // Location overlay wasn't ready yet, try using last known geolocation from manager.
             Location bestLocation = GeoUtils.getBestLastGeolocation(this);
             if (bestLocation != null) {
-                if (DEBUG) Log.d(TAG, "Using last known location as center point for recenterMap().");
                 mMapController.animateTo(GeoUtils.locationToGeoPoint(bestLocation));
-                mMapController.setZoom(16);
+                mMapController.setZoom(14);
             } else {
                 // We have no location information at all, so we'll just show the map at a high
                 // zoom level and the user can zoom in as they wish.
-                if (DEBUG) Log.d(TAG, "No location info available for recenterMap().");
+                Venue venue = mStateHolder.getVenues().get(0);
+                mMapController.animateTo(new GeoPoint(
+                        (int)(Float.valueOf(venue.getGeolat()) * 1E6), 
+                        (int)(Float.valueOf(venue.getGeolong()) * 1E6)));
                 mMapController.setZoom(8);
             }
         }
     }
  
-    /** Handle taps on one of the pins. */
+    /** 
+     * Handle taps on one of the pins. 
+     */
     private VenueItemizedOverlayTapListener mVenueOverlayTapListener = 
         new VenueItemizedOverlayTapListener() {
         @Override
@@ -228,4 +217,16 @@ public class NearbyVenuesMapActivity extends MapActivity {
             mCallout.setVisibility(View.GONE);
         }
     };
+    
+    private class StateHolder {
+        private Group<Venue> mVenues;
+        
+        public StateHolder(Group<Venue> venues) {
+            mVenues = venues;
+        }
+        
+        public Group<Venue> getVenues() {
+            return mVenues;
+        }
+    }
 }
