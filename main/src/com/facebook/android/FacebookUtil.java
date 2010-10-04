@@ -17,6 +17,12 @@
 
 package com.facebook.android;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.os.Bundle;
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,12 +31,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.os.Bundle;
-import android.util.Log;
+import java.util.Set;
 
 
 /**
@@ -45,7 +46,10 @@ import android.util.Log;
 public final class FacebookUtil {
 
     public static String encodeUrl(Bundle parameters) {
-        if (parameters == null) return "";
+        if (parameters == null) {
+            return "";
+        }
+        
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (String key : parameters.keySet()) {
@@ -189,5 +193,24 @@ public final class FacebookUtil {
             throw new FacebookError(json.getString("error_reason"));
         }
         return json;
+    }
+    
+    public static String printBundle(Bundle bundle) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Bundle: "); 
+        if (bundle != null) {
+            sb.append(bundle.toString()); sb.append("\n");
+            Set<String> keys = bundle.keySet();
+            for (String it : keys) {
+                sb.append("   ");
+                sb.append(it);
+                sb.append(": ");
+                sb.append(bundle.get(it).toString());
+                sb.append("\n");
+            }
+        } else {
+            sb.append("(null)");
+        }
+        return sb.toString();
     }
 }
