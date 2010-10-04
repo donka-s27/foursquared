@@ -40,7 +40,7 @@ public class NearbyVenuesMapActivity extends MapActivity {
 
     private String mTappedVenueId;
 
-    private Observer mSearchResultsObserver;
+    //private Observer mSearchResultsObserver;
     private MapCalloutView mCallout;
     
     private MapView mMapView;
@@ -71,6 +71,7 @@ public class NearbyVenuesMapActivity extends MapActivity {
         
         initMap();
 
+        /*
         mSearchResultsObserver = new Observer() {
             @Override
             public void update(Observable observable, Object data) {
@@ -80,6 +81,7 @@ public class NearbyVenuesMapActivity extends MapActivity {
                 recenterMap();
             } 
         };
+        */
     }
 
     @Override
@@ -94,13 +96,13 @@ public class NearbyVenuesMapActivity extends MapActivity {
         // immediately. If the results are already loaded, the observer would not be called.
         if (!mConstructedPinsOnce) {
             clearMap();
-            loadSearchResults(NearbyVenuesActivity.searchResultsObservable.getSearchResults());
+            //loadSearchResults(NearbyVenuesActivity.searchResultsObservable.getSearchResults());
             recenterMap(); 
             mConstructedPinsOnce = true;
         }
 
         //NearbyVenuesActivity.
-        NearbyVenuesActivity.searchResultsObservable.addObserver(mSearchResultsObserver);
+        //NearbyVenuesActivity.searchResultsObservable.addObserver(mSearchResultsObserver);
     }
 
     @Override
@@ -109,7 +111,7 @@ public class NearbyVenuesMapActivity extends MapActivity {
         if (DEBUG) Log.d(TAG, "onPause()");
         mMyLocationOverlay.disableMyLocation();
         mMyLocationOverlay.disableCompass();
-        NearbyVenuesActivity.searchResultsObservable.deleteObserver(mSearchResultsObserver);
+        //NearbyVenuesActivity.searchResultsObservable.deleteObserver(mSearchResultsObserver);
     }
 
     @Override
