@@ -298,7 +298,7 @@ public class AddFriendsByUserInputActivity extends Activity {
         intent.putExtra(FacebookWebViewActivity.INTENT_EXTRA_KEY_APP_ID, 
                 getResources().getString(R.string.facebook_api_key));
         intent.putExtra(FacebookWebViewActivity.INTENT_EXTRA_KEY_PERMISSIONS, 
-                new String[] {});//"publish_stream", "read_stream", "offline_access"});
+                new String[] {}); //{"publish_stream", "read_stream", "offline_access"});
         intent.putExtra(FacebookWebViewActivity.INTENT_EXTRA_KEY_DEBUG, false);
         intent.putExtra(FacebookWebViewActivity.INTENT_EXTRA_KEY_CLEAR_COOKIES, true);
         startActivityForResult(intent, ACTIVITY_RESULT_FACEBOOK_WEBVIEW_ACTIVITY);
@@ -545,6 +545,8 @@ public class AddFriendsByUserInputActivity extends Activity {
                         break;
                     case INPUT_TYPE_FACEBOOK:
                         // For facebook, we need to first get all friend uids, then use that with the foursquare api.
+                        //Log.e(TAG, "Umm yeah so we got da id back [" + params[0] + "]..");
+                        
                         String facebookFriendIds = getFacebookFriendIds(params[0]);
                         if (TextUtils.isEmpty(facebookFriendIds)) {
                             result.setUsersOnFoursquare(new Group<User>());

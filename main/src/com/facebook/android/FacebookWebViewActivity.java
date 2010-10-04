@@ -96,7 +96,7 @@ public class FacebookWebViewActivity extends Activity {
     public static final String INTENT_RESULT_KEY_RESULT_BUNDLE = "bundle";
     public static final String INTENT_RESULT_KEY_ERROR = "error";
 
-    private static final String DISPLAY_STRING = "display=touch";
+    private static final String DISPLAY_STRING = "touch";
     private static final int FB_BLUE = 0xFF6D84B4;
     private static final int MARGIN = 4;
     private static final int PADDING = 2;
@@ -171,8 +171,8 @@ public class FacebookWebViewActivity extends Activity {
                         // If the user supplied a pre-authenticated info, use it
                         // here.
                         Facebook facebook = new Facebook();
-                        if (extras.containsKey(INTENT_EXTRA_AUTHENTICATED_TOKEN)
-                                && extras.containsKey(INTENT_EXTRA_AUTHENTICATED_EXPIRES)) {
+                        if (extras.containsKey(INTENT_EXTRA_AUTHENTICATED_TOKEN) && 
+                            extras.containsKey(INTENT_EXTRA_AUTHENTICATED_EXPIRES)) {
                             facebook.setAccessToken(extras
                                     .getString(INTENT_EXTRA_AUTHENTICATED_TOKEN));
                             facebook.setAccessExpires(extras
@@ -240,7 +240,7 @@ public class FacebookWebViewActivity extends Activity {
         super.onPause();
 
         CookieSyncManager.getInstance().stopSync();
-    }
+    } 
 
     private class WebViewClientFacebook extends WebViewClient {
         @Override
@@ -257,6 +257,7 @@ public class FacebookWebViewActivity extends Activity {
                 Intent result = new Intent();
                 result.putExtra(INTENT_RESULT_KEY_SUPPLIED_ACTION, mAction);
                 if (error == null) {
+
                     CookieSyncManager.getInstance().sync();
 
                     result.putExtra(INTENT_RESULT_KEY_RESULT_STATUS, true);
@@ -289,7 +290,7 @@ public class FacebookWebViewActivity extends Activity {
             super.onReceivedError(view, errorCode, description, failingUrl);
 
             if (mDebug) {
-                Log.d(TAG, "WebViewClientFacebook:onReceivedError(): " + errorCode + ", "
+                Log.e(TAG, "WebViewClientFacebook:onReceivedError(): " + errorCode + ", "
                         + description + ", " + failingUrl);
             }
 

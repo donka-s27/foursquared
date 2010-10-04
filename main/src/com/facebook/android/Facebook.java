@@ -17,11 +17,11 @@
 
 package com.facebook.android;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-
 import android.os.Bundle;
 import android.text.TextUtils;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 /**
  * Main Facebook object for storing session token and session expiration date 
@@ -227,7 +227,7 @@ public class Facebook {
             params.putString("client_id", appId);
             if (permissions != null && permissions.length > 0) {
                 params.putString("scope", TextUtils.join(",", permissions));
-            }       
+            }
             endpoint = OAUTH_ENDPOINT;
             params.putString("type", "user_agent");
             params.putString("redirect_uri", REDIRECT_URI);
@@ -237,6 +237,7 @@ public class Facebook {
             params.putString("next", REDIRECT_URI);
         }
         params.putString("display", "touch");
+        params.putString("sdk", "android");
         if (isSessionValid()) {
             params.putString(TOKEN, getAccessToken());
         }
