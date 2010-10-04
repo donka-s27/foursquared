@@ -73,9 +73,20 @@ import android.widget.TextView;
  * <code>android.permission.INTERNET</code> permission added to your manifest.
  * You need to add this activity definition to your manifest. You can prevent
  * this activity from restarting on rotation so the network operations are
- * preserved like so: <activity
- * android:name="com.facebook.android.FacebookWebViewActivity"
- * android:configChanges="orientation|keyboardHidden" />
+ * preserved within the WebView like so: 
+ * 
+ *   <activity
+ *     android:name="com.facebook.android.FacebookWebViewActivity"
+ *     android:configChanges="orientation|keyboardHidden" />
+ *     
+ * This class and the rest of the facebook classes within this package are from
+ * the facebook android library project:
+ * 
+ *   http://github.com/facebook/facebook-android-sdk
+ * 
+ * The project implementation had several problems with it which made it unusable
+ * in a production application. It has been rewritten here for use with the 
+ * Foursquare project.
  * 
  * @date June 14, 2010
  * @author Mark Wyszomierski (markww@gmail.com)
