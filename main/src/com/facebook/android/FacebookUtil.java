@@ -21,7 +21,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -109,7 +108,7 @@ public final class FacebookUtil {
         if (method.equals("GET")) {
             url = url + "?" + encodeUrl(params);
         }
-        Log.d("Facebook-Util", method + " URL: " + url);
+
         HttpURLConnection conn = 
             (HttpURLConnection) new URL(url).openConnection();
         conn.setRequestProperty("User-Agent", System.getProperties().
@@ -122,6 +121,7 @@ public final class FacebookUtil {
             conn.getOutputStream().write(
                     encodeUrl(params).getBytes("UTF-8"));
         }
+        
         String response = "";
         try {
             response = read(conn.getInputStream());
@@ -129,6 +129,7 @@ public final class FacebookUtil {
             // Error Stream contains JSON that we can parse to a FB error
             response = read(conn.getErrorStream());
         }
+        
         return response;
     }
 
