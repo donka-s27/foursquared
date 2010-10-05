@@ -545,13 +545,12 @@ public class AddFriendsByUserInputActivity extends Activity {
                         break;
                     case INPUT_TYPE_FACEBOOK:
                         // For facebook, we need to first get all friend uids, then use that with the foursquare api.
-                        //Log.e(TAG, "Umm yeah so we got da id back [" + params[0] + "]..");
-                        
                         String facebookFriendIds = getFacebookFriendIds(params[0]);
-                        if (TextUtils.isEmpty(facebookFriendIds)) {
+                        if (!TextUtils.isEmpty(facebookFriendIds)) {
+                            result.setUsersOnFoursquare(foursquare.findFriendsByFacebook(facebookFriendIds));
+                        } else {
                             result.setUsersOnFoursquare(new Group<User>());
                         }
-                        result.setUsersOnFoursquare(foursquare.findFriendsByFacebook(facebookFriendIds));
                         break;
                     default:
                         // Combine searches for name/phone, results returned in one list.
