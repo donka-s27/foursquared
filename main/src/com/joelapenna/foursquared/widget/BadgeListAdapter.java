@@ -8,6 +8,7 @@ import com.joelapenna.foursquare.types.Badge;
 import com.joelapenna.foursquared.R;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,6 +53,7 @@ public class BadgeListAdapter extends BaseBadgeAdapter {
             holder = new ViewHolder();
             holder.icon = (ImageView)convertView.findViewById(R.id.icon);
             holder.name = (TextView)convertView.findViewById(R.id.name);
+            holder.description = (TextView)convertView.findViewById(R.id.description);
 
             convertView.setTag(holder);
         } else {
@@ -62,6 +64,13 @@ public class BadgeListAdapter extends BaseBadgeAdapter {
 
         Badge badge = (Badge)getItem(position);
         holder.name.setText(badge.getName());
+        if (holder.description != null) {
+            if (!TextUtils.isEmpty(badge.getDescription())) {
+                holder.description.setText(badge.getDescription());
+            } else {
+                holder.description.setText("");
+            }
+        }
 
         return convertView;
     }
@@ -69,5 +78,6 @@ public class BadgeListAdapter extends BaseBadgeAdapter {
     static class ViewHolder {
         ImageView icon;
         TextView name;
+        TextView description;
     }
 }
