@@ -1,0 +1,1 @@
+This project has been abandoned by Foursquare, and will not likely be seeing any more updates.
